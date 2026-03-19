@@ -6,6 +6,7 @@ import {
   MenuUnfoldOutlined,
   DashboardOutlined,
   FolderOpenOutlined,
+  FileTextOutlined,
   LogoutOutlined,
   UserOutlined,
 } from '@ant-design/icons'
@@ -24,7 +25,9 @@ export default function AppLayout() {
 
   const selectedMenuKey = location.pathname.startsWith('/document-classify')
     ? '/document-classify'
-    : location.pathname
+    : location.pathname.startsWith('/documents')
+      ? '/documents'
+      : location.pathname
 
   const sideMenuItems: MenuProps['items'] = [
     {
@@ -36,6 +39,11 @@ export default function AppLayout() {
       key: '/document-classify',
       icon: <FolderOpenOutlined />,
       label: 'Phân loại tài liệu',
+    },
+    {
+      key: '/documents',
+      icon: <FileTextOutlined />,
+      label: 'Tài liệu',
     },
   ]
 

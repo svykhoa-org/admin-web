@@ -34,6 +34,14 @@ const processQueue = (token: string) => {
 }
 
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (config.data instanceof FormData) {
+    if (typeof config.headers?.set === 'function') {
+      config.headers.set('Content-Type', undefined)
+    } else if (config.headers) {
+      delete (config.headers as Record<string, string>)['Content-Type']
+    }
+  }
+
   const token = getAccessToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config

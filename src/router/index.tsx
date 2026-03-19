@@ -3,6 +3,9 @@ import DashboardPage from '@/pages/authentication/DashboardPage/DashboardPage'
 import { DocumentClassifyCreatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyCreatePage'
 import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyListPage'
 import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyUpdatePage'
+import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
+import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
+import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
 import LoginPage from '@/pages/unauthentication/LoginPage'
 import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
 import { createBrowserRouter } from 'react-router-dom'
@@ -37,6 +40,23 @@ const router = createBrowserRouter([
               {
                 path: ':id/edit',
                 element: <DocumentClassifyUpdatePage />,
+              },
+            ],
+          },
+          {
+            path: '/documents',
+            children: [
+              {
+                index: true,
+                element: <DocumentListPage />,
+              },
+              {
+                path: 'create',
+                element: <DocumentCreatePage />,
+              },
+              {
+                path: ':id/edit',
+                element: <DocumentUpdatePage />,
               },
             ],
           },
