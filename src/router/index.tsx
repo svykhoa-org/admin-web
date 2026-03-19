@@ -1,0 +1,53 @@
+import AppLayout from '@/layouts/AppLayout'
+import DashboardPage from '@/pages/authentication/DashboardPage/DashboardPage'
+import { DocumentClassifyCreatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyCreatePage'
+import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyListPage'
+import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyUpdatePage'
+import LoginPage from '@/pages/unauthentication/LoginPage'
+import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
+import { createBrowserRouter } from 'react-router-dom'
+import ProtectedRoute from './ProtectedRoute'
+
+const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          {
+            path: '/',
+            element: <DashboardPage />,
+          },
+          {
+            path: '/document-classify',
+            children: [
+              {
+                index: true,
+                element: <DocumentClassifyListPage />,
+              },
+              {
+                path: 'create',
+                element: <DocumentClassifyCreatePage />,
+              },
+              {
+                path: ':id/edit',
+                element: <DocumentClassifyUpdatePage />,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: '*',
+    element: <NotFoundPage />,
+  },
+])
+
+export default router

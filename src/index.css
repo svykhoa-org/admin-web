@@ -1,0 +1,23 @@
+@import 'tailwindcss/theme';
+@import 'tailwindcss/utilities';
+
+@theme {
+  --color-primary: #1677ff;
+  --color-danger: #ff4d4f;
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
