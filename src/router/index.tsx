@@ -6,6 +6,9 @@ import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClass
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
+import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
+import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
+import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
 import LoginPage from '@/pages/unauthentication/LoginPage'
 import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
 import { createBrowserRouter } from 'react-router-dom'
@@ -57,6 +60,23 @@ const router = createBrowserRouter([
               {
                 path: ':id/edit',
                 element: <DocumentUpdatePage />,
+              },
+            ],
+          },
+          {
+            path: '/users',
+            children: [
+              {
+                index: true,
+                element: <UserListPage />,
+              },
+              {
+                path: 'create',
+                element: <UserCreatePage />,
+              },
+              {
+                path: ':id',
+                element: <UserDetailPage />,
               },
             ],
           },

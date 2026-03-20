@@ -8,6 +8,7 @@ import {
   FolderOpenOutlined,
   FileTextOutlined,
   LogoutOutlined,
+  TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '@/store/authStore'
@@ -27,7 +28,9 @@ export default function AppLayout() {
     ? '/document-classify'
     : location.pathname.startsWith('/documents')
       ? '/documents'
-      : location.pathname
+      : location.pathname.startsWith('/users')
+        ? '/users'
+        : location.pathname
 
   const sideMenuItems: MenuProps['items'] = [
     {
@@ -36,9 +39,14 @@ export default function AppLayout() {
       label: 'Dashboard',
     },
     {
+      key: '/users',
+      icon: <TeamOutlined />,
+      label: 'Người dùng',
+    },
+    {
       key: '/document-classify',
       icon: <FolderOpenOutlined />,
-      label: 'Phân loại tài liệu',
+      label: 'Loại tài liệu',
     },
     {
       key: '/documents',

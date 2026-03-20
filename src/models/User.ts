@@ -1,9 +1,21 @@
-export type UserRole = 'admin' | 'editor' | 'viewer'
+import type { AbstractModel } from './AbstractModel'
 
-export interface User {
-  id: string
+export enum UserRole {
+  Admin = 'admin',
+  User = 'user',
+}
+
+export enum UserStatus {
+  Active = 'active',
+  Blocked = 'blocked',
+}
+
+export interface User extends AbstractModel {
   email: string
   fullName: string
   role: UserRole
+  status: UserStatus
   avatar: string | null
+  googleId: string | null
+  facebookId: string | null
 }
