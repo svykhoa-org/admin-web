@@ -152,7 +152,18 @@ export const DocumentForm = ({ id }: Props) => {
     }
   }
 
-  const onInvalidSubmit: SubmitErrorHandler<DocumentFormValues> = () => {
+  const onInvalidSubmit: SubmitErrorHandler<DocumentFormValues> = invalidErrors => {
+    const erroredFields = Object.keys(invalidErrors)
+    const missingFields = Object.entries(invalidErrors)
+      .filter(([, error]) => error?.type === 'required' || error?.type === 'invalid_type')
+      .map(([field]) => field)
+
+    console.error('[DocumentForm] Invalid submit', {
+      erroredFields,
+      missingFields,
+      errors: invalidErrors,
+    })
+
     void message.warning('Vui lòng kiểm tra lại các trường bắt buộc trước khi lưu.')
   }
 

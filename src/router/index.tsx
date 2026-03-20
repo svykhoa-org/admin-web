@@ -3,6 +3,8 @@ import DashboardPage from '@/pages/authentication/DashboardPage/DashboardPage'
 import { DocumentClassifyCreatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyCreatePage'
 import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyListPage'
 import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyUpdatePage'
+import { DocumentOrderDetailPage } from '@/pages/authentication/DocumentOrderPage/DocumentOrderDetailPage'
+import { DocumentOrderListPage } from '@/pages/authentication/DocumentOrderPage/DocumentOrderListPage'
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
@@ -60,6 +62,19 @@ const router = createBrowserRouter([
               {
                 path: ':id/edit',
                 element: <DocumentUpdatePage />,
+              },
+            ],
+          },
+          {
+            path: '/document-orders',
+            children: [
+              {
+                index: true,
+                element: <DocumentOrderListPage />,
+              },
+              {
+                path: ':id',
+                element: <DocumentOrderDetailPage />,
               },
             ],
           },

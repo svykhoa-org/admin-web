@@ -7,6 +7,7 @@ import {
   DashboardOutlined,
   FolderOpenOutlined,
   FileTextOutlined,
+  ProfileOutlined,
   LogoutOutlined,
   TeamOutlined,
   UserOutlined,
@@ -23,14 +24,6 @@ export default function AppLayout() {
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
   const { token } = theme.useToken()
-
-  const selectedMenuKey = location.pathname.startsWith('/document-classify')
-    ? '/document-classify'
-    : location.pathname.startsWith('/documents')
-      ? '/documents'
-      : location.pathname.startsWith('/users')
-        ? '/users'
-        : location.pathname
 
   const sideMenuItems: MenuProps['items'] = [
     {
@@ -53,7 +46,22 @@ export default function AppLayout() {
       icon: <FileTextOutlined />,
       label: 'Tài liệu',
     },
+    {
+      key: '/document-orders',
+      icon: <ProfileOutlined />,
+      label: 'Đơn hàng tài liệu',
+    },
   ]
+
+  const menuRouteKeys = sideMenuItems
+    .map(item => item?.key)
+    .filter((key): key is string => typeof key === 'string')
+
+  const selectedMenuKey =
+    [...menuRouteKeys]
+      .filter(key => key !== '/')
+      .sort((a, b) => b.length - a.length)
+      .find(key => location.pathname.startsWith(key)) || location.pathname
 
   const userMenuItems: MenuProps['items'] = [
     {
