@@ -1,0 +1,40 @@
+{
+  // Format & lint on save
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+
+  // ESLint flat config
+  "eslint.useFlatConfig": true,
+
+  // TypeScript
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.preferences.importModuleSpecifier": "shortest",
+  "js/ts.preferences.importModuleSpecifierEnding": "minimal",
+
+  // File associations
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // Explorer
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.test.ts",
+    "*.tsx": "${capture}.test.tsx"
+  },
+
+  // Quick suggestions
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": true,
+    "strings": true
+  },
+
+  "gitlens.ai.generateCommits.customInstructions": "You are writing git commit messages for a professional frontend web application. Follow these rules strictly:\n\n1. FORMAT: Use Conventional Commits format — type(scope): subject\n2. TYPES: feat | fix | style | refactor | perf | chore | docs | test | ci | revert\n3. SCOPE: Use the affected area (e.g. auth, dashboard, button, api, router, layout)\n4. SUBJECT LINE: Max 72 characters. Start with a lowercase verb (add, update, fix, remove, refactor). No period at the end.\n5. BODY (optional): Add only if the change is non-obvious. Explain WHY, not WHAT. Wrap at 72 characters.\n6. LANGUAGE: English only.\n7. DO NOT add generic messages like 'update code' or 'fix bug'. Be specific about what changed.\n\nExamples:\nfeat(auth): add google OAuth login flow\nfix(dashboard): resolve chart not rendering on mobile\nperf(image): lazy load product thumbnails on scroll\nrefactor(form): extract validation logic into useFormValidation hook"
+}
