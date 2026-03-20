@@ -8,6 +8,7 @@ import {
   FolderOpenOutlined,
   FileTextOutlined,
   ProfileOutlined,
+  SafetyCertificateOutlined,
   LogoutOutlined,
   TeamOutlined,
   UserOutlined,
@@ -50,6 +51,11 @@ export default function AppLayout() {
       key: '/document-orders',
       icon: <ProfileOutlined />,
       label: 'Đơn hàng tài liệu',
+    },
+    {
+      key: '/document-licenses',
+      icon: <SafetyCertificateOutlined />,
+      label: 'License tài liệu',
     },
   ]
 

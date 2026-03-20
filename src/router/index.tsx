@@ -3,6 +3,8 @@ import DashboardPage from '@/pages/authentication/DashboardPage/DashboardPage'
 import { DocumentClassifyCreatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyCreatePage'
 import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyListPage'
 import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyUpdatePage'
+import { DocumentLicenseDetailPage } from '@/pages/authentication/DocumentLicensePage/DocumentLicenseDetailPage'
+import { DocumentLicenseListPage } from '@/pages/authentication/DocumentLicensePage/DocumentLicenseListPage'
 import { DocumentOrderDetailPage } from '@/pages/authentication/DocumentOrderPage/DocumentOrderDetailPage'
 import { DocumentOrderListPage } from '@/pages/authentication/DocumentOrderPage/DocumentOrderListPage'
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
@@ -75,6 +77,19 @@ const router = createBrowserRouter([
               {
                 path: ':id',
                 element: <DocumentOrderDetailPage />,
+              },
+            ],
+          },
+          {
+            path: '/document-licenses',
+            children: [
+              {
+                index: true,
+                element: <DocumentLicenseListPage />,
+              },
+              {
+                path: ':id',
+                element: <DocumentLicenseDetailPage />,
               },
             ],
           },
