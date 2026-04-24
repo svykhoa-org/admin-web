@@ -1,4 +1,7 @@
 import AppLayout from '@/layouts/AppLayout'
+import { CourseCreatePage } from '@/pages/authentication/CoursePage/CourseCreatePage'
+import { CourseDetailPage } from '@/pages/authentication/CoursePage/CourseDetailPage'
+import { CourseListPage } from '@/pages/authentication/CoursePage/CourseListPage'
 import DashboardPage from '@/pages/authentication/DashboardPage/DashboardPage'
 import { DocumentClassifyCreatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyCreatePage'
 import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyListPage'
@@ -17,6 +20,7 @@ import LoginPage from '@/pages/unauthentication/LoginPage'
 import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
 import { createBrowserRouter } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
+import { RoutePath } from './RoutePath'
 
 const router = createBrowserRouter([
   {
@@ -34,78 +38,95 @@ const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: '/document-classify',
+            path: RoutePath.CoursePage.route,
+            children: [
+              {
+                index: true,
+                element: <CourseListPage />,
+              },
+              {
+                path: RoutePath.CourseCreatePage.route,
+                element: <CourseCreatePage />,
+              },
+              {
+                path: RoutePath.CourseDetailPage.route,
+                element: <CourseDetailPage />,
+              },
+            ],
+          },
+          {
+            path: RoutePath.DocumentClassifyPage.route,
             children: [
               {
                 index: true,
                 element: <DocumentClassifyListPage />,
               },
               {
-                path: 'create',
+                path: RoutePath.DocumentClassifyCreatePage.route,
                 element: <DocumentClassifyCreatePage />,
               },
               {
-                path: ':id/edit',
+                path: RoutePath.DocumentClassifyUpdatePage.route,
                 element: <DocumentClassifyUpdatePage />,
               },
             ],
           },
           {
-            path: '/documents',
+            path: RoutePath.DocumentPage.route,
             children: [
               {
                 index: true,
                 element: <DocumentListPage />,
               },
               {
-                path: 'create',
+                path: RoutePath.DocumentCreatePage.route,
                 element: <DocumentCreatePage />,
               },
               {
-                path: ':id/edit',
+                path: RoutePath.DocumentUpdatePage.route,
                 element: <DocumentUpdatePage />,
               },
             ],
           },
           {
-            path: '/document-orders',
+            path: RoutePath.DocumentOrderPage.route,
             children: [
               {
                 index: true,
                 element: <DocumentOrderListPage />,
               },
               {
-                path: ':id',
+                path: RoutePath.DocumentOrderDetailPage.route,
                 element: <DocumentOrderDetailPage />,
               },
             ],
           },
           {
-            path: '/document-licenses',
+            path: RoutePath.DocumentLicensePage.route,
             children: [
               {
                 index: true,
                 element: <DocumentLicenseListPage />,
               },
               {
-                path: ':id',
+                path: RoutePath.DocumentLicenseDetailPage.route,
                 element: <DocumentLicenseDetailPage />,
               },
             ],
           },
           {
-            path: '/users',
+            path: RoutePath.UserPage.route,
             children: [
               {
                 index: true,
                 element: <UserListPage />,
               },
               {
-                path: 'create',
+                path: RoutePath.UserCreatePage.route,
                 element: <UserCreatePage />,
               },
               {
-                path: ':id',
+                path: RoutePath.UserDetailPage.route,
                 element: <UserDetailPage />,
               },
             ],

@@ -1,0 +1,13 @@
+.DataTable__inner .ant-table-thead > tr > th {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.DataTable__inner .ant-table-thead > tr > th::before {
+  display: none;
+}
+
+.DataTable__inner .ant-table-container {
+  border-radius: 8px;
+  overflow: hidden;
+}

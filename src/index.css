@@ -16,6 +16,12 @@
 
 body {
   margin: 0;
+  font-family: 'Gilroy', 'Be Vietnam Pro', sans-serif;
+  scrollbar-width: none;
+}
+
+body * {
+  font-weight: 500;
 }
 
 #root {

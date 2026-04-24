@@ -12,8 +12,10 @@ import {
   LogoutOutlined,
   TeamOutlined,
   UserOutlined,
+  PlaySquareOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '@/store/authStore'
+import logo from '@/assets/logo.png'
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -36,6 +38,11 @@ export default function AppLayout() {
       key: '/users',
       icon: <TeamOutlined />,
       label: 'Người dùng',
+    },
+    {
+      key: '/courses',
+      icon: <PlaySquareOutlined />,
+      label: 'Khoá học',
     },
     {
       key: '/document-classify',
@@ -85,42 +92,43 @@ export default function AppLayout() {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} trigger={null} theme="dark">
+    <Layout className="h-screen overflow-hidden">
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        trigger={null}
+        theme="light"
+        width={240}
+        style={{
+          background: token.colorBgContainer,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
         <div
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? 14 : 18,
-            fontWeight: 700,
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            transition: 'font-size 0.2s',
-          }}
+          className={`flex h-16 items-center justify-center overflow-hidden whitespace-nowrap ${collapsed ? 'px-2' : 'px-4'}`}
         >
-          {collapsed ? 'A' : 'Admin'}
+          <img
+            src={logo}
+            alt="Admin logo"
+            className={`w-auto object-contain transition-[height] duration-200 ${collapsed ? 'h-5' : 'h-9'}`}
+          />
         </div>
 
         <Menu
-          theme="dark"
+          theme="light"
           mode="inline"
           selectedKeys={[selectedMenuKey]}
           items={sideMenuItems}
           onClick={({ key }) => navigate(key)}
+          style={{ border: 'none' }}
         />
       </Sider>
 
-      <Layout>
+      <Layout className="overflow-hidden">
         <Header
+          className="flex items-center justify-between px-4"
           style={{
-            padding: '0 16px',
             background: token.colorBgContainer,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             borderBottom: `1px solid ${token.colorBorderSecondary}`,
           }}
         >
@@ -134,7 +142,7 @@ export default function AppLayout() {
             menu={{ items: userMenuItems, onClick: handleUserMenu }}
             placement="bottomRight"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <div className="flex cursor-pointer items-center gap-2">
               {user?.avatar ? (
                 <Avatar src={user.avatar} />
               ) : (
@@ -146,11 +154,9 @@ export default function AppLayout() {
         </Header>
 
         <Content
+          className="m-4 overflow-y-auto"
           style={{
-            margin: 16,
-            // padding: 24,
-            // background: token.colorBgContainer,
-            // borderRadius: token.borderRadius,
+            scrollbarWidth: 'none',
           }}
         >
           <Outlet />

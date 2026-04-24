@@ -34,6 +34,7 @@ export default defineConfig([
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/no-explicit-any': 'off',
 
       // React
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
