@@ -4,18 +4,14 @@ import { Layout, Menu, Avatar, Dropdown, Button, Typography, theme, type MenuPro
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  DashboardOutlined,
-  FolderOpenOutlined,
-  FileTextOutlined,
-  ProfileOutlined,
-  SafetyCertificateOutlined,
   LogoutOutlined,
-  TeamOutlined,
   UserOutlined,
-  PlaySquareOutlined,
 } from '@ant-design/icons'
+import { UploadTray } from '@/components/UploadTray'
 import { useAuthStore } from '@/store/authStore'
 import logo from '@/assets/logo.png'
+import { ItemType, sideMenuConfig, type SideMenuEntry } from './sideMenuConfig'
+import classNames from 'classnames'
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -28,47 +24,38 @@ export default function AppLayout() {
   const logout = useAuthStore(s => s.logout)
   const { token } = theme.useToken()
 
-  const sideMenuItems: MenuProps['items'] = [
-    {
-      key: '/',
-      icon: <DashboardOutlined />,
-      label: 'Dashboard',
-    },
-    {
-      key: '/users',
-      icon: <TeamOutlined />,
-      label: 'Người dùng',
-    },
-    {
-      key: '/courses',
-      icon: <PlaySquareOutlined />,
-      label: 'Khoá học',
-    },
-    {
-      key: '/document-classify',
-      icon: <FolderOpenOutlined />,
-      label: 'Loại tài liệu',
-    },
-    {
-      key: '/documents',
-      icon: <FileTextOutlined />,
-      label: 'Tài liệu',
-    },
-    {
-      key: '/document-orders',
-      icon: <ProfileOutlined />,
-      label: 'Đơn hàng tài liệu',
-    },
-    {
-      key: '/document-licenses',
-      icon: <SafetyCertificateOutlined />,
-      label: 'License tài liệu',
-    },
-  ]
+  const buildMenuItems = (config: SideMenuEntry[]): MenuProps['items'] =>
+    config.map(entry => {
+      if (entry.type === ItemType.GROUP) {
+        return {
+          key: entry.key,
+          type: 'group' as const,
+          label: (
+            <div className="flex items-center gap-2 py-1">
+              <div className="h-px flex-1 bg-neutral-500" />
+              {!collapsed && (
+                <>
+                  <span className="whitespace-nowrap text-sm text-neutral-500">{entry.label}</span>
+                  <div className="h-px flex-1 bg-neutral-500" />
+                </>
+              )}
+            </div>
+          ),
+          children: entry.children.map(child => ({
+            key: child.key,
+            icon: child.icon,
+            label: child.label,
+          })),
+        }
+      }
+      return { key: entry.key, icon: entry.icon, label: entry.label }
+    })
 
-  const menuRouteKeys = sideMenuItems
-    .map(item => item?.key)
-    .filter((key): key is string => typeof key === 'string')
+  const sideMenuItems = buildMenuItems(sideMenuConfig)
+
+  const menuRouteKeys = sideMenuConfig.flatMap(entry =>
+    entry.type === ItemType.GROUP ? entry.children.map(c => c.key) : [entry.key],
+  )
 
   const selectedMenuKey =
     [...menuRouteKeys]
@@ -105,7 +92,10 @@ export default function AppLayout() {
         }}
       >
         <div
-          className={`flex h-16 items-center justify-center overflow-hidden whitespace-nowrap ${collapsed ? 'px-2' : 'px-4'}`}
+          className={classNames(
+            'flex h-16 items-center justify-center overflow-hidden whitespace-nowrap transition-[padding] duration-200',
+            collapsed ? 'px-2' : 'px-4',
+          )}
         >
           <img
             src={logo}
@@ -161,6 +151,7 @@ export default function AppLayout() {
         >
           <Outlet />
         </Content>
+        <UploadTray />
       </Layout>
     </Layout>
   )

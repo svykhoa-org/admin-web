@@ -1,0 +1,124 @@
+import type { ReactNode } from 'react'
+import {
+  DashboardOutlined,
+  FolderOpenOutlined,
+  FileTextOutlined,
+  ProfileOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
+  PlaySquareOutlined,
+  TagsOutlined,
+  AppstoreOutlined,
+  OrderedListOutlined,
+} from '@ant-design/icons'
+
+export enum ItemType {
+  LINK,
+  GROUP,
+}
+
+export type SideMenuLink = {
+  type: ItemType.LINK
+  key: string
+  icon: ReactNode
+  label: string
+}
+
+export type SideMenuGroup = {
+  type: ItemType.GROUP
+  key: string
+  label: string
+  children: SideMenuLink[]
+}
+
+export type SideMenuEntry = SideMenuLink | SideMenuGroup
+
+export const sideMenuConfig: SideMenuEntry[] = [
+  {
+    type: ItemType.LINK,
+    key: '/',
+    icon: <DashboardOutlined />,
+    label: 'Dashboard',
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_USER',
+    label: 'Quản lý người dùng',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/users',
+        icon: <TeamOutlined />,
+        label: 'Người dùng',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_COURSE',
+    label: 'Quản lý khoá học',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/courses',
+        icon: <PlaySquareOutlined />,
+        label: 'Khoá học',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/course-categories',
+        icon: <AppstoreOutlined />,
+        label: 'Danh mục khoá học',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/course-tags',
+        icon: <TagsOutlined />,
+        label: 'Tag khoá học',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/enrollments',
+        icon: <OrderedListOutlined />,
+        label: 'Đăng ký khoá học',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/certificates',
+        icon: <SafetyCertificateOutlined />,
+        label: 'Chứng chỉ',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_DOCUMENT',
+    label: 'Quản lý tài liệu',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/document-classify',
+        icon: <FolderOpenOutlined />,
+        label: 'Loại tài liệu',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/documents',
+        icon: <FileTextOutlined />,
+        label: 'Tài liệu',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/document-orders',
+        icon: <ProfileOutlined />,
+        label: 'Đơn hàng tài liệu',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/document-licenses',
+        icon: <SafetyCertificateOutlined />,
+        label: 'License tài liệu',
+      },
+    ],
+  },
+]

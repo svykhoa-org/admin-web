@@ -80,4 +80,53 @@ export const RoutePath = {
     path: '/users/:id',
     getPath: (id: string) => `/users/${id}`,
   },
+
+  // Course Category
+  CourseCategoryPage: {
+    route: 'course-categories',
+    path: '/course-categories',
+  },
+  CourseCategoryCreatePage: {
+    route: 'create',
+    path: '/course-categories/create',
+  },
+  CourseCategoryDetailPage: {
+    route: ':id',
+    path: '/course-categories/:id',
+    getPath: (id: string) => `/course-categories/${id}`,
+  },
+
+  // Course Tag
+  CourseTagPage: {
+    route: 'course-tags',
+    path: '/course-tags',
+  },
+  CourseTagCreatePage: {
+    route: 'create',
+    path: '/course-tags/create',
+  },
+  CourseTagDetailPage: {
+    route: ':id',
+    path: '/course-tags/:id',
+    getPath: (id: string) => `/course-tags/${id}`,
+  },
+
+  // Quiz
+  QuizDetailPage: {
+    route: 'quizzes/:id',
+    path: '/quizzes/:id',
+    getPath: (id: string) => `/quizzes/${id}`,
+  },
+
+  // Enrollment
+  EnrollmentPage: {
+    route: 'enrollments',
+    path: '/enrollments',
+  },
+
+  // Certificate
+  CertificatePage: {
+    route: 'certificates',
+    path: '/certificates',
+  },
 }
