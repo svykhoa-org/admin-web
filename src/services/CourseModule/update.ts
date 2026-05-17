@@ -9,7 +9,9 @@ export interface UpdateCourseModuleInput {
   courseId: string
   id: string
   title?: string
+  description?: string
   order?: number
+  locked?: boolean
 }
 
 export type UpdateCourseModuleOutput = CourseModule
@@ -18,11 +20,9 @@ export async function updateCourseModule(
   input: UpdateCourseModuleInput,
 ): Promise<UpdateCourseModuleOutput> {
   const { courseId, id, ...payload } = input
-
   const response = await axiosInstance.patch<ApiDetailResponse<UpdateCourseModuleOutput>>(
     `${COURSE_ENDPOINT}/${courseId}/modules/${id}`,
     payload,
   )
-
   return unwrapDetail(response.data)
 }
