@@ -1,18 +1,10 @@
 import { DocumentSelect } from '@/components/SelectionVariants'
+import { UploadSingleVideo } from '@/components/Upload'
 import { LessonType, type Lesson } from '@/models/Course'
 import { createLesson, updateLesson } from '@/services/Lesson'
 import { createQuiz, type QuestionInput } from '@/services/Quiz'
-import { confirmVideoUpload, requestVideoUpload } from '@/services/Video'
 import { isApiResponseError } from '@/utils/apiResponse'
-import ENV from '@/constants/env'
-import {
-  CheckCircleOutlined,
-  DeleteOutlined,
-  InboxOutlined,
-  LoadingOutlined,
-  PlusOutlined,
-  VideoCameraOutlined,
-} from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   Alert,
   App,
@@ -21,22 +13,20 @@ import {
   Checkbox,
   Col,
   Divider,
-  Drawer,
   Form,
   Input,
   InputNumber,
-  Progress,
+  Modal,
   Row,
   Select,
   Space,
   Switch,
   Tag,
   Typography,
-  Upload,
 } from 'antd'
-import type { FormInstance, UploadProps } from 'antd'
-import axios from 'axios'
+import type { FormInstance } from 'antd'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,152 +63,6 @@ const lessonTypeLabelMap: Record<LessonType, string> = {
   [LessonType.VIDEO]: 'Video',
   [LessonType.DOCUMENT]: 'Tài liệu',
   [LessonType.QUIZ]: 'Quiz',
-}
-
-// ─── Video Upload Section ─────────────────────────────────────────────────────
-
-type VideoStatus = 'idle' | 'uploading' | 'confirming' | 'done' | 'error'
-
-interface VideoUploadSectionProps {
-  existingVideoId?: string
-  onVideoReady: (videoId: string) => void
-}
-
-const VideoUploadSection = ({ existingVideoId, onVideoReady }: VideoUploadSectionProps) => {
-  const { message } = App.useApp()
-  const [uploadStatus, setUploadStatus] = useState<VideoStatus>('idle')
-  const [progress, setProgress] = useState(0)
-  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null)
-  const [errorMsg, setErrorMsg] = useState('')
-
-  const handleCustomRequest: UploadProps['customRequest'] = async options => {
-    const file = options.file as File
-    setErrorMsg('')
-    setUploadStatus('uploading')
-    setProgress(0)
-
-    try {
-      // 1. Request upload — server trả về videoId + uploadUrl (relative path có presigned params)
-      const { videoId, uploadUrl } = await requestVideoUpload({ filename: file.name })
-      setUploadedVideoId(videoId)
-
-      // 2. Upload thẳng lên MinIO: VITE_API_FILE_URL làm base + uploadUrl là relative path có chữ ký
-      const minioUploadUrl = `${ENV.API_FILE_URL}${uploadUrl}`
-      await axios.put(minioUploadUrl, file, {
-        headers: { 'Content-Type': file.type || 'video/mp4' },
-        onUploadProgress: event => {
-          const pct = Math.round((event.loaded / (event.total ?? file.size)) * 100)
-          setProgress(pct)
-        },
-      })
-
-      // 3. Confirm upload
-      setUploadStatus('confirming')
-      await confirmVideoUpload({ id: videoId })
-
-      setUploadStatus('done')
-      onVideoReady(videoId)
-      options.onSuccess?.({})
-    } catch (err) {
-      setUploadStatus('error')
-      const msg = isApiResponseError(err) ? err.message : 'Upload thất bại. Vui lòng thử lại.'
-      setErrorMsg(msg)
-      void message.error(msg)
-      options.onError?.(new Error(msg))
-    }
-  }
-
-  const isUploading = uploadStatus === 'uploading' || uploadStatus === 'confirming'
-
-  return (
-    <Space direction="vertical" size={12} style={{ width: '100%' }}>
-      {/* Existing video info */}
-      {existingVideoId && uploadStatus === 'idle' && (
-        <Alert
-          type="info"
-          showIcon
-          icon={<VideoCameraOutlined />}
-          message="Video hiện tại"
-          description={
-            <Typography.Text code copyable>
-              {existingVideoId}
-            </Typography.Text>
-          }
-        />
-      )}
-
-      {/* Upload success */}
-      {uploadStatus === 'done' && uploadedVideoId && (
-        <Alert
-          type="success"
-          showIcon
-          icon={<CheckCircleOutlined />}
-          message="Upload thành công!"
-          description={
-            <Space direction="vertical" size={4}>
-              <span>
-                Video ID:{' '}
-                <Typography.Text code copyable>
-                  {uploadedVideoId}
-                </Typography.Text>
-              </span>
-              <Typography.Text type="secondary">
-                Video đang được hệ thống xử lý HLS. Trạng thái sẽ chuyển sang &quot;ready&quot; sau
-                khi worker xử lý xong.
-              </Typography.Text>
-            </Space>
-          }
-        />
-      )}
-
-      {/* Dropzone */}
-      <Upload.Dragger
-        name="video"
-        multiple={false}
-        maxCount={1}
-        accept="video/*"
-        showUploadList={false}
-        disabled={isUploading}
-        customRequest={handleCustomRequest}
-      >
-        <p className="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
-        <p className="ant-upload-text">
-          {uploadStatus === 'done'
-            ? 'Upload video khác để thay thế'
-            : 'Kéo thả file video vào đây hoặc bấm để chọn'}
-        </p>
-        <p className="ant-upload-hint">
-          Hỗ trợ MP4, MOV, AVI, MKV. File được upload trực tiếp lên MinIO.
-        </p>
-      </Upload.Dragger>
-
-      {/* Progress */}
-      {uploadStatus === 'uploading' && (
-        <div>
-          <Space style={{ marginBottom: 4 }}>
-            <Typography.Text type="secondary">Đang upload lên MinIO...</Typography.Text>
-            <Typography.Text type="secondary">{progress}%</Typography.Text>
-          </Space>
-          <Progress percent={progress} status="active" />
-        </div>
-      )}
-
-      {/* Confirming */}
-      {uploadStatus === 'confirming' && (
-        <Alert
-          type="info"
-          showIcon
-          icon={<LoadingOutlined spin />}
-          message="Đang xác nhận upload với server..."
-        />
-      )}
-
-      {/* Error */}
-      {uploadStatus === 'error' && errorMsg && <Alert type="error" showIcon message={errorMsg} />}
-    </Space>
-  )
 }
 
 // ─── Question Builder ─────────────────────────────────────────────────────────
@@ -401,6 +245,7 @@ const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) =
 
 export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSaved }: Props) => {
   const { message } = App.useApp()
+  const navigate = useNavigate()
   const [form] = Form.useForm()
   const [isSaving, setIsSaving] = useState(false)
   const [videoId, setVideoId] = useState<string | undefined>(undefined)
@@ -414,16 +259,19 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
     if (mode === 'edit' && initialData) {
       form.setFieldsValue({
         title: initialData.title,
+        description: initialData.description ?? '',
         type: initialData.type,
         order: initialData.order,
-        isFinal: initialData.isFinal,
+        durationMinutes: initialData.durationMinutes ?? 0,
+        isRequired: initialData.isRequired ?? true,
+        isPreview: initialData.isPreview ?? false,
       })
       setVideoId(
         initialData.type === LessonType.VIDEO ? (initialData.contentId ?? undefined) : undefined,
       )
     } else {
       form.resetFields()
-      form.setFieldsValue({ type: LessonType.VIDEO, isFinal: false, order: 1 })
+      form.setFieldsValue({ type: LessonType.VIDEO, order: 1 })
       setVideoId(undefined)
     }
   }, [open, mode, initialData, form])
@@ -443,7 +291,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
       let contentId: string | undefined
 
       if (type === LessonType.VIDEO) {
-        // videoId is set by VideoUploadSection via onVideoReady
+        // videoId is set by UploadSingleVideo via onVideoReady
         contentId = videoId
         if (!contentId && mode === 'create') {
           void message.warning('Vui lòng upload video trước khi lưu bài học')
@@ -487,10 +335,13 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
 
       const payload = {
         title: values.title as string,
+        description: (values.description as string | undefined) || undefined,
         type,
         order: values.order as number,
-        isFinal: (values.isFinal as boolean | undefined) ?? false,
         contentId,
+        durationMinutes: (values.durationMinutes as number | undefined) || undefined,
+        isRequired: (values.isRequired as boolean | undefined) ?? true,
+        isPreview: (values.isPreview as boolean | undefined) ?? false,
       }
 
       if (mode === 'create') {
@@ -513,7 +364,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   }
 
   return (
-    <Drawer
+    <Modal
       title={
         <Space>
           {mode === 'create' ? 'Thêm bài học' : 'Cập nhật bài học'}
@@ -522,20 +373,19 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
           )}
         </Space>
       }
-      placement="right"
       width="80%"
       open={open}
-      onClose={handleClose}
+      onCancel={handleClose}
       destroyOnClose
+      zIndex={1100}
+      styles={{ body: { maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', padding: '16px 0' } }}
       footer={
-        <div style={{ textAlign: 'right' }}>
-          <Space>
-            <Button onClick={handleClose}>Hủy</Button>
-            <Button type="primary" loading={isSaving} onClick={handleSave}>
-              {mode === 'create' ? 'Tạo bài học' : 'Lưu thay đổi'}
-            </Button>
-          </Space>
-        </div>
+        <Space>
+          <Button onClick={handleClose}>Hủy</Button>
+          <Button type="primary" loading={isSaving} onClick={handleSave}>
+            {mode === 'create' ? 'Tạo bài học' : 'Lưu thay đổi'}
+          </Button>
+        </Space>
       }
     >
       <Form form={form} layout="vertical">
@@ -550,21 +400,15 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
               <Input placeholder="Ví dụ: Bài 1: Giới thiệu NestJS" />
             </Form.Item>
           </Col>
-
           <Col span={6}>
             <Form.Item
               name="type"
               label="Loại bài học"
               rules={[{ required: true, message: 'Chọn loại bài học' }]}
             >
-              <Select
-                options={lessonTypeOptions}
-                disabled={mode === 'edit'}
-                placeholder="Chọn loại"
-              />
+              <Select options={lessonTypeOptions} disabled={mode === 'edit'} placeholder="Chọn loại" />
             </Form.Item>
           </Col>
-
           <Col span={3}>
             <Form.Item
               name="order"
@@ -574,9 +418,25 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
               <InputNumber min={1} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
-
           <Col span={3}>
-            <Form.Item name="isFinal" label="Thi cuối khoá" valuePropName="checked">
+            <Form.Item name="durationMinutes" label="Thời lượng (phút)">
+              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={16}>
+            <Form.Item name="description" label="Mô tả bài học">
+              <Input.TextArea rows={2} placeholder="Mô tả ngắn về bài học (tuỳ chọn)" />
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item name="isRequired" label="Bắt buộc" valuePropName="checked" initialValue={true}>
+              <Switch />
+            </Form.Item>
+          </Col>
+          <Col span={4}>
+            <Form.Item name="isPreview" label="Xem trước" valuePropName="checked" initialValue={false}>
               <Switch />
             </Form.Item>
           </Col>
@@ -594,12 +454,13 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
 
             {/* ── Video ── */}
             {lessonType === LessonType.VIDEO && (
-              <VideoUploadSection
+              <UploadSingleVideo
                 existingVideoId={
                   mode === 'edit' && initialData?.type === LessonType.VIDEO
                     ? (initialData.contentId ?? undefined)
                     : undefined
                 }
+                label={form.getFieldValue('title') as string | undefined}
                 onVideoReady={setVideoId}
               />
             )}
@@ -628,16 +489,22 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                     showIcon
                     message="Quiz đã được tạo"
                     description={
-                      <Space direction="vertical" size={2}>
-                        <span>
-                          Quiz ID:{' '}
-                          <Typography.Text code copyable>
-                            {initialData.contentId}
-                          </Typography.Text>
-                        </span>
-                        <Typography.Text type="secondary">
-                          Để chỉnh sửa nội dung quiz, vui lòng quản lý qua API Quiz.
-                        </Typography.Text>
+                      <Space direction="vertical" size={4}>
+                        <Space>
+                          <Typography.Text>Quiz ID:</Typography.Text>
+                          <Typography.Text code copyable>{initialData.contentId}</Typography.Text>
+                        </Space>
+                        <Button
+                          size="small"
+                          type="link"
+                          style={{ padding: 0 }}
+                          onClick={() => {
+                            handleClose()
+                            navigate(`/quizzes/${initialData.contentId}`)
+                          }}
+                        >
+                          Chỉnh sửa câu hỏi →
+                        </Button>
                       </Space>
                     }
                   />
@@ -740,6 +607,6 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
           </>
         )}
       </Form>
-    </Drawer>
+    </Modal>
   )
 }

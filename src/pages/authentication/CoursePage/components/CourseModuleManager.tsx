@@ -26,6 +26,7 @@ import {
   Modal,
   Space,
   Spin,
+  Switch,
   Table,
   Tag,
   Typography,
@@ -116,7 +117,6 @@ const LessonTable = ({
         <Space size={6}>
           <Typography.Text type="secondary">{lessonTypeIconMap[record.type]}</Typography.Text>
           <Typography.Text>{value}</Typography.Text>
-          {record.isFinal && <Tag color="gold">Thi cuối khoá</Tag>}
         </Space>
       ),
     },
@@ -262,9 +262,9 @@ export const CourseModuleManager = ({ courseId }: Props) => {
   const openModuleModal = (mode: 'create' | 'edit', data?: CourseModule) => {
     setModuleModal({ open: true, mode, data })
     if (mode === 'edit' && data) {
-      moduleForm.setFieldsValue({ title: data.title, order: data.order })
+      moduleForm.setFieldsValue({ title: data.title, order: data.order, description: data.description ?? '', locked: data.locked ?? false })
     } else {
-      moduleForm.setFieldsValue({ title: '', order: (modules ?? []).length + 1 })
+      moduleForm.setFieldsValue({ title: '', order: (modules ?? []).length + 1, description: '', locked: false })
     }
   }
 
@@ -278,6 +278,8 @@ export const CourseModuleManager = ({ courseId }: Props) => {
           courseId,
           title: values.title as string,
           order: values.order as number,
+          description: (values.description as string | undefined) || undefined,
+          locked: (values.locked as boolean | undefined) ?? false,
         })
         void message.success('Tạo module thành công')
       } else if (moduleModal.data) {
@@ -286,6 +288,8 @@ export const CourseModuleManager = ({ courseId }: Props) => {
           id: moduleModal.data.id,
           title: values.title as string,
           order: values.order as number,
+          description: (values.description as string | undefined) || undefined,
+          locked: (values.locked as boolean | undefined) ?? false,
         })
         void message.success('Cập nhật module thành công')
       }
@@ -343,6 +347,7 @@ export const CourseModuleManager = ({ courseId }: Props) => {
       <Space>
         <Tag>{mod.order}</Tag>
         <Typography.Text strong>{mod.title}</Typography.Text>
+        {mod.locked && <Tag color="orange">Khoá</Tag>}
         <Typography.Text type="secondary">
           ({(lessonsByModule[mod.id] ?? []).length} bài học)
         </Typography.Text>
@@ -438,6 +443,12 @@ export const CourseModuleManager = ({ courseId }: Props) => {
             rules={[{ required: true, message: 'Vui lòng nhập thứ tự' }]}
           >
             <InputNumber min={1} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <Input.TextArea rows={2} placeholder="Mô tả nội dung module (tuỳ chọn)" />
+          </Form.Item>
+          <Form.Item label="Khoá module" name="locked" valuePropName="checked">
+            <Switch checkedChildren="Khoá" unCheckedChildren="Mở" />
           </Form.Item>
         </Form>
       </Modal>
