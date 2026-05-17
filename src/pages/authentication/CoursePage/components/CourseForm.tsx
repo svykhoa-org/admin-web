@@ -57,12 +57,6 @@ export const CourseForm = ({ id }: Props) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null | undefined>(null)
   const [selectedTagIds, setSelectedTagIds] = useState<string[] | null>(null)
 
-  // Derive effective values: use user's selection if made, else fall back to loaded detail
-  const effectiveCategoryId =
-    selectedCategoryId === null ? (detailData?.categoryId ?? undefined) : selectedCategoryId
-  const effectiveTagIds =
-    selectedTagIds === null ? (detailData?.tags?.map(tag => tag.id) ?? []) : selectedTagIds
-
   useEffect(() => {
     Promise.all([listCourseCategory(), listCourseTag()])
       .then(([cats, tags]) => {
@@ -87,6 +81,12 @@ export const CourseForm = ({ id }: Props) => {
 
   const { execute: executeDetail, data: detailData, isLoading: isDetailLoading } = detailRequest
 
+  // Derive effective values: use user's selection if made, else fall back to loaded detail
+  const effectiveCategoryId =
+    selectedCategoryId === null ? (detailData?.categoryId ?? undefined) : selectedCategoryId
+  const effectiveTagIds =
+    selectedTagIds === null ? (detailData?.tags?.map(tag => tag.id) ?? []) : selectedTagIds
+
   const [courseOverride, setCourseDisplay] = useState<Course | null>(null)
   const courseDisplay = courseOverride ?? detailData
 
@@ -101,7 +101,6 @@ export const CourseForm = ({ id }: Props) => {
       subTitle: values.subTitle?.trim() || undefined,
       description: values.description?.trim() || undefined,
       price: values.price,
-      shortCode: values.shortCode,
       categoryId: effectiveCategoryId || undefined,
       tags: effectiveTagIds.length > 0 ? effectiveTagIds.map(tagId => ({ id: tagId })) : undefined,
       accessDurationDays: values.accessDurationDays || undefined,
@@ -162,7 +161,6 @@ export const CourseForm = ({ id }: Props) => {
               subTitle: detailData.subTitle ?? undefined,
               description: detailData.description ?? undefined,
               price: detailData.price,
-              shortCode: detailData.shortCode,
               accessDurationDays: detailData.accessDurationDays ?? undefined,
               maxEnrollments: detailData.maxEnrollments ?? undefined,
               selfPaced: detailData.selfPaced ?? true,
@@ -185,13 +183,6 @@ export const CourseForm = ({ id }: Props) => {
             fieldProps={{
               currency: Currency.VND,
             }}
-          />
-
-          <Field
-            name="shortCode"
-            label={t('CourseLocales:short_code')}
-            type="text"
-            fieldProps={{ style: { textTransform: 'uppercase' } }}
           />
 
           <Field name="subTitle" label="Tiêu đề phụ" type="text" className="col-span-2" />
