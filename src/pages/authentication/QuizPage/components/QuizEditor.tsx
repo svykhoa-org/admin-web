@@ -1,5 +1,4 @@
 import { useDetail, useUpdate } from '@/hooks'
-import type { Quiz } from '@/models/Quiz'
 import { QuestionType } from '@/models/Quiz'
 import { getQuizDetail, updateQuiz, type UpdateQuizInput } from '@/services/Quiz'
 import { isApiResponseError } from '@/utils/apiResponse'

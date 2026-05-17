@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { App, Button, Card, Form, Input, Space, Spin, Tag, Typography } from 'antd'
 import { useCallback, useEffect, useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useCreate, useDetail, useUpdate } from '@/hooks'
 import {
@@ -32,7 +32,6 @@ export const CourseTagForm = ({ id }: Props) => {
     control,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<CourseTagFormValues>({
     resolver: zodResolver(schema),
@@ -65,7 +64,7 @@ export const CourseTagForm = ({ id }: Props) => {
     })
   }, [detailData, reset])
 
-  const colorValue = watch('color')
+  const colorValue = useWatch({ control, name: 'color' })
 
   const onSubmit = async (values: CourseTagFormValues) => {
     const payload: CreateCourseTagInput = {
@@ -100,11 +99,7 @@ export const CourseTagForm = ({ id }: Props) => {
   return (
     <Card>
       <Space className="mb-4">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          type="text"
-          onClick={() => navigate('/course-tags')}
-        />
+        <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate('/course-tags')} />
         <Typography.Title level={4} style={{ margin: 0 }}>
           {isEditMode ? 'Cập nhật tag' : 'Tạo tag mới'}
         </Typography.Title>

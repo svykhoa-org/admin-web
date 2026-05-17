@@ -53,8 +53,15 @@ export const CourseForm = ({ id }: Props) => {
   const [courseTags, setCourseTags] = useState<CourseTag[]>([])
 
   // Local state for custom select fields (not in FormHandler schema)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined)
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  // null = user hasn't made a selection yet (derive from detailData); undefined/string/[] = user's choice
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null | undefined>(null)
+  const [selectedTagIds, setSelectedTagIds] = useState<string[] | null>(null)
+
+  // Derive effective values: use user's selection if made, else fall back to loaded detail
+  const effectiveCategoryId =
+    selectedCategoryId === null ? (detailData?.categoryId ?? undefined) : selectedCategoryId
+  const effectiveTagIds =
+    selectedTagIds === null ? (detailData?.tags?.map(tag => tag.id) ?? []) : selectedTagIds
 
   useEffect(() => {
     Promise.all([listCourseCategory(), listCourseTag()])
@@ -88,13 +95,6 @@ export const CourseForm = ({ id }: Props) => {
     void executeDetail(id)
   }, [executeDetail, id, isEditMode])
 
-  // Populate local state when detail loads
-  useEffect(() => {
-    if (!detailData) return
-    setSelectedCategoryId(detailData.categoryId ?? undefined)
-    setSelectedTagIds(detailData.tags?.map(tag => tag.id) ?? [])
-  }, [detailData])
-
   const onSubmit = async (values: CourseFormSubmitValues) => {
     const payload: CreateCourseInput = {
       title: values.title,
@@ -102,8 +102,8 @@ export const CourseForm = ({ id }: Props) => {
       description: values.description?.trim() || undefined,
       price: values.price,
       shortCode: values.shortCode,
-      categoryId: selectedCategoryId || undefined,
-      tags: selectedTagIds.length > 0 ? selectedTagIds.map(tagId => ({ id: tagId })) : undefined,
+      categoryId: effectiveCategoryId || undefined,
+      tags: effectiveTagIds.length > 0 ? effectiveTagIds.map(tagId => ({ id: tagId })) : undefined,
       accessDurationDays: values.accessDurationDays || undefined,
       maxEnrollments: values.maxEnrollments || undefined,
       selfPaced: values.selfPaced,
@@ -204,8 +204,8 @@ export const CourseForm = ({ id }: Props) => {
               showSearch
               style={{ width: '100%' }}
               placeholder="Chọn danh mục"
-              value={selectedCategoryId}
-              onChange={val => setSelectedCategoryId(val)}
+              value={effectiveCategoryId}
+              onChange={val => setSelectedCategoryId(val ?? null)}
               options={categories.map(c => ({ label: c.name, value: c.id }))}
               filterOption={(input, opt) =>
                 ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
@@ -221,7 +221,7 @@ export const CourseForm = ({ id }: Props) => {
               allowClear
               style={{ width: '100%' }}
               placeholder="Chọn tag"
-              value={selectedTagIds}
+              value={effectiveTagIds}
               onChange={vals => setSelectedTagIds(vals)}
               options={courseTags.map(tag => ({ label: tag.name, value: tag.id }))}
             />
