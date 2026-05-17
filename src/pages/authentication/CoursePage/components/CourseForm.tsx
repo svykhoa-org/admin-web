@@ -6,6 +6,8 @@ import {
   getCourseStatusMappingToLabels,
   type Course,
 } from '@/models/Course'
+import type { CourseCategory } from '@/models/CourseCategory'
+import type { CourseTag } from '@/models/CourseTag'
 import { Currency } from '@/models/enum/Currency'
 import { RoutePath } from '@/router/RoutePath'
 import {
@@ -16,9 +18,11 @@ import {
   updateCourse,
   type CreateCourseInput,
 } from '@/services/Course'
+import { listCourseCategory } from '@/services/CourseCategory'
+import { listCourseTag } from '@/services/CourseTag'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { ArrowLeftOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons'
-import { App, Button, Card, Popconfirm, Space, Spin, Tabs, Tag, Typography } from 'antd'
+import { App, Button, Card, Popconfirm, Select, Space, Spin, Tabs, Tag, Typography } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -44,6 +48,23 @@ export const CourseForm = ({ id }: Props) => {
   const isEditMode = !!id
   const courseFormSchema = useMemo(() => createCourseFormSchema(t), [t])
 
+  // Category and tag data for selectors
+  const [categories, setCategories] = useState<CourseCategory[]>([])
+  const [courseTags, setCourseTags] = useState<CourseTag[]>([])
+
+  // Local state for custom select fields (not in FormHandler schema)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined)
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+
+  useEffect(() => {
+    Promise.all([listCourseCategory(), listCourseTag()])
+      .then(([cats, tags]) => {
+        setCategories(cats)
+        setCourseTags(tags)
+      })
+      .catch(() => void message.error('Không thể tải danh mục/tag'))
+  }, [message])
+
   const fetchDetail = useCallback((detailId: string) => getCourseDetail({ id: detailId }), [])
   const updateById = useCallback(
     (updateId: string, payload: CreateCourseInput) => updateCourse({ id: updateId, ...payload }),
@@ -59,7 +80,6 @@ export const CourseForm = ({ id }: Props) => {
 
   const { execute: executeDetail, data: detailData, isLoading: isDetailLoading } = detailRequest
 
-  // Override chỉ được set từ publish/archive — tránh reset form khi detailData thay đổi
   const [courseOverride, setCourseDisplay] = useState<Course | null>(null)
   const courseDisplay = courseOverride ?? detailData
 
@@ -68,12 +88,25 @@ export const CourseForm = ({ id }: Props) => {
     void executeDetail(id)
   }, [executeDetail, id, isEditMode])
 
+  // Populate local state when detail loads
+  useEffect(() => {
+    if (!detailData) return
+    setSelectedCategoryId(detailData.categoryId ?? undefined)
+    setSelectedTagIds(detailData.tags?.map(tag => tag.id) ?? [])
+  }, [detailData])
+
   const onSubmit = async (values: CourseFormSubmitValues) => {
     const payload: CreateCourseInput = {
       title: values.title,
+      subTitle: values.subTitle?.trim() || undefined,
       description: values.description?.trim() || undefined,
       price: values.price,
       shortCode: values.shortCode,
+      categoryId: selectedCategoryId || undefined,
+      tags: selectedTagIds.length > 0 ? selectedTagIds.map(tagId => ({ id: tagId })) : undefined,
+      accessDurationDays: values.accessDurationDays || undefined,
+      maxEnrollments: values.maxEnrollments || undefined,
+      selfPaced: values.selfPaced,
     }
 
     if (isEditMode && id) {
@@ -126,9 +159,13 @@ export const CourseForm = ({ id }: Props) => {
         isEditMode && detailData
           ? {
               title: detailData.title,
+              subTitle: detailData.subTitle ?? undefined,
               description: detailData.description ?? undefined,
               price: detailData.price,
               shortCode: detailData.shortCode,
+              accessDurationDays: detailData.accessDurationDays ?? undefined,
+              maxEnrollments: detailData.maxEnrollments ?? undefined,
+              selfPaced: detailData.selfPaced ?? true,
             }
           : COURSE_FORM_DEFAULT_VALUES
       }
@@ -156,6 +193,55 @@ export const CourseForm = ({ id }: Props) => {
             type="text"
             fieldProps={{ style: { textTransform: 'uppercase' } }}
           />
+
+          <Field name="subTitle" label="Tiêu đề phụ" type="text" className="col-span-2" />
+
+          {/* Category selector — managed outside FormHandler via local state */}
+          <div className="col-span-1">
+            <div className="mb-2 text-sm font-medium">Danh mục</div>
+            <Select
+              allowClear
+              showSearch
+              style={{ width: '100%' }}
+              placeholder="Chọn danh mục"
+              value={selectedCategoryId}
+              onChange={val => setSelectedCategoryId(val)}
+              options={categories.map(c => ({ label: c.name, value: c.id }))}
+              filterOption={(input, opt) =>
+                ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
+          </div>
+
+          {/* Tag multi-select — managed outside FormHandler via local state */}
+          <div className="col-span-1">
+            <div className="mb-2 text-sm font-medium">Tags</div>
+            <Select
+              mode="multiple"
+              allowClear
+              style={{ width: '100%' }}
+              placeholder="Chọn tag"
+              value={selectedTagIds}
+              onChange={vals => setSelectedTagIds(vals)}
+              options={courseTags.map(tag => ({ label: tag.name, value: tag.id }))}
+            />
+          </div>
+
+          <Field
+            name="accessDurationDays"
+            label="Thời hạn truy cập (ngày)"
+            type="number"
+            fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
+          />
+
+          <Field
+            name="maxEnrollments"
+            label="Giới hạn học viên"
+            type="number"
+            fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
+          />
+
+          <Field name="selfPaced" label="Học tự do" type="checkbox" />
 
           <Field
             name="description"
