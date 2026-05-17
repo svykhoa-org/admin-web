@@ -14,29 +14,57 @@ export enum LessonType {
   DOCUMENT = 'document',
 }
 
+export interface CourseTagRef {
+  id: string
+  name: string
+  color: string
+}
+
 export interface Course extends AbstractModel {
   title: string
+  subTitle?: string | null
   description?: string | null
   thumbnail?: string | null
   price: number
   status: CourseStatus
   shortCode: string
-  finalLessonId?: string | null
+  categoryId?: string | null
+  tags?: CourseTagRef[]
+  accessDurationDays?: number | null
+  maxEnrollments?: number | null
+  currentEnrollments?: number
+  selfPaced?: boolean
+  objectives?: string[]
+  requirements?: string[]
+  suitableFor?: string[]
+  instructorIds?: string[]
+  cmeCredits?: number | null
+  certifyingOrganization?: string | null
+  totalDurationMinutes?: number
 }
 
 export interface CourseModule extends AbstractModel {
   courseId: string
   title: string
+  description?: string | null
   order: number
+  locked?: boolean
+  lessonCount?: number
+  totalDurationMinutes?: number
 }
 
 export interface Lesson extends AbstractModel {
   moduleId: string
+  courseId: string
   title: string
+  description?: string | null
   order: number
   type: LessonType
   contentId?: string | null
-  isFinal: boolean
+  durationMinutes?: number
+  isRequired?: boolean
+  isPreview?: boolean
+  prerequisiteLessonId?: string | null
 }
 
 export const getCourseStatusMappingToLabels = (t: TFunction<FlatNamespace[]>) => {
