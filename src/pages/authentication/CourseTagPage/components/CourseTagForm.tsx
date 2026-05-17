@@ -81,7 +81,11 @@ export const CourseTagForm = ({ id }: Props) => {
       }
       if (result) {
         void message.success(isEditMode ? 'Cập nhật tag thành công' : 'Tạo tag thành công')
-        navigate(`/course-tags/${result.id}`, { replace: true })
+        if (isEditMode) {
+          navigate(`/course-tags/${result.id}`, { replace: true })
+        } else {
+          navigate('/course-tags', { replace: true })
+        }
       }
     } catch (error) {
       void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')

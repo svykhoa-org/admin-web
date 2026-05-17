@@ -49,7 +49,10 @@ export const CourseCategoryForm = ({ id }: Props) => {
     defaultValues: COURSE_CATEGORY_FORM_DEFAULT_VALUES,
   })
 
-  const fetchDetail = useCallback((detailId: string) => getCourseCategoryDetail({ id: detailId }), [])
+  const fetchDetail = useCallback(
+    (detailId: string) => getCourseCategoryDetail({ id: detailId }),
+    [],
+  )
   const updateById = useCallback(
     (updateId: string, payload: CreateCourseCategoryInput) =>
       updateCourseCategory({ id: updateId, ...payload }),
@@ -94,14 +97,16 @@ export const CourseCategoryForm = ({ id }: Props) => {
         await updateRequest.execute(id, payload)
         void message.success('Cập nhật danh mục thành công')
       } else {
-        const created = await createRequest.execute(payload)
+        await createRequest.execute(payload)
         void message.success('Tạo danh mục thành công')
-        navigate(`/course-categories/${created.id}`, { replace: true })
+        navigate('/course-categories', { replace: true })
         return
       }
     } catch (error) {
       void message.error(
-        isApiResponseError(error) ? error.message : 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.',
+        isApiResponseError(error)
+          ? error.message
+          : 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.',
       )
     }
   }
