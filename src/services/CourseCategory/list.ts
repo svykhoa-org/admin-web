@@ -1,11 +1,11 @@
 import axiosInstance from '@/lib/axios'
 import type { CourseCategory } from '@/models/CourseCategory'
-import type { ApiListResponse } from '@/types/api'
-import { unwrapList } from '@/utils/apiResponse'
+import type { ApiDetailResponse } from '@/types/api'
+import { unwrapDetail } from '@/utils/apiResponse'
 
 const ENDPOINT = '/course-categories'
 
 export async function listCourseCategory(): Promise<CourseCategory[]> {
-  const response = await axiosInstance.get<ApiListResponse<CourseCategory>>(ENDPOINT)
-  return unwrapList(response.data).items
+  const response = await axiosInstance.get<ApiDetailResponse<CourseCategory[]>>(ENDPOINT)
+  return unwrapDetail(response.data)
 }
