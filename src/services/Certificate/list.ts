@@ -12,7 +12,9 @@ type CertSortFields = 'issuedAt' | 'createdAt'
 export type ListCertificateInput = QueryInput<CertSearchFields, CertSortFields>
 export type ListCertificateOutput = ApiListData<Certificate>
 
-export async function listCertificate(input?: ListCertificateInput): Promise<ListCertificateOutput> {
+export async function listCertificate(
+  input?: ListCertificateInput,
+): Promise<ListCertificateOutput> {
   const response = await axiosInstance.get<ApiListResponse<Certificate>>(ENDPOINT, {
     params: input ? buildQuery(input) : undefined,
   })

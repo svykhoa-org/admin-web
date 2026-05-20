@@ -126,7 +126,7 @@ export const CourseCategoryTable = () => {
           columns={columns}
           dataSource={categories}
           loading={isLoading}
-          rowSelection={{
+          selectionAction={{
             selectedRowKeys,
             onChange: keys => setSelectedRowKeys(keys as string[]),
           }}

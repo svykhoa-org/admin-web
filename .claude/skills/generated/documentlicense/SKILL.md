@@ -1,6 +1,6 @@
 ---
 name: documentlicense
-description: "Skill for the DocumentLicense area of svykhoa-admin. 4 symbols across 4 files."
+description: 'Skill for the DocumentLicense area of svykhoa-admin. 4 symbols across 4 files.'
 ---
 
 # DocumentLicense
@@ -15,12 +15,12 @@ description: "Skill for the DocumentLicense area of svykhoa-admin. 4 symbols acr
 
 ## Key Files
 
-| File | Symbols |
-|------|---------|
-| `src/services/DocumentLicense/unrevoke.ts` | unrevokeDocumentLicense |
-| `src/services/DocumentLicense/revoke.ts` | revokeDocumentLicense |
-| `src/services/DocumentLicense/detail.ts` | getDocumentLicenseDetail |
-| `src/pages/authentication/DocumentLicensePage/components/DocumentLicenseDetail.tsx` | DocumentLicenseDetail |
+| File                                                                                | Symbols                  |
+| ----------------------------------------------------------------------------------- | ------------------------ |
+| `src/services/DocumentLicense/unrevoke.ts`                                          | unrevokeDocumentLicense  |
+| `src/services/DocumentLicense/revoke.ts`                                            | revokeDocumentLicense    |
+| `src/services/DocumentLicense/detail.ts`                                            | getDocumentLicenseDetail |
+| `src/pages/authentication/DocumentLicensePage/components/DocumentLicenseDetail.tsx` | DocumentLicenseDetail    |
 
 ## Entry Points
 
@@ -33,27 +33,27 @@ Start here when exploring this area:
 
 ## Key Symbols
 
-| Symbol | Type | File | Line |
-|--------|------|------|------|
-| `unrevokeDocumentLicense` | Function | `src/services/DocumentLicense/unrevoke.ts` | 13 |
-| `revokeDocumentLicense` | Function | `src/services/DocumentLicense/revoke.ts` | 14 |
-| `getDocumentLicenseDetail` | Function | `src/services/DocumentLicense/detail.ts` | 13 |
-| `DocumentLicenseDetail` | Function | `src/pages/authentication/DocumentLicensePage/components/DocumentLicenseDetail.tsx` | 27 |
+| Symbol                     | Type     | File                                                                                | Line |
+| -------------------------- | -------- | ----------------------------------------------------------------------------------- | ---- |
+| `unrevokeDocumentLicense`  | Function | `src/services/DocumentLicense/unrevoke.ts`                                          | 13   |
+| `revokeDocumentLicense`    | Function | `src/services/DocumentLicense/revoke.ts`                                            | 14   |
+| `getDocumentLicenseDetail` | Function | `src/services/DocumentLicense/detail.ts`                                            | 13   |
+| `DocumentLicenseDetail`    | Function | `src/pages/authentication/DocumentLicensePage/components/DocumentLicenseDetail.tsx` | 27   |
 
 ## Execution Flows
 
-| Flow | Type | Steps |
-|------|------|-------|
-| `DocumentLicenseDetail → ApiResponseError` | cross_community | 4 |
-| `DocumentLicenseDetail → UseRequest` | cross_community | 3 |
+| Flow                                       | Type            | Steps |
+| ------------------------------------------ | --------------- | ----- |
+| `DocumentLicenseDetail → ApiResponseError` | cross_community | 4     |
+| `DocumentLicenseDetail → UseRequest`       | cross_community | 3     |
 
 ## Connected Areas
 
-| Area | Connections |
-|------|-------------|
-| DocumentClassify | 3 calls |
-| Request | 2 calls |
-| Components | 1 calls |
+| Area             | Connections |
+| ---------------- | ----------- |
+| DocumentClassify | 3 calls     |
+| Request          | 2 calls     |
+| Components       | 1 calls     |
 
 ## How to Explore
 

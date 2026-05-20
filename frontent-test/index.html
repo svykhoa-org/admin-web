@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multipart Upload — MinIO Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      * {
+        font-family: 'Inter', sans-serif;
+      }
+      .part-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gray-50 py-10 px-4">
+    <div class="max-w-2xl mx-auto space-y-5">
+      <!-- Header -->
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Multipart Upload Test</h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Upload file lớn lên MinIO qua presigned multipart URL
+        </p>
+      </div>
+
+      <!-- Config card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Cấu hình</h2>
+        <div class="grid grid-cols-1 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">API Base URL</label>
+            <input
+              id="apiBase"
+              type="text"
+              value="http://localhost:3000/api/v1"
+              class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">JWT Token (Bearer)</label>
+            <input
+              id="jwtToken"
+              type="password"
+              placeholder="eyJhbGci..."
+              class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1"
+              >API Key <span class="text-gray-400 font-normal">(x-api-key)</span></label
+            >
+            <input
+              id="apiKey"
+              type="password"
+              placeholder="your-api-key"
+              class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- File picker card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Chọn file</h2>
+
+        <!-- Drop zone -->
+        <div
+          id="dropzone"
+          class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          <svg
+            class="mx-auto h-10 w-10 text-gray-400 mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
+          <p class="text-sm font-medium text-gray-700">
+            Kéo thả hoặc <span class="text-indigo-600">chọn file</span>
+          </p>
+          <p class="text-xs text-gray-400 mt-1">Video, PDF, hoặc bất kỳ định dạng nào</p>
+          <input id="fileInput" type="file" class="hidden" />
+        </div>
+
+        <!-- File info (hidden until selected) -->
+        <div id="fileInfo" class="hidden flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          <div
+            class="flex-shrink-0 w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center"
+          >
+            <svg
+              class="w-5 h-5 text-indigo-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p id="fileName" class="text-sm font-medium text-gray-800 truncate"></p>
+            <p id="fileMeta" class="text-xs text-gray-400"></p>
+          </div>
+          <button onclick="clearFile()" class="text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Resume banner (hidden until session detected) -->
+        <div
+          id="resumeBanner"
+          class="hidden items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm"
+        >
+          <svg
+            class="w-5 h-5 text-amber-500 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <div class="flex-1">
+            <span class="font-medium text-amber-800"
+              >Phát hiện session upload chưa hoàn thành.</span
+            >
+            <span class="text-amber-700"> Tiếp tục hay bắt đầu mới?</span>
+          </div>
+          <button
+            onclick="resumeFromSession()"
+            class="px-3 py-1 bg-amber-500 text-white text-xs font-semibold rounded-md hover:bg-amber-600"
+          >
+            Tiếp tục
+          </button>
+          <button
+            onclick="discardSession()"
+            class="px-3 py-1 bg-white text-amber-700 text-xs font-semibold rounded-md border border-amber-300 hover:bg-amber-50"
+          >
+            Bắt đầu mới
+          </button>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex gap-3">
+          <button
+            id="btnUpload"
+            onclick="startUpload()"
+            class="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Upload
+          </button>
+          <button
+            id="btnRetry"
+            onclick="retryFailedParts()"
+            class="hidden px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+          >
+            Retry parts lỗi
+          </button>
+          <button
+            id="btnCancel"
+            onclick="cancelUpload()"
+            disabled
+            class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Hủy
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress card (hidden until upload starts) -->
+      <div
+        id="progressCard"
+        class="hidden bg-white rounded-xl border border-gray-200 p-5 space-y-4"
+      >
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Tiến độ</h2>
+          <span
+            id="statusBadge"
+            class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700"
+            >Đang upload</span
+          >
+        </div>
+
+        <!-- Overall progress bar -->
+        <div>
+          <div class="flex justify-between text-xs text-gray-500 mb-1.5">
+            <span id="progressLabel">0%</span>
+            <span id="progressStats">0 B / 0 B</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-2.5">
+            <div
+              id="progressBar"
+              class="bg-indigo-500 h-2.5 rounded-full transition-all duration-300"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Speed + ETA -->
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">Tốc độ</p>
+            <p id="speedDisplay" class="text-sm font-semibold text-gray-800">—</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">Còn lại</p>
+            <p id="etaDisplay" class="text-sm font-semibold text-gray-800">—</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">Parts</p>
+            <p id="partsDisplay" class="text-sm font-semibold text-gray-800">0 / 0</p>
+          </div>
+        </div>
+
+        <!-- Part dots -->
+        <div>
+          <p class="text-xs text-gray-500 mb-2">Trạng thái từng part</p>
+          <div id="partDots" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex gap-4 mt-2">
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+              <span class="part-dot bg-gray-200"></span>Chờ
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+              <span class="part-dot bg-indigo-400 animate-pulse"></span>Upload
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+              <span class="part-dot bg-emerald-400"></span>Xong
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+              <span class="part-dot bg-red-400"></span>Lỗi
+            </div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-400">
+              <span class="part-dot bg-amber-400"></span>Resume
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result card (hidden until complete) -->
+      <div id="resultCard" class="hidden bg-white rounded-xl border border-emerald-200 p-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0"
+          >
+            <svg
+              class="w-5 h-5 text-emerald-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-gray-800">Upload thành công!</p>
+            <p id="resultVideoId" class="text-xs text-gray-500 mt-0.5"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Log</h2>
+          <button onclick="clearLog()" class="text-xs text-gray-400 hover:text-gray-600">
+            Xóa
+          </button>
+        </div>
+        <div
+          id="logContainer"
+          class="bg-gray-950 rounded-lg p-3 h-48 overflow-y-auto font-mono text-xs space-y-0.5"
+        ></div>
+      </div>
+
+      <!-- MinIO CORS note -->
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800">
+        <p class="font-semibold mb-1">Lưu ý CORS cho MinIO local</p>
+        <p>
+          MinIO cần cho phép PUT từ origin của trang test. Chạy lệnh sau nếu upload bị lỗi CORS:
+        </p>
+        <pre class="mt-2 bg-blue-100 rounded p-2 overflow-x-auto">
+mc alias set local http://localhost:9000 &lt;user&gt; &lt;pass&gt;
+mc admin config set local api cors_allow_origin="*"
+mc admin service restart local</pre
+        >
+      </div>
+    </div>
+
+    <script>
+      // Khi true: 50% xác suất mỗi part bị lỗi giả để test retry/fault-tolerance
+      const IS_HAVE_ERROR = true
+
+      // ─────────────────────────────────────────────
+      // Constants
+      // ─────────────────────────────────────────────
+      const MAX_CONCURRENT = 3
+      const MAX_RETRIES = 3
+      const RETRY_BASE_MS = 1000
+      const SESSION_PREFIX = 'mpu_session_'
+
+      // ─────────────────────────────────────────────
+      // State
+      // ─────────────────────────────────────────────
+      let selectedFile = null
+      let currentSession = null
+      let abortSignal = null
+      let isCancelled = false
+      let uploadedBytesBase = 0 // bytes từ completed parts
+      let speedSamples = [] // [{time, bytes}] sliding window
+
+      // Part status tracking (for dots UI)
+      let partStatus = {} // { 1: 'pending'|'uploading'|'done'|'failed'|'resumed' }
+
+      // ─────────────────────────────────────────────
+      // Helpers
+      // ─────────────────────────────────────────────
+      function apiBase() {
+        return document.getElementById('apiBase').value.replace(/\/$/, '')
+      }
+      function authHeader() {
+        const token = document.getElementById('jwtToken').value.trim()
+        const apiKey = document.getElementById('apiKey').value.trim()
+        const value = token.toLowerCase().startsWith('bearer ') ? token : `Bearer ${token}`
+        return {
+          Authorization: value,
+          ...(apiKey && { 'x-api-key': apiKey }),
+        }
+      }
+
+      function sessionKey(file) {
+        return SESSION_PREFIX + encodeURIComponent(`${file.name}::${file.size}`)
+      }
+
+      function saveSession(s) {
+        localStorage.setItem(sessionKey(selectedFile), JSON.stringify(s))
+      }
+
+      function loadSession(file) {
+        try {
+          return JSON.parse(localStorage.getItem(sessionKey(file)) || 'null')
+        } catch {
+          return null
+        }
+      }
+
+      function clearSessionStorage() {
+        if (selectedFile) localStorage.removeItem(sessionKey(selectedFile))
+      }
+
+      function formatBytes(b) {
+        if (b < 1024) return b + ' B'
+        if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB'
+        if (b < 1024 * 1024 * 1024) return (b / 1024 / 1024).toFixed(1) + ' MB'
+        return (b / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+      }
+
+      function formatEta(secs) {
+        if (!isFinite(secs) || secs < 0) return '—'
+        if (secs < 60) return `${Math.round(secs)}s`
+        if (secs < 3600) return `${Math.floor(secs / 60)}m ${Math.round(secs % 60)}s`
+        return `${Math.floor(secs / 3600)}h ${Math.floor((secs % 3600) / 60)}m`
+      }
+
+      function sleep(ms) {
+        return new Promise(r => setTimeout(r, ms))
+      }
+
+      // ─────────────────────────────────────────────
+      // Log
+      // ─────────────────────────────────────────────
+      function log(msg, type = 'info') {
+        const colors = {
+          info: 'text-gray-300',
+          ok: 'text-emerald-400',
+          warn: 'text-amber-400',
+          err: 'text-red-400',
+          dim: 'text-gray-500',
+        }
+        const el = document.getElementById('logContainer')
+        const line = document.createElement('p')
+        const now = new Date().toLocaleTimeString('vi-VN', { hour12: false })
+        line.className = colors[type] || colors.info
+        line.textContent = `[${now}] ${msg}`
+        el.appendChild(line)
+        el.scrollTop = el.scrollHeight
+      }
+
+      function clearLog() {
+        document.getElementById('logContainer').innerHTML = ''
+      }
+
+      // ─────────────────────────────────────────────
+      // UI helpers
+      // ─────────────────────────────────────────────
+      function setButtonState(uploading) {
+        document.getElementById('btnUpload').disabled = uploading
+        document.getElementById('btnCancel').disabled = !uploading
+        if (uploading) document.getElementById('btnRetry').classList.add('hidden')
+      }
+
+      function showRetryButton() {
+        document.getElementById('btnRetry').classList.remove('hidden')
+      }
+
+      function hideRetryButton() {
+        document.getElementById('btnRetry').classList.add('hidden')
+      }
+
+      function showProgressCard() {
+        document.getElementById('progressCard').classList.remove('hidden')
+      }
+      function hideProgressCard() {
+        document.getElementById('progressCard').classList.add('hidden')
+      }
+
+      function showResultCard(videoId) {
+        const card = document.getElementById('resultCard')
+        card.classList.remove('hidden')
+        document.getElementById('resultVideoId').textContent = `Video ID: ${videoId}`
+      }
+
+      function setStatusBadge(text, color) {
+        const badge = document.getElementById('statusBadge')
+        badge.textContent = text
+        badge.className = `text-xs font-semibold px-2 py-0.5 rounded-full ${color}`
+      }
+
+      function buildPartDots(totalParts) {
+        const container = document.getElementById('partDots')
+        container.innerHTML = ''
+        for (let i = 1; i <= totalParts; i++) {
+          const dot = document.createElement('div')
+          dot.id = `dot-${i}`
+          dot.className = 'part-dot bg-gray-200'
+          dot.title = `Part ${i}`
+          container.appendChild(dot)
+          partStatus[i] = 'pending'
+        }
+      }
+
+      function setPartDotColor(partNumber, status) {
+        const dot = document.getElementById(`dot-${partNumber}`)
+        if (!dot) return
+        const colorMap = {
+          pending: 'bg-gray-200',
+          uploading: 'bg-indigo-400 animate-pulse',
+          done: 'bg-emerald-400',
+          failed: 'bg-red-400',
+          resumed: 'bg-amber-400',
+        }
+        dot.className = `part-dot ${colorMap[status] || 'bg-gray-200'}`
+        partStatus[partNumber] = status
+      }
+
+      function updateProgress(loadedBytes, totalBytes, completedParts, totalParts) {
+        const pct = totalBytes > 0 ? Math.min((loadedBytes / totalBytes) * 100, 100) : 0
+        document.getElementById('progressBar').style.width = `${pct.toFixed(1)}%`
+        document.getElementById('progressLabel').textContent = `${pct.toFixed(1)}%`
+        document.getElementById('progressStats').textContent =
+          `${formatBytes(loadedBytes)} / ${formatBytes(totalBytes)}`
+        document.getElementById('partsDisplay').textContent = `${completedParts} / ${totalParts}`
+
+        // Speed + ETA (sliding window 5s)
+        const now = Date.now()
+        speedSamples.push({ time: now, bytes: loadedBytes })
+        speedSamples = speedSamples.filter(s => now - s.time < 5000)
+        if (speedSamples.length >= 2) {
+          const dt = (speedSamples[speedSamples.length - 1].time - speedSamples[0].time) / 1000
+          const db = speedSamples[speedSamples.length - 1].bytes - speedSamples[0].bytes
+          const speed = dt > 0 ? db / dt : 0
+          const remaining = totalBytes - loadedBytes
+          document.getElementById('speedDisplay').textContent = `${formatBytes(speed)}/s`
+          document.getElementById('etaDisplay').textContent = formatEta(
+            speed > 0 ? remaining / speed : Infinity,
+          )
+        }
+      }
+
+      // ─────────────────────────────────────────────
+      // File selection
+      // ─────────────────────────────────────────────
+      document
+        .getElementById('fileInput')
+        .addEventListener('change', e => onFileSelected(e.target.files[0]))
+
+      const dropzone = document.getElementById('dropzone')
+      dropzone.addEventListener('dragover', e => {
+        e.preventDefault()
+        dropzone.classList.add('border-indigo-500', 'bg-indigo-50')
+      })
+      dropzone.addEventListener('dragleave', () =>
+        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50'),
+      )
+      dropzone.addEventListener('drop', e => {
+        e.preventDefault()
+        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50')
+        onFileSelected(e.dataTransfer.files[0])
+      })
+
+      function onFileSelected(file) {
+        if (!file) return
+        selectedFile = file
+
+        document.getElementById('fileInfo').classList.remove('hidden')
+        document.getElementById('fileName').textContent = file.name
+        document.getElementById('fileMeta').textContent =
+          `${formatBytes(file.size)} · ${file.type || 'unknown type'}`
+
+        // Check existing session
+        const session = loadSession(file)
+        if (session && session.completedParts?.length > 0) {
+          const pct = Math.round((session.completedParts.length / session.totalParts) * 100)
+          document.getElementById('resumeBanner').classList.remove('hidden')
+          document.getElementById('resumeBanner').classList.add('flex')
+          log(
+            `Phát hiện session chưa hoàn thành: ${session.completedParts.length}/${session.totalParts} parts (${pct}%)`,
+            'warn',
+          )
+        } else {
+          hideBanner()
+        }
+      }
+
+      function hideBanner() {
+        document.getElementById('resumeBanner').classList.add('hidden')
+        document.getElementById('resumeBanner').classList.remove('flex')
+      }
+
+      function clearFile() {
+        selectedFile = null
+        document.getElementById('fileInfo').classList.add('hidden')
+        document.getElementById('fileInput').value = ''
+        hideBanner()
+      }
+
+      // ─────────────────────────────────────────────
+      // Upload entry points
+      // ─────────────────────────────────────────────
+      async function startUpload() {
+        if (!selectedFile) return alert('Chọn file trước!')
+        if (!document.getElementById('jwtToken').value.trim()) return alert('Nhập JWT token!')
+        discardSession() // bắt đầu mới hoàn toàn
+        await runUpload(false)
+      }
+
+      async function resumeFromSession() {
+        if (!selectedFile) return
+        hideBanner()
+        await runUpload(true)
+      }
+
+      function discardSession() {
+        clearSessionStorage()
+        hideBanner()
+      }
+
+      // ─────────────────────────────────────────────
+      // Core upload logic
+      // ─────────────────────────────────────────────
+      async function runUpload(isResume) {
+        isCancelled = false
+        abortSignal = { cancelled: false }
+        setButtonState(true)
+        document.getElementById('resultCard').classList.add('hidden')
+        showProgressCard()
+        setStatusBadge('Đang khởi tạo…', 'bg-blue-100 text-blue-700')
+        speedSamples = []
+
+        let session = isResume ? loadSession(selectedFile) : null
+
+        try {
+          // ── 1. INIT (hoặc load session) ───────────────────────────────────────
+          if (!session) {
+            log(
+              `Khởi tạo multipart upload: ${selectedFile.name} (${formatBytes(selectedFile.size)})`,
+            )
+            const res = await apiFetch('POST', '/videos/multipart/init', {
+              filename: selectedFile.name,
+              fileSize: selectedFile.size,
+              contentType: selectedFile.type || 'application/octet-stream',
+            })
+            session = {
+              videoId: res.videoId,
+              uploadId: res.uploadId,
+              key: res.key,
+              chunkSize: res.chunkSize,
+              totalParts: res.totalParts,
+              parts: res.parts,
+              completedParts: [],
+              initiatedAt: Date.now(),
+            }
+            saveSession(session)
+            log(
+              `Init OK — uploadId: ${res.uploadId} | ${res.totalParts} parts × ${formatBytes(res.chunkSize)}`,
+              'ok',
+            )
+          } else {
+            log(
+              `Resume session — ${session.completedParts.length}/${session.totalParts} parts đã xong`,
+              'warn',
+            )
+
+            // Reconcile với server (ground truth sau browser crash)
+            log('Đang reconcile với MinIO server...')
+            const serverParts = await apiFetch(
+              'GET',
+              `/videos/multipart/parts?uploadId=${encodeURIComponent(session.uploadId)}&key=${encodeURIComponent(session.key)}`,
+            )
+            if (serverParts.length !== session.completedParts.length) {
+              session.completedParts = serverParts.map(p => ({
+                partNumber: p.PartNumber,
+                etag: p.ETag,
+              }))
+              saveSession(session)
+              log(`Reconcile: server có ${serverParts.length} parts, cập nhật localStorage`, 'warn')
+            } else {
+              log('Reconcile OK — localStorage khớp server', 'ok')
+            }
+
+            // Refresh presigned URLs nếu cần (check expiry)
+            const ageSecs = (Date.now() - session.initiatedAt) / 1000
+            const urlTtl = 6 * 3600 // MULTIPART_PART_EXPIRES
+            if (ageSecs > urlTtl * 0.9) {
+              const completedNums = new Set(session.completedParts.map(p => p.partNumber))
+              const pendingNums = session.parts
+                .filter(p => !completedNums.has(p.partNumber))
+                .map(p => p.partNumber)
+              log(
+                `URLs gần hết hạn (${Math.round(ageSecs / 3600)}h), đang refresh ${pendingNums.length} URLs...`,
+                'warn',
+              )
+              const refreshed = await apiFetch('POST', '/videos/multipart/refresh-urls', {
+                uploadId: session.uploadId,
+                key: session.key,
+                partNumbers: pendingNums,
+              })
+              for (const rp of refreshed.parts) {
+                const idx = session.parts.findIndex(p => p.partNumber === rp.partNumber)
+                if (idx >= 0) session.parts[idx].url = rp.url
+              }
+              session.initiatedAt = Date.now()
+              saveSession(session)
+              log('Refresh URLs xong', 'ok')
+            }
+          }
+
+          currentSession = session
+
+          // ── 2. BUILD PART QUEUE ───────────────────────────────────────────────
+          const completedNums = new Set(session.completedParts.map(p => p.partNumber))
+          const pendingParts = session.parts.filter(p => !completedNums.has(p.partNumber))
+
+          buildPartDots(session.totalParts)
+          // Mark resumed parts
+          for (const p of session.completedParts) setPartDotColor(p.partNumber, 'resumed')
+
+          uploadedBytesBase = session.completedParts.length * session.chunkSize
+          log(
+            `Upload ${pendingParts.length} parts còn lại (${session.completedParts.length} đã resume)`,
+          )
+          setStatusBadge('Đang upload', 'bg-blue-100 text-blue-700')
+
+          // ── 3. UPLOAD PARTS (concurrent) ─────────────────────────────────────
+          const failedParts = await uploadConcurrent(pendingParts, session, MAX_CONCURRENT)
+
+          if (isCancelled) {
+            log('Upload đã hủy bởi người dùng.', 'warn')
+            setStatusBadge('Đã hủy', 'bg-gray-100 text-gray-600')
+            return
+          }
+
+          if (failedParts.length > 0) {
+            // Lưu lại parts thất bại vào session để retryFailedParts dùng
+            currentSession._failedParts = failedParts
+            setStatusBadge(`${failedParts.length} part lỗi`, 'bg-red-100 text-red-700')
+            log(
+              `${failedParts.length} parts thất bại: [${failedParts.map(p => p.partNumber).join(', ')}]. Bấm "Retry parts lỗi" để thử lại.`,
+              'err',
+            )
+            showRetryButton()
+            return
+          }
+
+          // ── 4. COMPLETE ───────────────────────────────────────────────────────
+          log('Tất cả parts xong, đang hoàn tất...')
+          setStatusBadge('Hoàn tất…', 'bg-purple-100 text-purple-700')
+
+          const allParts = [...session.completedParts].sort((a, b) => a.partNumber - b.partNumber)
+          await apiFetch('POST', '/videos/multipart/complete', {
+            videoId: session.videoId,
+            uploadId: session.uploadId,
+            key: session.key,
+            parts: allParts,
+          })
+
+          clearSessionStorage()
+          setStatusBadge('Thành công', 'bg-emerald-100 text-emerald-700')
+          updateProgress(
+            selectedFile.size,
+            selectedFile.size,
+            session.totalParts,
+            session.totalParts,
+          )
+          showResultCard(session.videoId)
+          log(`Upload hoàn tất! Video ID: ${session.videoId}`, 'ok')
+        } catch (err) {
+          if (isCancelled) return
+          log(`Lỗi: ${err.message}`, 'err')
+          setStatusBadge('Lỗi', 'bg-red-100 text-red-700')
+          console.error(err)
+
+          // Abort nếu init thành công nhưng upload thất bại hoàn toàn
+          if (currentSession && !currentSession.completedParts?.length) {
+            try {
+              await apiFetch('POST', '/videos/multipart/abort', {
+                videoId: currentSession.videoId,
+                uploadId: currentSession.uploadId,
+                key: currentSession.key,
+              })
+              clearSessionStorage()
+              log('Đã abort session MinIO', 'warn')
+            } catch (abortErr) {
+              log(`Abort thất bại: ${abortErr.message} — session orphaned trên MinIO`, 'err')
+            }
+          }
+        } finally {
+          setButtonState(false)
+        }
+      }
+
+      // ─────────────────────────────────────────────
+      // Concurrent uploader
+      // ─────────────────────────────────────────────
+      async function uploadConcurrent(pendingParts, session, concurrency) {
+        const queue = [...pendingParts]
+        const failedParts = []
+        let currentBytes = uploadedBytesBase
+
+        const workers = Array.from({ length: concurrency }, async () => {
+          while (queue.length > 0 && !isCancelled) {
+            const part = queue.shift()
+            const ok = await uploadSinglePart(part, session, progressBytes => {
+              const totalLoaded = currentBytes + progressBytes
+              updateProgress(
+                totalLoaded,
+                selectedFile.size,
+                session.completedParts.length,
+                session.totalParts,
+              )
+            })
+            if (ok) {
+              currentBytes += getChunkSize(part.partNumber, session)
+            } else {
+              failedParts.push(part)
+            }
+          }
+        })
+
+        await Promise.all(workers)
+        return failedParts
+      }
+
+      function getChunkSize(partNumber, session) {
+        const start = (partNumber - 1) * session.chunkSize
+        return Math.min(session.chunkSize, selectedFile.size - start)
+      }
+
+      // Trả về true nếu thành công, false nếu thất bại hoàn toàn (không throw)
+      async function uploadSinglePart(part, session, onProgress, attempt = 1) {
+        if (isCancelled) return false
+
+        const { partNumber, url } = part
+        setPartDotColor(partNumber, 'uploading')
+        log(`Part ${partNumber} — bắt đầu (lần ${attempt})`, 'dim')
+
+        const start = (partNumber - 1) * session.chunkSize
+        const end = Math.min(start + session.chunkSize, selectedFile.size)
+        const chunk = selectedFile.slice(start, end)
+
+        try {
+          maybeThrowMockError(partNumber)
+          const etag = await putChunk(url, chunk, onProgress)
+
+          // ── Lưu ETag ngay lập tức vào localStorage ──
+          session.completedParts.push({ partNumber, etag })
+          saveSession(session)
+
+          setPartDotColor(partNumber, 'done')
+          log(`Part ${partNumber} OK — ETag: ${etag}`, 'ok')
+          return true
+        } catch (err) {
+          if (isCancelled) return false
+
+          // 403 = presigned URL hết hạn → refresh rồi retry
+          if (err.status === 403 && attempt === 1) {
+            log(`Part ${partNumber} — URL hết hạn (403), đang refresh...`, 'warn')
+            try {
+              const refreshed = await apiFetch('POST', '/videos/multipart/refresh-urls', {
+                uploadId: session.uploadId,
+                key: session.key,
+                partNumbers: [partNumber],
+              })
+              part.url = refreshed.parts[0].url
+              const idx = session.parts.findIndex(p => p.partNumber === partNumber)
+              if (idx >= 0) session.parts[idx].url = part.url
+              saveSession(session)
+              return uploadSinglePart(part, session, onProgress, attempt + 1)
+            } catch (refreshErr) {
+              log(`Part ${partNumber} — không thể refresh URL: ${refreshErr.message}`, 'err')
+              setPartDotColor(partNumber, 'failed')
+              return false
+            }
+          }
+
+          if (attempt >= MAX_RETRIES) {
+            setPartDotColor(partNumber, 'failed')
+            log(`Part ${partNumber} thất bại sau ${MAX_RETRIES} lần: ${err.message}`, 'err')
+            return false // ← không throw, để các parts khác tiếp tục
+          }
+
+          const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1)
+          log(`Part ${partNumber} lỗi (${err.message}), retry sau ${delay}ms...`, 'warn')
+          await sleep(delay)
+          return uploadSinglePart(part, session, onProgress, attempt + 1)
+        }
+      }
+
+      // ─────────────────────────────────────────────
+      // Mock error (IS_HAVE_ERROR)
+      // ─────────────────────────────────────────────
+      function maybeThrowMockError(partNumber) {
+        if (!IS_HAVE_ERROR) return
+        if (Math.random() < 0.5) {
+          const err = new Error(`[MOCK] Part ${partNumber} bị lỗi giả (50% chance)`)
+          err.status = 500
+          throw err
+        }
+      }
+
+      // ─────────────────────────────────────────────
+      // XHR PUT (có progress)
+      // ─────────────────────────────────────────────
+      function putChunk(url, chunk, onProgress) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+
+          xhr.upload.onprogress = e => {
+            if (e.lengthComputable) onProgress(e.loaded)
+          }
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              // ETag từ response header (bao gồm dấu ngoặc kép nếu có)
+              const etag = xhr.getResponseHeader('ETag') || xhr.getResponseHeader('etag') || ''
+              resolve(etag)
+            } else {
+              const err = new Error(`HTTP ${xhr.status}`)
+              err.status = xhr.status
+              reject(err)
+            }
+          }
+
+          xhr.onerror = () => reject(new Error('Network error'))
+          xhr.ontimeout = () => reject(new Error('Timeout'))
+
+          // Gắn abort signal
+          if (abortSignal) {
+            const origSignal = abortSignal
+            const checkCancel = () => {
+              if (origSignal.cancelled) xhr.abort()
+            }
+            const interval = setInterval(checkCancel, 100)
+            xhr.onloadend = () => clearInterval(interval)
+          }
+
+          xhr.open('PUT', url)
+          xhr.send(chunk)
+        })
+      }
+
+      // ─────────────────────────────────────────────
+      // Cancel
+      // ─────────────────────────────────────────────
+      async function cancelUpload() {
+        if (!currentSession) return
+        isCancelled = true
+        if (abortSignal) abortSignal.cancelled = true
+        log('Đang hủy upload...', 'warn')
+
+        try {
+          await apiFetch('POST', '/videos/multipart/abort', {
+            videoId: currentSession.videoId,
+            uploadId: currentSession.uploadId,
+            key: currentSession.key,
+          })
+          clearSessionStorage()
+          log('Đã hủy và xóa session MinIO.', 'warn')
+        } catch (err) {
+          log(`Abort thất bại: ${err.message}`, 'err')
+        }
+
+        setStatusBadge('Đã hủy', 'bg-gray-100 text-gray-600')
+        setButtonState(false)
+        currentSession = null
+      }
+
+      // ─────────────────────────────────────────────
+      // Retry failed parts
+      // ─────────────────────────────────────────────
+      async function retryFailedParts() {
+        if (!currentSession?._failedParts?.length) return
+
+        hideRetryButton()
+        setButtonState(true)
+        isCancelled = false
+        abortSignal = { cancelled: false }
+        speedSamples = []
+
+        const session = currentSession
+        const partsToRetry = session._failedParts
+        session._failedParts = []
+
+        log(
+          `Retry ${partsToRetry.length} parts: [${partsToRetry.map(p => p.partNumber).join(', ')}]`,
+          'warn',
+        )
+        setStatusBadge('Đang retry…', 'bg-amber-100 text-amber-700')
+
+        uploadedBytesBase = session.completedParts.length * session.chunkSize
+
+        try {
+          const stillFailed = await uploadConcurrent(partsToRetry, session, MAX_CONCURRENT)
+
+          if (isCancelled) {
+            setStatusBadge('Đã hủy', 'bg-gray-100 text-gray-600')
+            return
+          }
+
+          if (stillFailed.length > 0) {
+            session._failedParts = stillFailed
+            setStatusBadge(`${stillFailed.length} part lỗi`, 'bg-red-100 text-red-700')
+            log(
+              `Vẫn còn ${stillFailed.length} parts lỗi: [${stillFailed.map(p => p.partNumber).join(', ')}]. Bấm "Retry parts lỗi" để thử lại.`,
+              'err',
+            )
+            showRetryButton()
+            return
+          }
+
+          // Tất cả parts đã xong → complete
+          log('Tất cả parts xong sau retry, đang hoàn tất...', 'ok')
+          setStatusBadge('Hoàn tất…', 'bg-purple-100 text-purple-700')
+
+          const allParts = [...session.completedParts].sort((a, b) => a.partNumber - b.partNumber)
+          await apiFetch('POST', '/videos/multipart/complete', {
+            videoId: session.videoId,
+            uploadId: session.uploadId,
+            key: session.key,
+            parts: allParts,
+          })
+
+          clearSessionStorage()
+          setStatusBadge('Thành công', 'bg-emerald-100 text-emerald-700')
+          updateProgress(
+            selectedFile.size,
+            selectedFile.size,
+            session.totalParts,
+            session.totalParts,
+          )
+          showResultCard(session.videoId)
+          log(`Upload hoàn tất! Video ID: ${session.videoId}`, 'ok')
+        } catch (err) {
+          log(`Retry thất bại: ${err.message}`, 'err')
+          setStatusBadge('Lỗi', 'bg-red-100 text-red-700')
+        } finally {
+          setButtonState(false)
+        }
+      }
+
+      // ─────────────────────────────────────────────
+      // Network online/offline
+      // ─────────────────────────────────────────────
+      window.addEventListener('offline', () => {
+        log('Mất kết nối mạng — upload tạm dừng (session vẫn còn trong localStorage)', 'warn')
+        setStatusBadge('Mất mạng', 'bg-amber-100 text-amber-700')
+      })
+
+      window.addEventListener('online', () => {
+        log('Kết nối lại — bạn có thể resume upload từ phần còn lại', 'ok')
+        if (currentSession) setStatusBadge('Đang upload', 'bg-blue-100 text-blue-700')
+      })
+
+      // ─────────────────────────────────────────────
+      // API fetch helper
+      // ─────────────────────────────────────────────
+      async function apiFetch(method, path, body) {
+        const opts = {
+          method,
+          headers: { 'Content-Type': 'application/json', ...authHeader() },
+        }
+        if (body && method !== 'GET') opts.body = JSON.stringify(body)
+
+        const res = await fetch(apiBase() + path, opts)
+        if (!res.ok) {
+          const text = await res.text().catch(() => '')
+          const err = new Error(`${method} ${path} → ${res.status}: ${text}`)
+          err.status = res.status
+          throw err
+        }
+        if (res.status === 204) return null
+        const json = await res.json()
+        // HttpInterceptor wraps response: { statusCode, message, data, requestId }
+        return json?.data !== undefined ? json.data : json
+      }
+    </script>
+  </body>
+</html>

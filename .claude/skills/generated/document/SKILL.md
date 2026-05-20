@@ -1,6 +1,6 @@
 ---
 name: document
-description: "Skill for the Document area of svykhoa-admin. 4 symbols across 4 files."
+description: 'Skill for the Document area of svykhoa-admin. 4 symbols across 4 files.'
 ---
 
 # Document
@@ -15,12 +15,12 @@ description: "Skill for the Document area of svykhoa-admin. 4 symbols across 4 f
 
 ## Key Files
 
-| File | Symbols |
-|------|---------|
-| `src/utils/getUrlFileResource.ts` | getUrlFileResource |
-| `src/services/Document/update.ts` | updateDocument |
-| `src/services/Document/detail.ts` | getDocumentDetail |
-| `src/pages/authentication/DocumentPage/components/DocumentForm.tsx` | DocumentForm |
+| File                                                                | Symbols            |
+| ------------------------------------------------------------------- | ------------------ |
+| `src/utils/getUrlFileResource.ts`                                   | getUrlFileResource |
+| `src/services/Document/update.ts`                                   | updateDocument     |
+| `src/services/Document/detail.ts`                                   | getDocumentDetail  |
+| `src/pages/authentication/DocumentPage/components/DocumentForm.tsx` | DocumentForm       |
 
 ## Entry Points
 
@@ -33,26 +33,26 @@ Start here when exploring this area:
 
 ## Key Symbols
 
-| Symbol | Type | File | Line |
-|--------|------|------|------|
-| `getUrlFileResource` | Function | `src/utils/getUrlFileResource.ts` | 2 |
-| `updateDocument` | Function | `src/services/Document/update.ts` | 14 |
-| `getDocumentDetail` | Function | `src/services/Document/detail.ts` | 13 |
-| `DocumentForm` | Function | `src/pages/authentication/DocumentPage/components/DocumentForm.tsx` | 56 |
+| Symbol               | Type     | File                                                                | Line |
+| -------------------- | -------- | ------------------------------------------------------------------- | ---- |
+| `getUrlFileResource` | Function | `src/utils/getUrlFileResource.ts`                                   | 2    |
+| `updateDocument`     | Function | `src/services/Document/update.ts`                                   | 14   |
+| `getDocumentDetail`  | Function | `src/services/Document/detail.ts`                                   | 13   |
+| `DocumentForm`       | Function | `src/pages/authentication/DocumentPage/components/DocumentForm.tsx` | 56   |
 
 ## Execution Flows
 
-| Flow | Type | Steps |
-|------|------|-------|
-| `DocumentForm → ApiResponseError` | cross_community | 4 |
-| `DocumentForm → UseRequest` | cross_community | 3 |
+| Flow                              | Type            | Steps |
+| --------------------------------- | --------------- | ----- |
+| `DocumentForm → ApiResponseError` | cross_community | 4     |
+| `DocumentForm → UseRequest`       | cross_community | 3     |
 
 ## Connected Areas
 
-| Area | Connections |
-|------|-------------|
-| Request | 3 calls |
-| DocumentClassify | 2 calls |
+| Area             | Connections |
+| ---------------- | ----------- |
+| Request          | 3 calls     |
+| DocumentClassify | 2 calls     |
 
 ## How to Explore
 

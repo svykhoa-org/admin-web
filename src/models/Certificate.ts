@@ -19,4 +19,10 @@ export interface Certificate extends AbstractModel {
   physicalRequestedAt?: string | null
   physicalShippedAt?: string | null
   courseSnapshot?: Record<string, unknown>
+  user?: {
+    id: string
+    fullName: string
+    email: string
+    avatar?: string | null
+  }
 }

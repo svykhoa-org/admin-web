@@ -5,7 +5,7 @@ import type { CourseTag } from '@/models/CourseTag'
 import { listCourseTag, removeCourseTag } from '@/services/CourseTag'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
-import { App, Button, Card, Dropdown, Tag, Typography } from 'antd'
+import { App, Button, Card, Dropdown, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -69,28 +69,14 @@ export const CourseTagTable = () => {
       title: 'Slug',
       dataIndex: 'slug',
       key: 'slug',
+      width: 200,
     },
     {
-      title: 'Mô tả',
-      dataIndex: 'description',
-      key: 'description',
-      render: (v?: string) =>
-        v ? (
-          <Typography.Text>{v}</Typography.Text>
-        ) : (
-          <Typography.Text type="secondary">—</Typography.Text>
-        ),
-    },
-    {
-      title: 'Màu',
-      dataIndex: 'color',
-      key: 'color',
-      render: (v?: string) =>
-        v ? (
-          <Typography.Text code>{v}</Typography.Text>
-        ) : (
-          <Typography.Text type="secondary">—</Typography.Text>
-        ),
+      title: 'Ngày tạo',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: v => new Date(v).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }),
+      width: 200,
     },
     {
       title: '',
@@ -124,7 +110,7 @@ export const CourseTagTable = () => {
           columns={columns}
           dataSource={tags}
           loading={isLoading}
-          rowSelection={{
+          selectionAction={{
             selectedRowKeys,
             onChange: keys => setSelectedRowKeys(keys as string[]),
           }}

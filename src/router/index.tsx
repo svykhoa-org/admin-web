@@ -1,4 +1,5 @@
 import AppLayout from '@/layouts/AppLayout'
+import { CertificateListPage } from '@/pages/authentication/CertificatePage/CertificateListPage'
 import { CourseCategoryCreatePage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryCreatePage'
 import { CourseCategoryDetailPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryDetailPage'
 import { CourseCategoryListPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryListPage'
@@ -19,7 +20,6 @@ import { DocumentOrderListPage } from '@/pages/authentication/DocumentOrderPage/
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
-import { CertificateListPage } from '@/pages/authentication/CertificatePage/CertificateListPage'
 import { EnrollmentListPage } from '@/pages/authentication/EnrollmentPage/EnrollmentListPage'
 import { QuizDetailPage } from '@/pages/authentication/QuizPage/QuizDetailPage'
 import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
@@ -127,8 +127,14 @@ const router = createBrowserRouter([
             path: RoutePath.CourseCategoryPage.route,
             children: [
               { index: true, element: <CourseCategoryListPage /> },
-              { path: RoutePath.CourseCategoryCreatePage.route, element: <CourseCategoryCreatePage /> },
-              { path: RoutePath.CourseCategoryDetailPage.route, element: <CourseCategoryDetailPage /> },
+              {
+                path: RoutePath.CourseCategoryCreatePage.route,
+                element: <CourseCategoryCreatePage />,
+              },
+              {
+                path: RoutePath.CourseCategoryDetailPage.route,
+                element: <CourseCategoryDetailPage />,
+              },
             ],
           },
           {
@@ -141,21 +147,15 @@ const router = createBrowserRouter([
           },
           {
             path: 'quizzes',
-            children: [
-              { path: ':id', element: <QuizDetailPage /> },
-            ],
+            children: [{ path: ':id', element: <QuizDetailPage /> }],
           },
           {
             path: RoutePath.EnrollmentPage.route,
-            children: [
-              { index: true, element: <EnrollmentListPage /> },
-            ],
+            children: [{ index: true, element: <EnrollmentListPage /> }],
           },
           {
             path: RoutePath.CertificatePage.route,
-            children: [
-              { index: true, element: <CertificateListPage /> },
-            ],
+            children: [{ index: true, element: <CertificateListPage /> }],
           },
           {
             path: RoutePath.UserPage.route,

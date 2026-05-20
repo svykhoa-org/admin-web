@@ -406,7 +406,11 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
               label="Loại bài học"
               rules={[{ required: true, message: 'Chọn loại bài học' }]}
             >
-              <Select options={lessonTypeOptions} disabled={mode === 'edit'} placeholder="Chọn loại" />
+              <Select
+                options={lessonTypeOptions}
+                disabled={mode === 'edit'}
+                placeholder="Chọn loại"
+              />
             </Form.Item>
           </Col>
           <Col span={3}>
@@ -431,12 +435,22 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
             </Form.Item>
           </Col>
           <Col span={4}>
-            <Form.Item name="isRequired" label="Bắt buộc" valuePropName="checked" initialValue={true}>
+            <Form.Item
+              name="isRequired"
+              label="Bắt buộc"
+              valuePropName="checked"
+              initialValue={true}
+            >
               <Switch />
             </Form.Item>
           </Col>
           <Col span={4}>
-            <Form.Item name="isPreview" label="Xem trước" valuePropName="checked" initialValue={false}>
+            <Form.Item
+              name="isPreview"
+              label="Xem trước"
+              valuePropName="checked"
+              initialValue={false}
+            >
               <Switch />
             </Form.Item>
           </Col>
@@ -492,7 +506,9 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                       <Space direction="vertical" size={4}>
                         <Space>
                           <Typography.Text>Quiz ID:</Typography.Text>
-                          <Typography.Text code copyable>{initialData.contentId}</Typography.Text>
+                          <Typography.Text code copyable>
+                            {initialData.contentId}
+                          </Typography.Text>
                         </Space>
                         <Button
                           size="small"

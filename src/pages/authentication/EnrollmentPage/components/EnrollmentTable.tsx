@@ -1,10 +1,12 @@
+import { DataTable } from '@/components/DataTable/DataTable'
+import { CourseSelect, UserSelect } from '@/components/SelectionVariants'
 import { useList } from '@/hooks'
-import { Enrollment, EnrollmentStatus } from '@/models/Enrollment'
+import type { Enrollment } from '@/models/Enrollment'
+import { EnrollmentStatus } from '@/models/Enrollment'
 import { listEnrollment } from '@/services/Enrollment'
 import { formatTimestamp } from '@/utils/time'
-import { Card, Input, Progress, Select, Space, Table, Tag, Typography } from 'antd'
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
-import { useState } from 'react'
+import { Avatar, Card, Progress, Select, Space, Tag, Typography } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 
 const statusColors: Record<EnrollmentStatus, string> = {
   [EnrollmentStatus.ACTIVE]: 'green',
@@ -29,9 +31,6 @@ interface ListParams {
 }
 
 export const EnrollmentTable = () => {
-  const [courseIdFilter, setCourseIdFilter] = useState<string>('')
-  const [userIdFilter, setUserIdFilter] = useState<string>('')
-
   const {
     items,
     data: listData,
@@ -41,20 +40,14 @@ export const EnrollmentTable = () => {
   } = useList<Enrollment, ListParams>(
     currentParams => {
       const searcher: Record<string, { operator: string; value: string }> = {}
-      if (currentParams.userId) {
-        searcher.userId = { operator: 'eq', value: currentParams.userId }
-      }
-      if (currentParams.courseId) {
+      if (currentParams.userId) searcher.userId = { operator: 'eq', value: currentParams.userId }
+      if (currentParams.courseId)
         searcher.courseId = { operator: 'eq', value: currentParams.courseId }
-      }
-      if (currentParams.status) {
-        searcher.status = { operator: 'eq', value: currentParams.status }
-      }
+      if (currentParams.status) searcher.status = { operator: 'eq', value: currentParams.status }
 
       return listEnrollment({
         page: currentParams.page,
         pageSize: currentParams.pageSize,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         searcher: Object.keys(searcher).length > 0 ? (searcher as any) : undefined,
         sorter: { field: 'enrolledAt', direction: 'desc' },
       })
@@ -64,26 +57,38 @@ export const EnrollmentTable = () => {
 
   const columns: ColumnsType<Enrollment> = [
     {
-      title: 'User ID',
-      dataIndex: 'userId',
-      key: 'userId',
-      width: 180,
-      render: (v: string) => (
-        <Typography.Text code style={{ fontSize: 11 }}>
-          {v.slice(0, 8)}...
-        </Typography.Text>
-      ),
+      title: 'Người dùng',
+      key: 'user',
+      render: (_, record) =>
+        record.user ? (
+          <Space>
+            {record.user.avatar && <Avatar src={record.user.avatar} size="small" />}
+            <div>
+              <div>{record.user.fullName || '-'}</div>
+              <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                {record.user.email}
+              </Typography.Text>
+            </div>
+          </Space>
+        ) : (
+          <Typography.Text code style={{ fontSize: 11 }}>
+            {record.userId.slice(0, 8)}...
+          </Typography.Text>
+        ),
     },
     {
-      title: 'Course ID',
-      dataIndex: 'courseId',
-      key: 'courseId',
-      width: 180,
-      render: (v: string) => (
-        <Typography.Text code style={{ fontSize: 11 }}>
-          {v.slice(0, 8)}...
-        </Typography.Text>
-      ),
+      title: 'Khoá học',
+      key: 'course',
+      render: (_, record) => {
+        const title = record.courseSnapshot?.title as string | undefined
+        return title ? (
+          <Typography.Text strong>{title}</Typography.Text>
+        ) : (
+          <Typography.Text code style={{ fontSize: 11 }}>
+            {record.courseId.slice(0, 8)}...
+          </Typography.Text>
+        )
+      },
     },
     {
       title: 'Trạng thái',
@@ -120,83 +125,57 @@ export const EnrollmentTable = () => {
       key: 'expireAt',
       width: 160,
       render: (v?: string | null) =>
-        v ? (
-          formatTimestamp(v)
-        ) : (
-          <Typography.Text type="secondary">Không giới hạn</Typography.Text>
-        ),
+        v ? formatTimestamp(v) : <Typography.Text type="secondary">Không giới hạn</Typography.Text>,
     },
   ]
 
-  const handlePaginationChange = (pagination: TablePaginationConfig) => {
-    setParams(current => ({
-      ...current,
-      page: pagination.current ?? current.page,
-      pageSize: pagination.pageSize ?? current.pageSize,
-    }))
-  }
-
   return (
     <Card>
-      <Space vertical size={16} className="w-full">
-        <Space className="w-full justify-between items-center">
-          <div>
-            <Typography.Title level={3} style={{ marginBottom: 4 }}>
-              Danh sách Enrollment
-            </Typography.Title>
-          </div>
-
-          <Space wrap>
-            <Input.Search
-              placeholder="Lọc theo User ID (UUID)"
-              value={userIdFilter}
-              onChange={e => setUserIdFilter(e.target.value)}
-              onSearch={val =>
-                setParams(p => ({ ...p, userId: val || undefined, page: 1 }))
-              }
-              allowClear
-              style={{ width: 280 }}
-            />
-            <Input.Search
-              placeholder="Lọc theo Course ID (UUID)"
-              value={courseIdFilter}
-              onChange={e => setCourseIdFilter(e.target.value)}
-              onSearch={val =>
-                setParams(p => ({ ...p, courseId: val || undefined, page: 1 }))
-              }
-              allowClear
-              style={{ width: 280 }}
-            />
+      <DataTable<Enrollment>
+        title="Danh sách đăng ký khoá học"
+        columns={columns}
+        dataSource={items}
+        loading={isLoading}
+        extraAction={{
+          items: [
+            <UserSelect
+              key="user"
+              placeholder="Lọc theo người dùng"
+              value={params.userId}
+              onChange={value => setParams(p => ({ ...p, userId: value, page: 1 }))}
+            />,
+            <CourseSelect
+              key="course"
+              placeholder="Lọc theo khoá học"
+              value={params.courseId}
+              onChange={value => setParams(p => ({ ...p, courseId: value, page: 1 }))}
+            />,
             <Select
+              key="status"
               allowClear
               placeholder="Trạng thái"
               style={{ width: 140 }}
+              value={params.status}
               onChange={v => setParams(p => ({ ...p, status: v || undefined, page: 1 }))}
               options={Object.values(EnrollmentStatus).map(s => ({
                 label: statusLabels[s],
                 value: s,
               }))}
-            />
-          </Space>
-        </Space>
-
-        <Table<Enrollment>
-          rowKey="id"
-          columns={columns}
-          dataSource={items}
-          loading={isLoading}
-          scroll={{ x: 'max-content' }}
-          pagination={{
-            current: listData?.pagination.page ?? params.page,
-            pageSize: listData?.pagination.pageSize ?? params.pageSize,
-            total: listData?.pagination.totalItems ?? 0,
-            showSizeChanger: true,
-            pageSizeOptions: [20, 50, 100],
-            onChange: handlePaginationChange,
-            showTotal: total => `Tổng ${total} bản ghi`,
-          }}
-        />
-      </Space>
+            />,
+          ],
+        }}
+        paginationAction={{
+          showPagination: true,
+          currentPage: listData?.pagination.page ?? params.page,
+          pageSize: listData?.pagination.pageSize ?? params.pageSize,
+          totalRecords: listData?.pagination.totalItems ?? 0,
+          showSizeChanger: true,
+          pageSizeOptions: [20, 50, 100],
+          onPageChange(page, pageSize) {
+            setParams(p => ({ ...p, page, pageSize }))
+          },
+        }}
+      />
     </Card>
   )
 }

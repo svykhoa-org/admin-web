@@ -1,2 +1,7 @@
 export * from './requestUpload'
 export * from './confirm'
+export * from './multipartInit'
+export * from './multipartComplete'
+export * from './multipartAbort'
+export * from './multipartRefreshUrls'
+export * from './multipartListParts'

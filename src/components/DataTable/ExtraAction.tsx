@@ -4,5 +4,5 @@ export interface ExtraActionProps {
 
 export const ExtraAction = ({ items }: ExtraActionProps) => {
   if (items.length === 0) return null
-  return <>{items}</>
+  return <div className="flex gap-4 items-center">{items}</div>
 }

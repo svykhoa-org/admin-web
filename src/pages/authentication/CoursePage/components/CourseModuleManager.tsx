@@ -262,9 +262,19 @@ export const CourseModuleManager = ({ courseId }: Props) => {
   const openModuleModal = (mode: 'create' | 'edit', data?: CourseModule) => {
     setModuleModal({ open: true, mode, data })
     if (mode === 'edit' && data) {
-      moduleForm.setFieldsValue({ title: data.title, order: data.order, description: data.description ?? '', locked: data.locked ?? false })
+      moduleForm.setFieldsValue({
+        title: data.title,
+        order: data.order,
+        description: data.description ?? '',
+        locked: data.locked ?? false,
+      })
     } else {
-      moduleForm.setFieldsValue({ title: '', order: (modules ?? []).length + 1, description: '', locked: false })
+      moduleForm.setFieldsValue({
+        title: '',
+        order: (modules ?? []).length + 1,
+        description: '',
+        locked: false,
+      })
     }
   }
 

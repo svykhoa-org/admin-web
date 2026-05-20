@@ -1,0 +1,137 @@
+/* ─── Media Card ──────────────────────────────────────────────────────────────
+   Used for image and video single/multi uploads.
+   Full size: 400px wide, 9:16 ratio
+   Grid size: 140px wide, 9:16 ratio
+─────────────────────────────────────────────────────────────────────────────── */
+
+.upload-media-card {
+  position: relative;
+  width: 400px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.upload-media-card:hover {
+  border-color: var(--color-primary);
+}
+
+.upload-media-card--sm {
+  width: 140px;
+}
+
+/* Preview image/video fills the card */
+.upload-media-card__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition:
+    opacity 0.25s ease,
+    filter 0.25s ease;
+}
+
+/* Dim + blur preview while uploading */
+.upload-media-card__preview--uploading {
+  opacity: 0.4;
+  filter: blur(1px);
+}
+
+/* Centered overlay for progress / placeholder content */
+.upload-media-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Close / cancel button — top-right */
+.upload-media-card__close-btn {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: unset !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  line-height: 1 !important;
+}
+
+.upload-media-card__close-btn:hover {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Hover overlay — shown when status is done */
+.upload-media-card__hover-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.upload-media-card:hover .upload-media-card__hover-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── File item row (base single/multiple) ────────────────────────────────────
+   Horizontal row: icon | name + progress | actions
+─────────────────────────────────────────────────────────────────────────────── */
+
+.upload-file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  transition: border-color 0.15s ease;
+}
+
+.upload-file-item--error {
+  border-color: #fecaca;
+  background: #fff5f5;
+}
+
+/* Progress bar track */
+.upload-progress-track {
+  height: 3px;
+  border-radius: 2px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+/* Progress bar fill — uses inline width for dynamic value */
+.upload-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 60%, white)
+  );
+  transition: width 0.15s ease;
+}

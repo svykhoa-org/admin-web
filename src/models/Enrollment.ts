@@ -19,4 +19,10 @@ export interface Enrollment extends AbstractModel {
   progress: number
   pricePaid: number
   courseSnapshot?: Record<string, unknown>
+  user?: {
+    id: string
+    fullName: string
+    email: string
+    avatar?: string | null
+  }
 }
