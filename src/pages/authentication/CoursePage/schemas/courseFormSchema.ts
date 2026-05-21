@@ -10,11 +10,10 @@ import type { FlatNamespace, TFunction } from 'i18next'
  */
 export function parseTextareaToArray(text?: string): string[] | undefined {
   if (!text?.trim()) return undefined
-  const lines = text
+  return text
     .split('\n')
     .map(line => line.replace(/^-\s*/, '').trim())
     .filter(Boolean)
-  return lines.length > 0 ? lines : undefined
 }
 
 /**
