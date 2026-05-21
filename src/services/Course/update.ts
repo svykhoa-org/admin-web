@@ -21,6 +21,7 @@ export interface UpdateCourseInput {
   objectives?: string[]
   requirements?: string[]
   suitableFor?: string[]
+  instructorIds?: string[]
   cmeCredits?: number
   certifyingOrganization?: string
   totalDurationMinutes?: number

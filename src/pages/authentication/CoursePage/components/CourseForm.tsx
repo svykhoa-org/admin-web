@@ -114,7 +114,9 @@ export const CourseForm = ({ id }: Props) => {
   const effectiveInstructorIds =
     selectedInstructorIds === null ? (detailData?.instructorIds ?? []) : selectedInstructorIds
 
-  const effectiveThumbnail = newThumbnailUrl ?? detailData?.thumbnail ?? undefined
+  // null = unchanged (fall back to server value); '' = explicitly cleared; string = newly uploaded
+  const effectiveThumbnail =
+    newThumbnailUrl !== null ? newThumbnailUrl || undefined : (detailData?.thumbnail ?? undefined)
 
   const [courseOverride, setCourseDisplay] = useState<Course | null>(null)
   const courseDisplay = courseOverride ?? detailData
@@ -224,7 +226,7 @@ export const CourseForm = ({ id }: Props) => {
               <div className="mb-2 text-sm font-medium">Ảnh đại diện</div>
               <UploadSingleImage
                 onSuccess={resource => setNewThumbnailUrl(resource.url ?? null)}
-                onRemove={() => setNewThumbnailUrl(null)}
+                onRemove={() => setNewThumbnailUrl('')}
                 maxSizeMB={5}
               />
               {effectiveThumbnail && !newThumbnailUrl && (
