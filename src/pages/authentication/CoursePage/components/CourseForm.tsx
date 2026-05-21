@@ -269,7 +269,8 @@ export const CourseForm = ({ id }: Props) => {
                 onChange={val => setSelectedCategoryId(val ?? null)}
                 options={categories.map(c => ({ label: c.name, value: c.id }))}
                 filterOption={(input, opt) =>
-                  ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
+                  typeof opt?.label === 'string' &&
+                  opt.label.toLowerCase().includes(input.toLowerCase())
                 }
               />
             </div>
@@ -297,7 +298,8 @@ export const CourseForm = ({ id }: Props) => {
                 onChange={vals => setSelectedInstructorIds(vals)}
                 options={users.map(u => ({ label: u.fullName, value: u.id }))}
                 filterOption={(input, opt) =>
-                  ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
+                  typeof opt?.label === 'string' &&
+                  opt.label.toLowerCase().includes(input.toLowerCase())
                 }
               />
             </div>
