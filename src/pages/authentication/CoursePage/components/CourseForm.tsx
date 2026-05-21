@@ -20,9 +20,25 @@ import {
 } from '@/services/Course'
 import { listCourseCategory } from '@/services/CourseCategory'
 import { listCourseTag } from '@/services/CourseTag'
+import { listUser } from '@/services/User'
+import type { User } from '@/models/User'
+import { UploadSingleImage } from '@/components/Upload'
+import { arrayToTextarea, parseTextareaToArray } from '../schemas/courseFormSchema'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { ArrowLeftOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons'
-import { App, Button, Card, Popconfirm, Select, Space, Spin, Tabs, Tag, Typography } from 'antd'
+import {
+  App,
+  Button,
+  Card,
+  Divider,
+  Popconfirm,
+  Select,
+  Space,
+  Spin,
+  Tabs,
+  Tag,
+  Typography,
+} from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -57,11 +73,19 @@ export const CourseForm = ({ id }: Props) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null | undefined>(null)
   const [selectedTagIds, setSelectedTagIds] = useState<string[] | null>(null)
 
+  // TODO: filter by instructor role when UserRole.Instructor is added to backend
+  const [users, setUsers] = useState<User[]>([])
+  const [selectedInstructorIds, setSelectedInstructorIds] = useState<string[] | null>(null)
+
+  // null = chưa thay đổi, dùng detailData; string = đã upload mới
+  const [newThumbnailUrl, setNewThumbnailUrl] = useState<string | null>(null)
+
   useEffect(() => {
-    Promise.all([listCourseCategory(), listCourseTag()])
-      .then(([cats, tags]) => {
+    Promise.all([listCourseCategory(), listCourseTag(), listUser()])
+      .then(([cats, tags, usersData]) => {
         setCategories(cats)
         setCourseTags(tags)
+        setUsers(usersData.items)
       })
       .catch(() => void message.error('Không thể tải danh mục/tag'))
   }, [message])
@@ -86,6 +110,11 @@ export const CourseForm = ({ id }: Props) => {
     selectedCategoryId === null ? (detailData?.categoryId ?? undefined) : selectedCategoryId
   const effectiveTagIds =
     selectedTagIds === null ? (detailData?.tags?.map(tag => tag.id) ?? []) : selectedTagIds
+
+  const effectiveInstructorIds =
+    selectedInstructorIds === null ? (detailData?.instructorIds ?? []) : selectedInstructorIds
+
+  const effectiveThumbnail = newThumbnailUrl ?? detailData?.thumbnail ?? undefined
 
   const [courseOverride, setCourseDisplay] = useState<Course | null>(null)
   const courseDisplay = courseOverride ?? detailData
