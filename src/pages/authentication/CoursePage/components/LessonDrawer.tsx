@@ -5,7 +5,8 @@ import { DocumentStatus } from '@/models/Document'
 import type { FileResource } from '@/models/FileResource'
 import { createDocument } from '@/services/Document'
 import { createLesson, updateLesson } from '@/services/Lesson'
-import { createQuiz, type QuestionInput } from '@/services/Quiz'
+import { createQuiz, getQuizDetail, type QuestionInput } from '@/services/Quiz'
+import type { Quiz } from '@/models/Quiz'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import {
@@ -254,6 +255,8 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   const [isSaving, setIsSaving] = useState(false)
   const [videoId, setVideoId] = useState<string | undefined>(undefined)
   const [docMode, setDocMode] = useState<'select' | 'upload'>('upload')
+  const [quizDetail, setQuizDetail] = useState<Quiz | null>(null)
+  const [isLoadingQuiz, setIsLoadingQuiz] = useState(false)
 
   const lessonType = Form.useWatch('type', form) as LessonType | undefined
 
@@ -285,6 +288,23 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
     }
     setDocMode('upload')
   }, [open, mode, initialData, form])
+
+  useEffect(() => {
+    if (
+      !open ||
+      mode !== 'edit' ||
+      initialData?.type !== LessonType.QUIZ ||
+      !initialData?.contentId
+    ) {
+      setQuizDetail(null)
+      return
+    }
+    setIsLoadingQuiz(true)
+    getQuizDetail({ id: initialData.contentId })
+      .then(setQuizDetail)
+      .catch(() => setQuizDetail(null))
+      .finally(() => setIsLoadingQuiz(false))
+  }, [open, mode, initialData])
 
   const handleClose = () => {
     form.resetFields()
@@ -554,32 +574,38 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
               <>
                 {/* Edit mode: quiz already created, show info only */}
                 {mode === 'edit' && initialData?.contentId ? (
-                  <Alert
-                    type="info"
-                    showIcon
-                    message="Quiz đã được tạo"
-                    description={
-                      <Space direction="vertical" size={4}>
-                        <Space>
-                          <Typography.Text>Quiz ID:</Typography.Text>
-                          <Typography.Text code copyable>
-                            {initialData.contentId}
-                          </Typography.Text>
+                  <Card size="small" loading={isLoadingQuiz}>
+                    {quizDetail ? (
+                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                        <Space wrap>
+                          <Typography.Text strong>{quizDetail.title}</Typography.Text>
+                          <Tag color="purple">{quizDetail.questions?.length ?? 0} câu hỏi</Tag>
+                          <Tag color="blue">Điểm đạt: {quizDetail.passingScore}%</Tag>
+                          {quizDetail.timeLimit && (
+                            <Tag color="orange">Thời gian: {quizDetail.timeLimit}s</Tag>
+                          )}
+                          {quizDetail.maxAttempts && (
+                            <Tag>Tối đa {quizDetail.maxAttempts} lần thử</Tag>
+                          )}
                         </Space>
                         <Button
                           size="small"
-                          type="link"
-                          style={{ padding: 0 }}
+                          type="primary"
+                          ghost
                           onClick={() => {
                             handleClose()
                             navigate(`/quizzes/${initialData.contentId}`)
                           }}
                         >
-                          Chỉnh sửa câu hỏi →
+                          Chỉnh sửa câu hỏi
                         </Button>
                       </Space>
-                    }
-                  />
+                    ) : (
+                      <Typography.Text type="secondary">
+                        Không thể tải thông tin quiz
+                      </Typography.Text>
+                    )}
+                  </Card>
                 ) : (
                   <>
                     {/* Quiz settings */}
