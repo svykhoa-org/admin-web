@@ -1,9 +1,10 @@
 import { DocumentSelect } from '@/components/SelectionVariants'
 import { UploadSingleDocument, UploadSingleVideo } from '@/components/Upload'
+import type { ExistingFileData } from '@/components/Upload'
 import { LessonType, type Lesson } from '@/models/Course'
 import { DocumentStatus } from '@/models/Document'
 import type { FileResource } from '@/models/FileResource'
-import { createDocument } from '@/services/Document'
+import { createDocument, getDocumentDetail } from '@/services/Document'
 import { createLesson, updateLesson } from '@/services/Lesson'
 import { createQuiz, getQuizDetail, type QuestionInput } from '@/services/Quiz'
 import type { Quiz } from '@/models/Quiz'
@@ -254,6 +255,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   const [isSaving, setIsSaving] = useState(false)
   const [videoId, setVideoId] = useState<string | undefined>(undefined)
   const [docMode, setDocMode] = useState<'select' | 'upload'>('upload')
+  const [existingDocFile, setExistingDocFile] = useState<ExistingFileData | null>(null)
   const [quizDetail, setQuizDetail] = useState<Quiz | null>(null)
   const [isLoadingQuiz, setIsLoadingQuiz] = useState(false)
 
@@ -280,10 +282,24 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
       setVideoId(
         initialData.type === LessonType.VIDEO ? (initialData.contentId ?? undefined) : undefined,
       )
+
+      // Fetch existing document file info to pre-populate the upload preview
+      if (initialData.type === LessonType.DOCUMENT && initialData.contentId) {
+        getDocumentDetail({ id: initialData.contentId })
+          .then(doc => {
+            const url = doc.file?.url
+            const name = doc.file?.originalName ?? doc.file?.fileName ?? doc.title
+            if (url) setExistingDocFile({ url, name, type: 'document' })
+          })
+          .catch(() => {})
+      } else {
+        setExistingDocFile(null)
+      }
     } else {
       form.resetFields()
-      form.setFieldsValue({ type: LessonType.VIDEO, order: 1 })
+      form.setFieldsValue({ type: LessonType.VIDEO })
       setVideoId(undefined)
+      setExistingDocFile(null)
     }
     setDocMode('upload')
   }, [open, mode, initialData, form])
@@ -309,6 +325,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
     form.resetFields()
     setVideoId(undefined)
     setDocMode('upload')
+    setExistingDocFile(null)
     onClose()
   }
 
@@ -363,11 +380,10 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
         contentId = initialData?.contentId ?? undefined
       }
 
-      const payload = {
+      const basePayload = {
         title: values.title as string,
         description: (values.description as string | undefined) || undefined,
         type,
-        order: values.order as number,
         contentId,
         durationMinutes: (values.durationMinutes as number | undefined) || undefined,
         isRequired: (values.isRequired as boolean | undefined) ?? true,
@@ -375,10 +391,14 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
       }
 
       if (mode === 'create') {
-        await createLesson({ moduleId, ...payload })
+        await createLesson({ moduleId, ...basePayload })
         void message.success('Tạo bài học thành công')
       } else if (initialData) {
-        await updateLesson({ id: initialData.id, ...payload })
+        await updateLesson({
+          id: initialData.id,
+          ...basePayload,
+          order: (values.order as number | undefined) ?? undefined,
+        })
         void message.success('Cập nhật bài học thành công')
       }
 
@@ -443,15 +463,13 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
               />
             </Form.Item>
           </Col>
-          <Col span={3}>
-            <Form.Item
-              name="order"
-              label="Thứ tự"
-              rules={[{ required: true, message: 'Nhập thứ tự' }]}
-            >
-              <InputNumber min={1} style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
+          {mode === 'edit' && (
+            <Col span={3}>
+              <Form.Item name="order" label="Thứ tự">
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          )}
           <Col span={3}>
             <Form.Item name="durationMinutes" label="Thời lượng (phút)">
               <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
@@ -507,6 +525,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                 label={form.getFieldValue('title') as string | undefined}
                 onVideoReady={setVideoId}
                 onVideoRemoved={() => setVideoId(undefined)}
+                hideUploadOnFilled={true}
               />
             )}
 
@@ -549,6 +568,9 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                     style={{ marginBottom: 0 }}
                   >
                     <UploadSingleDocument
+                      existingFile={existingDocFile ?? undefined}
+                      hideUploadOnFilled={true}
+                      onRemoveExisting={() => setExistingDocFile(null)}
                       onSuccess={async (resource: FileResource) => {
                         try {
                           const doc = await createDocument({

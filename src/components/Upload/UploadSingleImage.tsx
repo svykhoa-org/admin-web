@@ -4,6 +4,7 @@ import { Upload } from 'antd'
 import { useRef, useState } from 'react'
 import { mapAssetToFileResource } from './assetResource'
 import { MediaCard } from './MediaCard'
+import type { MediaCardSize } from './MediaCard'
 import { UploadStatus } from './types'
 
 // ─── Upload fn ────────────────────────────────────────────────────────────────
@@ -26,6 +27,8 @@ export interface UploadSingleImageProps {
   onRemove?: (resource: FileResource) => void
   maxSizeMB?: number
   disabled?: boolean
+  /** Card size: 'full' = 400px wide (default), 'sm' = 140px wide */
+  size?: MediaCardSize
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -35,6 +38,7 @@ export function UploadSingleImage({
   onRemove,
   maxSizeMB,
   disabled = false,
+  size,
 }: UploadSingleImageProps) {
   const [status, setStatus] = useState<UploadStatus>(UploadStatus.Idle)
   const [progress, setProgress] = useState(0)
@@ -123,6 +127,7 @@ export function UploadSingleImage({
         progress={progress}
         mediaType="image"
         previewUrl={previewUrl}
+        size={size}
         onRemove={handleRemove}
         onPreview={status === UploadStatus.Done ? handlePreview : undefined}
         errorMsg={errorMsg}

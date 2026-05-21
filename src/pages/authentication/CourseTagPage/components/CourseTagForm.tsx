@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { App, Button, Card, Form, Input, Space, Spin, Tag, Typography } from 'antd'
+import { App, Button, Card, ColorPicker, Form, Input, Space, Spin, Typography } from 'antd'
 import { useCallback, useEffect, useMemo } from 'react'
-import { Controller, useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useCreate, useDetail, useUpdate } from '@/hooks'
 import {
@@ -64,8 +64,6 @@ export const CourseTagForm = ({ id }: Props) => {
     })
   }, [detailData, reset])
 
-  const colorValue = useWatch({ control, name: 'color' })
-
   const onSubmit = async (values: CourseTagFormValues) => {
     const payload: CreateCourseTagInput = {
       name: values.name,
@@ -125,7 +123,7 @@ export const CourseTagForm = ({ id }: Props) => {
           </Form.Item>
 
           <Form.Item
-            label="Màu (hex)"
+            label="Màu"
             validateStatus={errors.color ? 'error' : ''}
             help={errors.color?.message}
           >
@@ -133,17 +131,12 @@ export const CourseTagForm = ({ id }: Props) => {
               name="color"
               control={control}
               render={({ field }) => (
-                <Space>
-                  <Input
-                    {...field}
-                    value={field.value ?? ''}
-                    placeholder="#3B82F6"
-                    style={{ width: 160 }}
-                  />
-                  {colorValue && /^#[0-9A-Fa-f]{6}$/.test(colorValue) && (
-                    <Tag color={colorValue}>{colorValue}</Tag>
-                  )}
-                </Space>
+                <ColorPicker
+                  value={field.value ?? undefined}
+                  onChange={(_color, hex) => field.onChange(hex)}
+                  showText
+                  format="hex"
+                />
               )}
             />
           </Form.Item>

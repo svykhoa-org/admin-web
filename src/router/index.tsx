@@ -25,6 +25,7 @@ import { QuizDetailPage } from '@/pages/authentication/QuizPage/QuizDetailPage'
 import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
 import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
 import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
+import ComponentsPage from '@/pages/dev/ComponentsPage'
 import LoginPage from '@/pages/unauthentication/LoginPage'
 import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
 import { createBrowserRouter } from 'react-router-dom'
@@ -175,6 +176,11 @@ const router = createBrowserRouter([
             ],
           },
         ],
+      },
+      // Dev playground — no AppLayout (no sidebar/navbar)
+      {
+        path: 'components',
+        element: <ComponentsPage />,
       },
     ],
   },

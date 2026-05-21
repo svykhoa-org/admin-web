@@ -13,7 +13,7 @@ import { listCourse, removeCourse } from '@/services/Course'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
-import { App, Button, Card, Dropdown, Input, Select, Tag, Typography } from 'antd'
+import { App, Button, Card, Dropdown, Input, Select, Space, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -103,6 +103,20 @@ export const CourseTable = () => {
       dataIndex: 'shortCode',
       key: 'shortCode',
       render: (value: string) => <Tag>{value}</Tag>,
+    },
+    {
+      title: 'Tags',
+      key: 'tags',
+      render: (_, record) =>
+        record.tags?.length ? (
+          <Space size={4} wrap>
+            {record.tags.map(tag => (
+              <Tag key={tag.id} color={tag.color || undefined}>
+                {tag.name}
+              </Tag>
+            ))}
+          </Space>
+        ) : null,
     },
     {
       title: t('CourseLocales:price'),

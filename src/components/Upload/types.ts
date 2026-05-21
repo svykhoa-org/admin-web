@@ -1,3 +1,11 @@
+// ─── Existing file descriptor (for pre-populating upload components) ─────────
+
+export interface ExistingFileData {
+  url: string
+  name: string
+  type: 'image' | 'video' | 'document'
+}
+
 // ─── Upload Status ─────────────────────────────────────────────────────────────
 
 export enum UploadStatus {

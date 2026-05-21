@@ -1,5 +1,6 @@
 import axiosInstance from '@/lib/axios'
 import type { Quiz } from '@/models/Quiz'
+import type { QuestionInput } from './create'
 import type { ApiDetailResponse } from '@/types/api'
 import { unwrapDetail } from '@/utils/apiResponse'
 
@@ -11,6 +12,7 @@ export interface UpdateQuizInput {
   passingScore?: number
   maxAttempts?: number
   timeLimit?: number
+  questions?: QuestionInput[]
 }
 
 export type UpdateQuizOutput = Quiz

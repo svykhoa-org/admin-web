@@ -221,10 +221,11 @@ export const CourseForm = ({ id }: Props) => {
           <Typography.Title level={5} style={{ margin: 0 }}>
             Thông tin chung
           </Typography.Title>
-          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
-            <div className="col-span-1 row-span-2">
+          <div className="flex gap-x-6">
+            <div className="w-36 shrink-0">
               <div className="mb-2 text-sm font-medium">Ảnh đại diện</div>
               <UploadSingleImage
+                size="sm"
                 onSuccess={resource => setNewThumbnailUrl(resource.url ?? null)}
                 onRemove={() => setNewThumbnailUrl('')}
                 maxSizeMB={5}
@@ -238,19 +239,21 @@ export const CourseForm = ({ id }: Props) => {
                 />
               )}
             </div>
-            <Field
-              name="title"
-              label={t('CourseLocales:title')}
-              type="text"
-              className="col-span-2"
-            />
-            <Field
-              name="price"
-              label={t('CourseLocales:price')}
-              type="price"
-              fieldProps={{ currency: Currency.VND }}
-            />
-            <Field name="subTitle" label="Tiêu đề phụ" type="text" className="col-span-2" />
+            <div className="flex-1 grid grid-cols-3 gap-x-6 gap-y-0">
+              <Field
+                name="title"
+                label={t('CourseLocales:title')}
+                type="text"
+                className="col-span-2"
+              />
+              <Field
+                name="price"
+                label={t('CourseLocales:price')}
+                type="price"
+                fieldProps={{ currency: Currency.VND }}
+              />
+              <Field name="subTitle" label="Tiêu đề phụ" type="text" className="col-span-2" />
+            </div>
           </div>
 
           <Divider style={{ margin: 0 }} />

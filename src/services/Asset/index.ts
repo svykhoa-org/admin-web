@@ -142,9 +142,17 @@ export async function abortMultipartUpload(assetId: string): Promise<void> {
   await axiosInstance.delete(`${ASSET_ENDPOINT}/upload/multipart/${assetId}/abort`)
 }
 
+const FILE_BASE_URL = import.meta.env.VITE_API_FILE_URL as string | undefined
+
+/** Prepend the file storage domain when the API returns a relative path. */
+function resolveFileUrl(url: string): string {
+  if (!FILE_BASE_URL || url.startsWith('http://') || url.startsWith('https://')) return url
+  return `${FILE_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
 export async function getAssetAccessUrl(assetId: string, expires = 900): Promise<string> {
   const response = await axiosInstance.get<ApiDetailResponse<{ url: string }>>(
     `${ASSET_ENDPOINT}/${assetId}/url?expires=${expires}`,
   )
-  return unwrapDetail(response.data).url
+  return resolveFileUrl(unwrapDetail(response.data).url)
 }

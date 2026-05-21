@@ -7,16 +7,106 @@ import {
   LoadingOutlined,
   StopOutlined,
 } from '@ant-design/icons'
-import { Button, Upload } from 'antd'
+import { Button, Image, Upload } from 'antd'
 import cx from 'classnames'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
-import type { UploadFileFn } from '../types'
+import type { ExistingFileData, UploadFileFn } from '../types'
 import { UploadStatus } from '../types'
-import { formatBytes } from '../utils'
+import { formatBytes, getFileIconInfo } from '../utils'
 import '../upload.css'
 
 export type { UploadFileFn }
+
+// ─── Existing file preview ────────────────────────────────────────────────────
+
+function ExistingFilePreview({ file, onRemove }: { file: ExistingFileData; onRemove: () => void }) {
+  if (file.type === 'image') {
+    return (
+      <div className="relative">
+        <Image
+          src={file.url}
+          alt={file.name}
+          className="w-full rounded-lg object-cover"
+          style={{ maxHeight: 200, width: '100%' }}
+          preview
+          fallback="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+        />
+        <Button
+          type="text"
+          size="small"
+          icon={<CloseOutlined style={{ fontSize: 11 }} />}
+          onClick={onRemove}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            background: 'rgba(0,0,0,0.55)',
+            color: '#fff',
+            borderRadius: '50%',
+            width: 26,
+            height: 26,
+            minWidth: 'unset',
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: 'none',
+          }}
+        />
+      </div>
+    )
+  }
+
+  if (file.type === 'video') {
+    return (
+      <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-black">
+        <video src={file.url} controls className="w-full max-h-64 block" />
+        <Button
+          type="text"
+          size="small"
+          icon={<CloseOutlined style={{ fontSize: 11, color: '#fff' }} />}
+          onClick={onRemove}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            background: 'rgba(0,0,0,0.55)',
+            borderRadius: 4,
+            border: 'none',
+          }}
+        />
+      </div>
+    )
+  }
+
+  // document
+  const { Icon, colorClass, label } = getFileIconInfo(file.name)
+  return (
+    <div className="upload-file-item">
+      <Icon style={{ fontSize: 22 }} className={`shrink-0 ${colorClass}`} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-gray-900 truncate">{file.name}</div>
+        <div className="text-xs text-gray-400">{label}</div>
+      </div>
+      <a href={file.url} target="_blank" rel="noopener noreferrer">
+        <Button
+          type="text"
+          size="small"
+          icon={<DownloadOutlined />}
+          className="shrink-0 text-gray-400"
+        />
+      </a>
+      <Button
+        type="text"
+        size="small"
+        icon={<CloseOutlined style={{ fontSize: 11 }} />}
+        onClick={onRemove}
+        className="shrink-0 text-gray-400"
+      />
+    </div>
+  )
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -49,6 +139,19 @@ export interface UploadSingleFileProps<TResult = unknown> {
   disabled?: boolean
   placeholder?: string
   hint?: string
+  /**
+   * Pre-existing file to display before a new upload.
+   * Useful for Update forms that already have a file saved.
+   */
+  existingFile?: ExistingFileData
+  /**
+   * When true, hide the upload zone while an existing (or newly uploaded) file
+   * is present. Set false to keep the zone visible for replacement.
+   * Default: false
+   */
+  hideUploadOnFilled?: boolean
+  /** Called when the user dismisses the existing file preview */
+  onRemoveExisting?: () => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -65,6 +168,9 @@ export function UploadSingleFile<TResult>({
   disabled = false,
   placeholder = 'Kéo thả file vào đây hoặc bấm để chọn',
   hint,
+  existingFile,
+  hideUploadOnFilled = false,
+  onRemoveExisting,
 }: UploadSingleFileProps<TResult>) {
   const [status, setStatus] = useState<UploadStatus>(UploadStatus.Idle)
   const [progress, setProgress] = useState(0)
@@ -72,7 +178,18 @@ export function UploadSingleFile<TResult>({
   const [result, setResult] = useState<TResult | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | undefined>()
+  // Track the URL that the user explicitly dismissed so we can re-show if the
+  // prop changes to a different file without needing a sync setState in effect.
+  const [removedExistingUrl, setRemovedExistingUrl] = useState<string | null>(null)
   const controllerRef = useRef<AbortController | null>(null)
+
+  // existingFile is "active" as long as it's present and the user hasn't dismissed it
+  const existingActive = !!existingFile && existingFile.url !== removedExistingUrl
+
+  function handleRemoveExisting() {
+    setRemovedExistingUrl(existingFile?.url ?? null)
+    onRemoveExisting?.()
+  }
 
   // Revoke old object URLs when previewUrl changes or on unmount
   useEffect(() => {
@@ -144,9 +261,10 @@ export function UploadSingleFile<TResult>({
   }
 
   const showDropzone =
-    status === UploadStatus.Idle ||
-    status === UploadStatus.Error ||
-    status === UploadStatus.Cancelled
+    (status === UploadStatus.Idle ||
+      status === UploadStatus.Error ||
+      status === UploadStatus.Cancelled) &&
+    !(hideUploadOnFilled && existingActive)
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -169,6 +287,11 @@ export function UploadSingleFile<TResult>({
           <p className="ant-upload-text">{placeholder}</p>
           {hint && <p className="ant-upload-hint">{hint}</p>}
         </Upload.Dragger>
+      )}
+
+      {/* ── Existing file preview (shown when Idle and not yet replaced) ── */}
+      {existingActive && status === UploadStatus.Idle && (
+        <ExistingFilePreview file={existingFile!} onRemove={handleRemoveExisting} />
       )}
 
       {/* ── Uploading row ── */}

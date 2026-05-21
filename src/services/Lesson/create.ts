@@ -10,8 +10,9 @@ export interface CreateLessonInput {
   title: string
   description?: string
   type: LessonType
-  order?: number
   contentId?: string
+  /** Snapshot metadata của content để cache — không cần query lại sau này */
+  content?: Record<string, unknown>
   durationMinutes?: number
   isRequired?: boolean
   isPreview?: boolean

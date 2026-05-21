@@ -269,7 +269,6 @@ export const CourseModuleManager = ({ courseId }: Props) => {
     } else {
       moduleForm.setFieldsValue({
         title: '',
-        order: (modules ?? []).length + 1,
         description: '',
         locked: false,
       })
@@ -285,7 +284,6 @@ export const CourseModuleManager = ({ courseId }: Props) => {
         await createCourseModule({
           courseId,
           title: values.title as string,
-          order: values.order as number,
           description: (values.description as string | undefined) || undefined,
           locked: (values.locked as boolean | undefined) ?? false,
         })
@@ -445,13 +443,11 @@ export const CourseModuleManager = ({ courseId }: Props) => {
           >
             <Input placeholder="Ví dụ: Phần 1: Giới thiệu NestJS" />
           </Form.Item>
-          <Form.Item
-            label="Thứ tự"
-            name="order"
-            rules={[{ required: true, message: 'Vui lòng nhập thứ tự' }]}
-          >
-            <InputNumber min={1} style={{ width: '100%' }} />
-          </Form.Item>
+          {moduleModal.mode === 'edit' && (
+            <Form.Item label="Thứ tự" name="order">
+              <InputNumber min={0} style={{ width: '100%' }} />
+            </Form.Item>
+          )}
           <Form.Item label="Mô tả" name="description">
             <Input.TextArea rows={2} placeholder="Mô tả nội dung module (tuỳ chọn)" />
           </Form.Item>

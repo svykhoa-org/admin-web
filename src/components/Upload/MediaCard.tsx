@@ -87,7 +87,7 @@ export function MediaCard({
             trailColor="rgba(255,255,255,0.3)"
             format={pct => (
               <span
-                className={cx('font-medium text-white', size === 'full' ? 'text-sm' : 'text-xs')}
+                className={cx('font-medium text-gray-900', size === 'full' ? 'text-sm' : 'text-xs')}
               >
                 {pct}%
               </span>

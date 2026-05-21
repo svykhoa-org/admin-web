@@ -9,7 +9,6 @@ export interface CreateCourseModuleInput {
   courseId: string
   title: string
   description?: string
-  order: number
   locked?: boolean
 }
 

@@ -5,6 +5,7 @@ import { Button } from 'antd'
 import { mapAssetToFileResource } from './assetResource'
 import { UploadSingleFile } from './base/UploadSingleFile'
 import type { UploadFileFn } from './base/UploadSingleFile'
+import type { ExistingFileData } from './types'
 import { getFileIconInfo } from './utils'
 
 // ─── Upload fn ────────────────────────────────────────────────────────────────
@@ -23,6 +24,9 @@ export interface UploadSingleDocumentProps {
   onRemove?: (resource: FileResource) => void
   maxSizeMB?: number
   disabled?: boolean
+  existingFile?: ExistingFileData
+  hideUploadOnFilled?: boolean
+  onRemoveExisting?: () => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -32,6 +36,9 @@ export function UploadSingleDocument({
   onRemove,
   maxSizeMB,
   disabled,
+  existingFile,
+  hideUploadOnFilled,
+  onRemoveExisting,
 }: UploadSingleDocumentProps) {
   return (
     <UploadSingleFile<FileResource>
@@ -43,6 +50,9 @@ export function UploadSingleDocument({
       disabled={disabled}
       placeholder="Kéo thả tài liệu vào đây hoặc bấm để chọn"
       hint="Hỗ trợ: PDF, Word, Excel, PowerPoint, TXT"
+      existingFile={existingFile}
+      hideUploadOnFilled={hideUploadOnFilled}
+      onRemoveExisting={onRemoveExisting}
       renderSuccess={(resource, file, onReset, _previewUrl) => {
         const name = resource.originalName ?? resource.fileName ?? file.name
         const { Icon, colorClass, label } = getFileIconInfo(name, resource.mimeType)
