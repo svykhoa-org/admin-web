@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModal'
 import { LessonType, type CourseModule, type Lesson } from '@/models/Course'
 import {
@@ -130,18 +131,15 @@ const LessonTable = ({
       ),
     },
     {
-      title: 'Content ID',
-      dataIndex: 'contentId',
-      key: 'contentId',
-      width: 200,
-      render: (value?: string) =>
-        value ? (
-          <Typography.Text code style={{ fontSize: 11 }}>
-            {value.slice(0, 8)}...
-          </Typography.Text>
-        ) : (
-          <Typography.Text type="secondary">—</Typography.Text>
-        ),
+      title: 'Ngày tạo',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 160,
+      render: (value: string | number) => (
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          {dayjs(value).format('DD/MM/YYYY HH:mm')}
+        </Typography.Text>
+      ),
     },
     {
       title: '',
