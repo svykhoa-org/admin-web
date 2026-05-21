@@ -214,74 +214,195 @@ export const CourseForm = ({ id }: Props) => {
       }}
     >
       {({ Field }) => (
-        <div className="grid grid-cols-4 gap-x-6 gap-y-0">
-          <Field name="title" label={t('CourseLocales:title')} type="text" className="col-span-2" />
+        <div className="flex flex-col gap-y-6">
+          {/* ── Thông tin chung ─────────────────────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            Thông tin chung
+          </Typography.Title>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <div className="col-span-1 row-span-2">
+              <div className="mb-2 text-sm font-medium">Ảnh đại diện</div>
+              <UploadSingleImage
+                onSuccess={resource => setNewThumbnailUrl(resource.url ?? null)}
+                onRemove={() => setNewThumbnailUrl(null)}
+                maxSizeMB={5}
+              />
+              {effectiveThumbnail && !newThumbnailUrl && (
+                <img
+                  src={effectiveThumbnail}
+                  alt="thumbnail hiện tại"
+                  className="mt-2 rounded-lg w-full object-cover"
+                  style={{ maxHeight: 120 }}
+                />
+              )}
+            </div>
+            <Field
+              name="title"
+              label={t('CourseLocales:title')}
+              type="text"
+              className="col-span-2"
+            />
+            <Field
+              name="price"
+              label={t('CourseLocales:price')}
+              type="price"
+              fieldProps={{ currency: Currency.VND }}
+            />
+            <Field name="subTitle" label="Tiêu đề phụ" type="text" className="col-span-2" />
+          </div>
 
-          <Field
-            name="price"
-            label={t('CourseLocales:price')}
-            type="price"
-            fieldProps={{
-              currency: Currency.VND,
-            }}
-          />
+          <Divider style={{ margin: 0 }} />
 
-          <Field name="subTitle" label="Tiêu đề phụ" type="text" className="col-span-2" />
+          {/* ── Phân loại ───────────────────────────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            Phân loại
+          </Typography.Title>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <div className="col-span-1">
+              <div className="mb-2 text-sm font-medium">Danh mục</div>
+              <Select
+                allowClear
+                showSearch
+                style={{ width: '100%' }}
+                placeholder="Chọn danh mục"
+                value={effectiveCategoryId}
+                onChange={val => setSelectedCategoryId(val ?? null)}
+                options={categories.map(c => ({ label: c.name, value: c.id }))}
+                filterOption={(input, opt) =>
+                  ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              />
+            </div>
+            <div className="col-span-1">
+              <div className="mb-2 text-sm font-medium">Tags</div>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ width: '100%' }}
+                placeholder="Chọn tag"
+                value={effectiveTagIds}
+                onChange={vals => setSelectedTagIds(vals)}
+                options={courseTags.map(tag => ({ label: tag.name, value: tag.id }))}
+              />
+            </div>
+            <div className="col-span-2">
+              <div className="mb-2 text-sm font-medium">Giảng viên</div>
+              <Select
+                mode="multiple"
+                allowClear
+                showSearch
+                style={{ width: '100%' }}
+                placeholder="Chọn giảng viên"
+                value={effectiveInstructorIds}
+                onChange={vals => setSelectedInstructorIds(vals)}
+                options={users.map(u => ({ label: u.fullName, value: u.id }))}
+                filterOption={(input, opt) =>
+                  ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              />
+            </div>
+          </div>
 
-          {/* Category selector — managed outside FormHandler via local state */}
-          <div className="col-span-1">
-            <div className="mb-2 text-sm font-medium">Danh mục</div>
-            <Select
-              allowClear
-              showSearch
-              style={{ width: '100%' }}
-              placeholder="Chọn danh mục"
-              value={effectiveCategoryId}
-              onChange={val => setSelectedCategoryId(val ?? null)}
-              options={categories.map(c => ({ label: c.name, value: c.id }))}
-              filterOption={(input, opt) =>
-                ((opt?.label as string) ?? '').toLowerCase().includes(input.toLowerCase())
-              }
+          <Divider style={{ margin: 0 }} />
+
+          {/* ── Cài đặt khoá học ────────────────────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            Cài đặt khoá học
+          </Typography.Title>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field name="selfPaced" label="Học tự do" type="checkbox" />
+            <Field
+              name="accessDurationDays"
+              label="Thời hạn truy cập (ngày)"
+              type="number"
+              fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
+            />
+            <Field
+              name="maxEnrollments"
+              label="Giới hạn học viên"
+              type="number"
+              fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
             />
           </div>
 
-          {/* Tag multi-select — managed outside FormHandler via local state */}
-          <div className="col-span-1">
-            <div className="mb-2 text-sm font-medium">Tags</div>
-            <Select
-              mode="multiple"
-              allowClear
-              style={{ width: '100%' }}
-              placeholder="Chọn tag"
-              value={effectiveTagIds}
-              onChange={vals => setSelectedTagIds(vals)}
-              options={courseTags.map(tag => ({ label: tag.name, value: tag.id }))}
+          <Divider style={{ margin: 0 }} />
+
+          {/* ── CME / Chứng chỉ ─────────────────────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            CME / Chứng chỉ
+          </Typography.Title>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field
+              name="cmeCredits"
+              label="Tín chỉ CME"
+              type="number"
+              fieldProps={{ min: 0, placeholder: 'Không có' }}
+            />
+            <Field
+              name="certifyingOrganization"
+              label="Tổ chức cấp chứng chỉ"
+              type="text"
+              className="col-span-2"
             />
           </div>
 
-          <Field
-            name="accessDurationDays"
-            label="Thời hạn truy cập (ngày)"
-            type="number"
-            fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
-          />
+          <Divider style={{ margin: 0 }} />
 
-          <Field
-            name="maxEnrollments"
-            label="Giới hạn học viên"
-            type="number"
-            fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
-          />
+          {/* ── Nội dung khoá học ───────────────────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            Nội dung khoá học
+          </Typography.Title>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field
+              name="objectives"
+              label="Mục tiêu khoá học"
+              type="textarea"
+              className="col-span-full"
+              fieldProps={{
+                rows: 4,
+                placeholder: '- Học viên sẽ nắm vững...\n- Áp dụng được...',
+              }}
+              tooltip="Mỗi mục tiêu một dòng. Có thể bắt đầu bằng dấu -"
+            />
+            <Field
+              name="requirements"
+              label="Yêu cầu đầu vào"
+              type="textarea"
+              className="col-span-full"
+              fieldProps={{
+                rows: 3,
+                placeholder: '- Đã học qua...\n- Có kiến thức cơ bản về...',
+              }}
+              tooltip="Mỗi yêu cầu một dòng. Có thể bắt đầu bằng dấu -"
+            />
+            <Field
+              name="suitableFor"
+              label="Đối tượng phù hợp"
+              type="textarea"
+              className="col-span-full"
+              fieldProps={{
+                rows: 3,
+                placeholder: '- Sinh viên y khoa\n- Bác sĩ muốn cập nhật kiến thức',
+              }}
+              tooltip="Mỗi đối tượng một dòng. Có thể bắt đầu bằng dấu -"
+            />
+          </div>
 
-          <Field name="selfPaced" label="Học tự do" type="checkbox" />
+          <Divider style={{ margin: 0 }} />
 
-          <Field
-            name="description"
-            label={t('CourseLocales:description')}
-            type="textarea"
-            className="col-span-full"
-            fieldProps={{ rows: 4 }}
-          />
+          {/* ── Mô tả ───────────────────────────────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            Mô tả
+          </Typography.Title>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field
+              name="description"
+              label={t('CourseLocales:description')}
+              type="textarea"
+              className="col-span-full"
+              fieldProps={{ rows: 4 }}
+            />
+          </div>
         </div>
       )}
     </FormHandler>
