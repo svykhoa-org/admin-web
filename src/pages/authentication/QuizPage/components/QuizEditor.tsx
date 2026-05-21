@@ -215,7 +215,7 @@ export const QuizEditor = ({ quizId }: Props) => {
 
   const fetchDetail = useCallback((id: string) => getQuizDetail({ id }), [])
   const updateById = useCallback(
-    (id: string, payload: UpdateQuizInput) => updateQuiz({ id, ...payload }),
+    (id: string, payload: Omit<UpdateQuizInput, 'id'>) => updateQuiz({ id, ...payload }),
     [],
   )
 

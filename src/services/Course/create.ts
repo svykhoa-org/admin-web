@@ -11,7 +11,7 @@ export interface CreateCourseInput {
   description?: string
   thumbnail?: string
   price: number
-  shortCode: string
+  shortCode?: string
   categoryId?: string
   tags?: Pick<CourseTagRef, 'id'>[]
   accessDurationDays?: number

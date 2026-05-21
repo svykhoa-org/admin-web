@@ -322,13 +322,15 @@ export const CourseForm = ({ id }: Props) => {
               name="accessDurationDays"
               label="Thời hạn truy cập (ngày)"
               type="number"
-              fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
+              placeholder="Không giới hạn"
+              fieldProps={{ min: 1 }}
             />
             <Field
               name="maxEnrollments"
               label="Giới hạn học viên"
               type="number"
-              fieldProps={{ min: 1, placeholder: 'Không giới hạn' }}
+              placeholder="Không giới hạn"
+              fieldProps={{ min: 1 }}
             />
           </div>
 
@@ -343,7 +345,8 @@ export const CourseForm = ({ id }: Props) => {
               name="cmeCredits"
               label="Tín chỉ CME"
               type="number"
-              fieldProps={{ min: 0, placeholder: 'Không có' }}
+              placeholder="Không có"
+              fieldProps={{ min: 0 }}
             />
             <Field
               name="certifyingOrganization"
@@ -365,10 +368,8 @@ export const CourseForm = ({ id }: Props) => {
               label="Mục tiêu khoá học"
               type="textarea"
               className="col-span-full"
-              fieldProps={{
-                rows: 4,
-                placeholder: '- Học viên sẽ nắm vững...\n- Áp dụng được...',
-              }}
+              placeholder={'- Học viên sẽ nắm vững...\n- Áp dụng được...'}
+              fieldProps={{ rows: 4 }}
               tooltip="Mỗi mục tiêu một dòng. Có thể bắt đầu bằng dấu -"
             />
             <Field
@@ -376,10 +377,8 @@ export const CourseForm = ({ id }: Props) => {
               label="Yêu cầu đầu vào"
               type="textarea"
               className="col-span-full"
-              fieldProps={{
-                rows: 3,
-                placeholder: '- Đã học qua...\n- Có kiến thức cơ bản về...',
-              }}
+              placeholder={'- Đã học qua...\n- Có kiến thức cơ bản về...'}
+              fieldProps={{ rows: 3 }}
               tooltip="Mỗi yêu cầu một dòng. Có thể bắt đầu bằng dấu -"
             />
             <Field
@@ -387,10 +386,8 @@ export const CourseForm = ({ id }: Props) => {
               label="Đối tượng phù hợp"
               type="textarea"
               className="col-span-full"
-              fieldProps={{
-                rows: 3,
-                placeholder: '- Sinh viên y khoa\n- Bác sĩ muốn cập nhật kiến thức',
-              }}
+              placeholder={'- Sinh viên y khoa\n- Bác sĩ muốn cập nhật kiến thức'}
+              fieldProps={{ rows: 3 }}
               tooltip="Mỗi đối tượng một dòng. Có thể bắt đầu bằng dấu -"
             />
           </div>

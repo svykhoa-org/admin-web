@@ -10,7 +10,6 @@ import {
   CloseOutlined,
   DownOutlined,
   ExclamationCircleFilled,
-  MinusOutlined,
   ReloadOutlined,
   StopOutlined,
   UpOutlined,
