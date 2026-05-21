@@ -162,9 +162,7 @@ export function UploadTray() {
         notification.success({
           message: 'Upload hoàn tất',
           description: task.label,
-          placement: 'bottomRight',
-          // offset to sit above the tray
-          style: { marginBottom: 220 },
+          placement: 'topRight',
         })
       }
 
@@ -172,8 +170,7 @@ export function UploadTray() {
         notification.error({
           message: 'Upload thất bại',
           description: `${task.label}: ${task.errorMsg}`,
-          placement: 'bottomRight',
-          style: { marginBottom: 220 },
+          placement: 'topRight',
         })
       }
     }
