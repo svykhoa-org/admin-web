@@ -135,6 +135,13 @@ export const CourseForm = ({ id }: Props) => {
       accessDurationDays: values.accessDurationDays || undefined,
       maxEnrollments: values.maxEnrollments || undefined,
       selfPaced: values.selfPaced,
+      thumbnail: effectiveThumbnail,
+      instructorIds: effectiveInstructorIds.length > 0 ? effectiveInstructorIds : undefined,
+      objectives: parseTextareaToArray(values.objectives),
+      requirements: parseTextareaToArray(values.requirements),
+      suitableFor: parseTextareaToArray(values.suitableFor),
+      cmeCredits: values.cmeCredits,
+      certifyingOrganization: values.certifyingOrganization?.trim() || undefined,
     }
 
     if (isEditMode && id) {
@@ -193,6 +200,11 @@ export const CourseForm = ({ id }: Props) => {
               accessDurationDays: detailData.accessDurationDays ?? undefined,
               maxEnrollments: detailData.maxEnrollments ?? undefined,
               selfPaced: detailData.selfPaced ?? true,
+              objectives: arrayToTextarea(detailData.objectives),
+              requirements: arrayToTextarea(detailData.requirements),
+              suitableFor: arrayToTextarea(detailData.suitableFor),
+              cmeCredits: detailData.cmeCredits ?? undefined,
+              certifyingOrganization: detailData.certifyingOrganization ?? undefined,
             }
           : COURSE_FORM_DEFAULT_VALUES
       }
