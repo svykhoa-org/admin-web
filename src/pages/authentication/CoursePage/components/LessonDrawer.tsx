@@ -1,6 +1,9 @@
 import { DocumentSelect } from '@/components/SelectionVariants'
-import { UploadSingleVideo } from '@/components/Upload'
+import { UploadSingleDocument, UploadSingleVideo } from '@/components/Upload'
 import { LessonType, type Lesson } from '@/models/Course'
+import { DocumentStatus } from '@/models/Document'
+import type { FileResource } from '@/models/FileResource'
+import { createDocument } from '@/services/Document'
 import { createLesson, updateLesson } from '@/services/Lesson'
 import { createQuiz, type QuestionInput } from '@/services/Quiz'
 import { isApiResponseError } from '@/utils/apiResponse'
@@ -17,6 +20,7 @@ import {
   Input,
   InputNumber,
   Modal,
+  Radio,
   Row,
   Select,
   Space,
@@ -249,6 +253,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   const [form] = Form.useForm()
   const [isSaving, setIsSaving] = useState(false)
   const [videoId, setVideoId] = useState<string | undefined>(undefined)
+  const [docMode, setDocMode] = useState<'select' | 'upload'>('upload')
 
   const lessonType = Form.useWatch('type', form) as LessonType | undefined
 
@@ -265,6 +270,10 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
         durationMinutes: initialData.durationMinutes ?? 0,
         isRequired: initialData.isRequired ?? true,
         isPreview: initialData.isPreview ?? false,
+        documentId:
+          initialData.type === LessonType.DOCUMENT
+            ? (initialData.contentId ?? undefined)
+            : undefined,
       })
       setVideoId(
         initialData.type === LessonType.VIDEO ? (initialData.contentId ?? undefined) : undefined,
@@ -274,11 +283,13 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
       form.setFieldsValue({ type: LessonType.VIDEO, order: 1 })
       setVideoId(undefined)
     }
+    setDocMode('upload')
   }, [open, mode, initialData, form])
 
   const handleClose = () => {
     form.resetFields()
     setVideoId(undefined)
+    setDocMode('upload')
     onClose()
   }
 
@@ -476,21 +487,66 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                 }
                 label={form.getFieldValue('title') as string | undefined}
                 onVideoReady={setVideoId}
+                onVideoRemoved={() => setVideoId(undefined)}
               />
             )}
 
             {/* ── Document ── */}
             {lessonType === LessonType.DOCUMENT && (
-              <Form.Item
-                name="documentId"
-                label="Chọn tài liệu"
-                rules={[{ required: true, message: 'Vui lòng chọn tài liệu' }]}
-              >
-                <DocumentSelect
-                  onChange={val => form.setFieldValue('documentId', val)}
-                  value={form.getFieldValue('documentId') as string | undefined}
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Radio.Group
+                  value={docMode}
+                  onChange={e => {
+                    setDocMode(e.target.value as 'select' | 'upload')
+                    form.setFieldValue('documentId', undefined)
+                  }}
+                  optionType="button"
+                  buttonStyle="solid"
+                  options={[
+                    { label: 'Chọn từ hệ thống', value: 'select' },
+                    { label: 'Tải lên tệp mới', value: 'upload' },
+                  ]}
                 />
-              </Form.Item>
+
+                {docMode === 'select' && (
+                  <Form.Item
+                    name="documentId"
+                    label="Tài liệu"
+                    rules={[{ required: true, message: 'Vui lòng chọn tài liệu' }]}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <DocumentSelect
+                      onChange={val => form.setFieldValue('documentId', val)}
+                      value={form.getFieldValue('documentId') as string | undefined}
+                    />
+                  </Form.Item>
+                )}
+
+                {docMode === 'upload' && (
+                  <Form.Item
+                    name="documentId"
+                    label="Tải lên tài liệu"
+                    rules={[{ required: true, message: 'Vui lòng tải lên tài liệu' }]}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <UploadSingleDocument
+                      onSuccess={async (resource: FileResource) => {
+                        try {
+                          const doc = await createDocument({
+                            title: resource.originalName ?? resource.fileName ?? 'Tài liệu',
+                            price: 0,
+                            status: DocumentStatus.PUBLISHED,
+                            fileId: resource.id,
+                          })
+                          form.setFieldValue('documentId', doc.id)
+                        } catch {
+                          void message.error('Không thể tạo tài liệu từ file đã tải lên')
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                )}
+              </Space>
             )}
 
             {/* ── Quiz ── */}
