@@ -1,3 +1,4 @@
+import { IconPicker } from '@/components/IconPicker'
 import { useCreate, useDetail, useUpdate } from '@/hooks'
 import type { CourseCategory } from '@/models/CourseCategory'
 import {
@@ -154,14 +155,14 @@ export const CourseCategoryForm = ({ id }: Props) => {
           </Form.Item>
 
           <Form.Item
-            label="Icon (emoji hoặc tên icon)"
+            label="Icon danh mục"
             validateStatus={errors.icon ? 'error' : ''}
             help={errors.icon?.message}
           >
             <Controller
               name="icon"
               control={control}
-              render={({ field }) => <Input {...field} placeholder="Ví dụ: 📚 hoặc book" />}
+              render={({ field }) => <IconPicker value={field.value} onChange={field.onChange} />}
             />
           </Form.Item>
 

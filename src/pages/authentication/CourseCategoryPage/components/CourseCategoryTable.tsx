@@ -1,4 +1,5 @@
 import { DataTable } from '@/components/DataTable/DataTable'
+import { renderIcon } from '@/components/IconPicker'
 import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModal'
 import { useDelete } from '@/hooks'
 import type { CourseCategory } from '@/models/CourseCategory'
@@ -60,7 +61,7 @@ export const CourseCategoryTable = () => {
       key: 'name',
       render: (_, record) => (
         <Space>
-          {record.icon && <span>{record.icon}</span>}
+          {renderIcon(record.icon)}
           <Typography.Link onClick={() => navigate(`/course-categories/${record.id}`)}>
             {record.name}
           </Typography.Link>
@@ -69,29 +70,15 @@ export const CourseCategoryTable = () => {
       ),
     },
     {
-      title: 'Đường dẫn',
-      dataIndex: 'path',
-      key: 'path',
-      render: (value: string) => (
-        <Typography.Text code style={{ fontSize: 11 }}>
-          {value}
-        </Typography.Text>
-      ),
-    },
-    {
-      title: 'Slug',
-      dataIndex: 'slug',
-      key: 'slug',
-    },
-    {
       title: 'Khoá học',
       key: 'counts',
-      width: 160,
+      width: 180,
       render: (_, record) => (
-        <Space>
-          <Tag>{record.publishedCourseCount} đã xuất bản</Tag>
-          <Tag color="default">{record.totalCourseCount} tổng</Tag>
-        </Space>
+        <Typography.Text>
+          <Typography.Text strong>{record.publishedCourseCount}</Typography.Text>
+          {' đã xuất bản / '}
+          <Typography.Text type="secondary">{record.totalCourseCount}</Typography.Text>
+        </Typography.Text>
       ),
     },
     {
