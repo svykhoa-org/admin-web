@@ -57,6 +57,14 @@ export const EnrollmentTable = () => {
 
   const columns: ColumnsType<Enrollment> = [
     {
+      title: 'STT',
+      key: 'stt',
+      width: 60,
+      align: 'center',
+      render: (_: unknown, __: Enrollment, index: number) =>
+        (params.page - 1) * params.pageSize + index + 1,
+    },
+    {
       title: 'Người dùng',
       key: 'user',
       render: (_, record) =>
