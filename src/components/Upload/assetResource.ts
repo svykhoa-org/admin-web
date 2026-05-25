@@ -20,6 +20,8 @@ export function mapAssetToFileResource(asset: AssetRecord, url?: string): FileRe
 }
 
 export function resolveUploadUrl(uploadUrl: string): string {
+  console.log('Resolving upload URL:', uploadUrl)
+  console.log('Base file URL from ENV:', ENV.API_FILE_URL)
   if (/^https?:\/\//i.test(uploadUrl)) return uploadUrl
   try {
     return new URL(uploadUrl, ENV.API_FILE_URL).toString()
