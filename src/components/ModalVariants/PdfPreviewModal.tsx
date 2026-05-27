@@ -88,30 +88,6 @@ export const PdfPreviewModal = ({ open, title, url, zIndex, onCancel }: Props) =
         </div>
       ) : (
         <div className="flex flex-col">
-          {/* ── Toolbar ── */}
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background sticky top-0 z-10">
-            <Space>
-              <Button
-                size="small"
-                icon={<MinusOutlined />}
-                disabled={zoomIndex === 0}
-                onClick={() => setZoomIndex(i => i - 1)}
-              />
-              <span className="text-sm w-12 text-center select-none">{zoomLabel}</span>
-              <Button
-                size="small"
-                icon={<PlusOutlined />}
-                disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-                onClick={() => setZoomIndex(i => i + 1)}
-              />
-            </Space>
-            {numPages > 0 && (
-              <Typography.Text type="secondary" className="text-xs">
-                {numPages} trang
-              </Typography.Text>
-            )}
-          </div>
-
           {/* ── PDF scroll area ── */}
           <div className="overflow-y-auto bg-gray-100" style={{ height: '70vh' }}>
             {isLoading && !loadError && (
@@ -145,6 +121,30 @@ export const PdfPreviewModal = ({ open, title, url, zIndex, onCancel }: Props) =
                 />
               ))}
             </Document>
+          </div>
+
+          {/* ── Bottom toolbar ── */}
+          <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-background">
+            <Space>
+              <Button
+                size="small"
+                icon={<MinusOutlined />}
+                disabled={zoomIndex === 0}
+                onClick={() => setZoomIndex(i => i - 1)}
+              />
+              <span className="text-sm w-12 text-center select-none">{zoomLabel}</span>
+              <Button
+                size="small"
+                icon={<PlusOutlined />}
+                disabled={zoomIndex === ZOOM_LEVELS.length - 1}
+                onClick={() => setZoomIndex(i => i + 1)}
+              />
+            </Space>
+            {numPages > 0 && (
+              <Typography.Text type="secondary" className="text-xs">
+                {numPages} trang
+              </Typography.Text>
+            )}
           </div>
         </div>
       )}
