@@ -1,5 +1,6 @@
 import axiosInstance from '@/lib/axios'
 import type { Document } from '@/models/Document'
+import { resolveFileUrl } from '@/services/Asset'
 import type { ApiDetailResponse } from '@/types/api'
 import { unwrapDetail } from '@/utils/apiResponse'
 
@@ -19,4 +20,11 @@ export async function getDocumentDetail(
   )
 
   return unwrapDetail(response.data)
+}
+
+export async function getDocumentDownloadUrl(id: string): Promise<string> {
+  const response = await axiosInstance.get<ApiDetailResponse<{ url: string }>>(
+    `${DOCUMENT_ENDPOINT}/${id}/download-url`,
+  )
+  return resolveFileUrl(unwrapDetail(response.data).url)
 }

@@ -145,7 +145,7 @@ export async function abortMultipartUpload(assetId: string): Promise<void> {
 const FILE_BASE_URL = import.meta.env.VITE_API_FILE_URL as string | undefined
 
 /** Prepend the file storage domain when the API returns a relative path. */
-function resolveFileUrl(url: string): string {
+export function resolveFileUrl(url: string): string {
   if (!FILE_BASE_URL || url.startsWith('http://') || url.startsWith('https://')) return url
   return `${FILE_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }

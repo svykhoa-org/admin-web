@@ -1,18 +1,10 @@
+import { resolveFileUrl } from '@/services/Asset'
 import { DownloadOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Modal, Space, Spin, Typography } from 'antd'
 import { useState } from 'react'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
-
-// ─── URL resolution ───────────────────────────────────────────────────────────
-
-const FILE_BASE_URL = import.meta.env.VITE_API_FILE_URL as string | undefined
-
-function resolveUrl(raw: string): string {
-  if (!FILE_BASE_URL || raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  return `${FILE_BASE_URL}${raw.startsWith('/') ? '' : '/'}${raw}`
-}
 
 // ─── Zoom config ──────────────────────────────────────────────────────────────
 
@@ -37,7 +29,7 @@ export const PdfPreviewModal = ({ open, title, url, zIndex, onCancel }: Props) =
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
-  const resolvedUrl = url ? resolveUrl(url) : undefined
+  const resolvedUrl = url ? resolveFileUrl(url) : undefined
   const scale = ZOOM_LEVELS[zoomIndex]
   const zoomLabel = `${Math.round(scale * 100)}%`
 
