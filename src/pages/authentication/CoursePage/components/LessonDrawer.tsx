@@ -1,10 +1,11 @@
+import { PdfPreviewModal } from '@/components/ModalVariants/PdfPreviewModal'
 import { DocumentSelect } from '@/components/SelectionVariants'
 import { UploadSingleDocument, UploadSingleVideo } from '@/components/Upload'
 import type { ExistingFileData } from '@/components/Upload'
 import { LessonType, type Lesson } from '@/models/Course'
 import { DocumentStatus } from '@/models/Document'
 import type { FileResource } from '@/models/FileResource'
-import { createDocument, getDocumentDetail } from '@/services/Document'
+import { createDocument, getDocumentDetail, getDocumentDownloadUrl } from '@/services/Document'
 import { createLesson, updateLesson } from '@/services/Lesson'
 import { createQuiz, getQuizDetail, type QuestionInput } from '@/services/Quiz'
 import type { Quiz } from '@/models/Quiz'
@@ -256,6 +257,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   const [videoId, setVideoId] = useState<string | undefined>(undefined)
   const [docMode, setDocMode] = useState<'select' | 'upload'>('upload')
   const [existingDocFile, setExistingDocFile] = useState<ExistingFileData | null>(null)
+  const [openPdfModal, setOpenPdfModal] = useState(false)
   const [quizDetail, setQuizDetail] = useState<Quiz | null>(null)
   const [isLoadingQuiz, setIsLoadingQuiz] = useState(false)
 
@@ -286,10 +288,13 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
       // Fetch existing document file info to pre-populate the upload preview
       if (initialData.type === LessonType.DOCUMENT && initialData.contentId) {
         getDocumentDetail({ id: initialData.contentId })
-          .then(doc => {
-            const url = doc.file?.url
-            const name = doc.file?.originalName ?? doc.file?.fileName ?? doc.title
-            if (url) setExistingDocFile({ url, name, type: 'document' })
+          .then(async doc => {
+            const name = doc.file?.originalName ?? doc.title
+            let url = doc.file?.url ?? undefined
+            if (!url) {
+              url = await getDocumentDownloadUrl(initialData.contentId!).catch(() => undefined)
+            }
+            setExistingDocFile({ url, name, type: 'document', onView: () => setOpenPdfModal(true) })
           })
           .catch(() => {})
       } else {
@@ -326,6 +331,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
     setVideoId(undefined)
     setDocMode('upload')
     setExistingDocFile(null)
+    setOpenPdfModal(false)
     onClose()
   }
 
@@ -414,318 +420,334 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   }
 
   return (
-    <Modal
-      title={
-        <Space>
-          {mode === 'create' ? 'Thêm bài học' : 'Cập nhật bài học'}
-          {lessonType && (
-            <Tag color={lessonTypeColorMap[lessonType]}>{lessonTypeLabelMap[lessonType]}</Tag>
-          )}
-        </Space>
-      }
-      width="80%"
-      open={open}
-      onCancel={handleClose}
-      destroyOnClose
-      zIndex={1100}
-      styles={{ body: { maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', padding: '16px 0' } }}
-      footer={
-        <Space>
-          <Button onClick={handleClose}>Hủy</Button>
-          <Button type="primary" loading={isSaving} onClick={handleSave}>
-            {mode === 'create' ? 'Tạo bài học' : 'Lưu thay đổi'}
-          </Button>
-        </Space>
-      }
-    >
-      <Form form={form} layout="vertical">
-        {/* ── Basic info ───────────────────────────────────────────────────── */}
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name="title"
-              label="Tiêu đề bài học"
-              rules={[{ required: true, message: 'Nhập tiêu đề bài học' }]}
-            >
-              <Input placeholder="Ví dụ: Bài 1: Giới thiệu NestJS" />
-            </Form.Item>
-          </Col>
-          <Col span={6}>
-            <Form.Item
-              name="type"
-              label="Loại bài học"
-              rules={[{ required: true, message: 'Chọn loại bài học' }]}
-            >
-              <Select
-                options={lessonTypeOptions}
-                disabled={mode === 'edit'}
-                placeholder="Chọn loại"
-              />
-            </Form.Item>
-          </Col>
-          {mode === 'edit' && (
-            <Col span={3}>
-              <Form.Item name="order" label="Thứ tự">
-                <InputNumber min={0} style={{ width: '100%' }} />
+    <>
+      <Modal
+        title={
+          <Space>
+            {mode === 'create' ? 'Thêm bài học' : 'Cập nhật bài học'}
+            {lessonType && (
+              <Tag color={lessonTypeColorMap[lessonType]}>{lessonTypeLabelMap[lessonType]}</Tag>
+            )}
+          </Space>
+        }
+        width="80%"
+        open={open}
+        onCancel={handleClose}
+        destroyOnClose
+        zIndex={1100}
+        styles={{
+          body: { maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', padding: '16px 0' },
+        }}
+        footer={
+          <Space>
+            <Button onClick={handleClose}>Hủy</Button>
+            <Button type="primary" loading={isSaving} onClick={handleSave}>
+              {mode === 'create' ? 'Tạo bài học' : 'Lưu thay đổi'}
+            </Button>
+          </Space>
+        }
+      >
+        <Form form={form} layout="vertical">
+          {/* ── Basic info ───────────────────────────────────────────────────── */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="title"
+                label="Tiêu đề bài học"
+                rules={[{ required: true, message: 'Nhập tiêu đề bài học' }]}
+              >
+                <Input placeholder="Ví dụ: Bài 1: Giới thiệu NestJS" />
               </Form.Item>
             </Col>
-          )}
-          <Col span={3}>
-            <Form.Item name="durationMinutes" label="Thời lượng (phút)">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row gutter={16}>
-          <Col span={16}>
-            <Form.Item name="description" label="Mô tả bài học">
-              <Input.TextArea rows={2} placeholder="Mô tả ngắn về bài học (tuỳ chọn)" />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item
-              name="isRequired"
-              label="Bắt buộc"
-              valuePropName="checked"
-              initialValue={true}
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item
-              name="isPreview"
-              label="Xem trước"
-              valuePropName="checked"
-              initialValue={false}
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        {/* ── Type-specific content ────────────────────────────────────────── */}
-        {lessonType && (
-          <>
-            <Divider orientation="horizontal">
-              Nội dung bài học
-              <Tag color={lessonTypeColorMap[lessonType]} style={{ marginLeft: 8 }}>
-                {lessonTypeLabelMap[lessonType]}
-              </Tag>
-            </Divider>
-
-            {/* ── Video ── */}
-            {lessonType === LessonType.VIDEO && (
-              <UploadSingleVideo
-                existingVideoId={
-                  mode === 'edit' && initialData?.type === LessonType.VIDEO
-                    ? (initialData.contentId ?? undefined)
-                    : undefined
-                }
-                label={form.getFieldValue('title') as string | undefined}
-                onVideoReady={setVideoId}
-                onVideoRemoved={() => setVideoId(undefined)}
-                hideUploadOnFilled={true}
-              />
-            )}
-
-            {/* ── Document ── */}
-            {lessonType === LessonType.DOCUMENT && (
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                <Radio.Group
-                  value={docMode}
-                  onChange={e => {
-                    setDocMode(e.target.value as 'select' | 'upload')
-                    form.setFieldValue('documentId', undefined)
-                  }}
-                  optionType="button"
-                  buttonStyle="solid"
-                  options={[
-                    { label: 'Chọn từ hệ thống', value: 'select' },
-                    { label: 'Tải lên tệp mới', value: 'upload' },
-                  ]}
+            <Col span={6}>
+              <Form.Item
+                name="type"
+                label="Loại bài học"
+                rules={[{ required: true, message: 'Chọn loại bài học' }]}
+              >
+                <Select
+                  options={lessonTypeOptions}
+                  disabled={mode === 'edit'}
+                  placeholder="Chọn loại"
                 />
-
-                {docMode === 'select' && (
-                  <Form.Item
-                    name="documentId"
-                    label="Tài liệu"
-                    rules={[{ required: true, message: 'Vui lòng chọn tài liệu' }]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <DocumentSelect
-                      onChange={val => form.setFieldValue('documentId', val)}
-                      value={form.getFieldValue('documentId') as string | undefined}
-                    />
-                  </Form.Item>
-                )}
-
-                {docMode === 'upload' && (
-                  <Form.Item
-                    name="documentId"
-                    label="Tải lên tài liệu"
-                    rules={[{ required: true, message: 'Vui lòng tải lên tài liệu' }]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <UploadSingleDocument
-                      existingFile={existingDocFile ?? undefined}
-                      hideUploadOnFilled={true}
-                      onRemoveExisting={() => setExistingDocFile(null)}
-                      onSuccess={async (resource: FileResource) => {
-                        try {
-                          const doc = await createDocument({
-                            title: resource.originalName ?? resource.fileName ?? 'Tài liệu',
-                            price: 0,
-                            status: DocumentStatus.PUBLISHED,
-                            fileId: resource.id,
-                          })
-                          form.setFieldValue('documentId', doc.id)
-                        } catch {
-                          void message.error('Không thể tạo tài liệu từ file đã tải lên')
-                        }
-                      }}
-                    />
-                  </Form.Item>
-                )}
-              </Space>
+              </Form.Item>
+            </Col>
+            {mode === 'edit' && (
+              <Col span={3}>
+                <Form.Item name="order" label="Thứ tự">
+                  <InputNumber min={0} style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
             )}
+            <Col span={3}>
+              <Form.Item name="durationMinutes" label="Thời lượng (phút)">
+                <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={16}>
+              <Form.Item name="description" label="Mô tả bài học">
+                <Input.TextArea rows={2} placeholder="Mô tả ngắn về bài học (tuỳ chọn)" />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item
+                name="isRequired"
+                label="Bắt buộc"
+                valuePropName="checked"
+                initialValue={true}
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item
+                name="isPreview"
+                label="Xem trước"
+                valuePropName="checked"
+                initialValue={false}
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
 
-            {/* ── Quiz ── */}
-            {lessonType === LessonType.QUIZ && (
-              <>
-                {/* Edit mode: quiz already created, show info only */}
-                {mode === 'edit' && initialData?.contentId ? (
-                  <Card size="small" loading={isLoadingQuiz}>
-                    {quizDetail ? (
-                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                        <Space wrap>
-                          <Typography.Text strong>{quizDetail.title}</Typography.Text>
-                          <Tag color="purple">{quizDetail.questions?.length ?? 0} câu hỏi</Tag>
-                          <Tag color="blue">Điểm đạt: {quizDetail.passingScore}%</Tag>
-                          {quizDetail.timeLimit && (
-                            <Tag color="orange">Thời gian: {quizDetail.timeLimit}s</Tag>
-                          )}
-                          {quizDetail.maxAttempts && (
-                            <Tag>Tối đa {quizDetail.maxAttempts} lần thử</Tag>
-                          )}
-                        </Space>
-                        <Button
-                          size="small"
-                          type="primary"
-                          ghost
-                          onClick={() => {
-                            handleClose()
-                            navigate(`/quizzes/${initialData.contentId}`)
-                          }}
-                        >
-                          Chỉnh sửa câu hỏi
-                        </Button>
-                      </Space>
-                    ) : (
-                      <Typography.Text type="secondary">
-                        Không thể tải thông tin quiz
-                      </Typography.Text>
-                    )}
-                  </Card>
-                ) : (
-                  <>
-                    {/* Quiz settings */}
-                    <Typography.Text strong>Cài đặt Quiz</Typography.Text>
-                    <Row gutter={16} style={{ marginTop: 12 }}>
-                      <Col span={8}>
-                        <Form.Item
-                          name={['quiz', 'passingScore']}
-                          label="Điểm đạt"
-                          initialValue={70}
-                          rules={[{ required: true, message: 'Nhập điểm đạt' }]}
-                        >
-                          <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item name={['quiz', 'maxAttempts']} label="Số lần thử tối đa">
-                          <InputNumber
-                            min={1}
-                            style={{ width: '100%' }}
-                            placeholder="Không giới hạn"
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item name={['quiz', 'timeLimit']} label="Giới hạn thời gian">
-                          <InputNumber
-                            min={0}
-                            style={{ width: '100%' }}
-                            placeholder="Không giới hạn"
-                            addonAfter="giây"
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
+          {/* ── Type-specific content ────────────────────────────────────────── */}
+          {lessonType && (
+            <>
+              <Divider orientation="horizontal">
+                Nội dung bài học
+                <Tag color={lessonTypeColorMap[lessonType]} style={{ marginLeft: 8 }}>
+                  {lessonTypeLabelMap[lessonType]}
+                </Tag>
+              </Divider>
 
-                    <Divider orientation="horizontal" style={{ fontSize: 13 }}>
-                      Danh sách câu hỏi
-                    </Divider>
+              {/* ── Video ── */}
+              {lessonType === LessonType.VIDEO && (
+                <UploadSingleVideo
+                  existingVideoId={
+                    mode === 'edit' && initialData?.type === LessonType.VIDEO
+                      ? (initialData.contentId ?? undefined)
+                      : undefined
+                  }
+                  label={form.getFieldValue('title') as string | undefined}
+                  onVideoReady={setVideoId}
+                  onVideoRemoved={() => setVideoId(undefined)}
+                  hideUploadOnFilled={true}
+                />
+              )}
 
-                    {/* Questions */}
-                    <Form.List name={['quiz', 'questions']}>
-                      {(fields, { add, remove }) => (
-                        <>
-                          {fields.length === 0 && (
-                            <div
-                              style={{
-                                textAlign: 'center',
-                                padding: '24px 0',
-                                color: '#999',
-                                border: '1px dashed #d9d9d9',
-                                borderRadius: 8,
-                                marginBottom: 12,
-                              }}
-                            >
-                              <Typography.Text type="secondary">
-                                Chưa có câu hỏi nào. Bấm &quot;Thêm câu hỏi&quot; để bắt đầu.
-                              </Typography.Text>
-                            </div>
-                          )}
+              {/* ── Document ── */}
+              {lessonType === LessonType.DOCUMENT && (
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Radio.Group
+                    value={docMode}
+                    onChange={e => {
+                      setDocMode(e.target.value as 'select' | 'upload')
+                      form.setFieldValue('documentId', undefined)
+                    }}
+                    optionType="button"
+                    buttonStyle="solid"
+                    options={[
+                      { label: 'Chọn từ hệ thống', value: 'select' },
+                      { label: 'Tải lên tệp mới', value: 'upload' },
+                    ]}
+                  />
 
-                          {fields.map((field, index) => (
-                            <QuestionBuilder
-                              key={field.key}
-                              field={field}
-                              index={index}
-                              remove={remove}
-                              form={form}
-                            />
-                          ))}
+                  {docMode === 'select' && (
+                    <Form.Item
+                      name="documentId"
+                      label="Tài liệu"
+                      rules={[{ required: true, message: 'Vui lòng chọn tài liệu' }]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <DocumentSelect
+                        onChange={val => form.setFieldValue('documentId', val)}
+                        value={form.getFieldValue('documentId') as string | undefined}
+                      />
+                    </Form.Item>
+                  )}
 
+                  {docMode === 'upload' && (
+                    <Form.Item
+                      name="documentId"
+                      label="Tải lên tài liệu"
+                      rules={[{ required: true, message: 'Vui lòng tải lên tài liệu' }]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <UploadSingleDocument
+                        existingFile={existingDocFile ?? undefined}
+                        hideUploadOnFilled={true}
+                        onRemoveExisting={() => setExistingDocFile(null)}
+                        onSuccess={async (resource: FileResource) => {
+                          try {
+                            const doc = await createDocument({
+                              title: resource.originalName ?? resource.fileName ?? 'Tài liệu',
+                              price: 0,
+                              status: DocumentStatus.PUBLISHED,
+                              fileId: resource.id,
+                            })
+                            form.setFieldValue('documentId', doc.id)
+                          } catch {
+                            void message.error('Không thể tạo tài liệu từ file đã tải lên')
+                          }
+                        }}
+                      />
+                    </Form.Item>
+                  )}
+                </Space>
+              )}
+
+              {/* ── Quiz ── */}
+              {lessonType === LessonType.QUIZ && (
+                <>
+                  {/* Edit mode: quiz already created, show info only */}
+                  {mode === 'edit' && initialData?.contentId ? (
+                    <Card size="small" loading={isLoadingQuiz}>
+                      {quizDetail ? (
+                        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                          <Space wrap>
+                            <Typography.Text strong>{quizDetail.title}</Typography.Text>
+                            <Tag color="purple">{quizDetail.questions?.length ?? 0} câu hỏi</Tag>
+                            <Tag color="blue">Điểm đạt: {quizDetail.passingScore}%</Tag>
+                            {quizDetail.timeLimit && (
+                              <Tag color="orange">Thời gian: {quizDetail.timeLimit}s</Tag>
+                            )}
+                            {quizDetail.maxAttempts && (
+                              <Tag>Tối đa {quizDetail.maxAttempts} lần thử</Tag>
+                            )}
+                          </Space>
                           <Button
-                            type="dashed"
-                            block
-                            icon={<PlusOutlined />}
-                            onClick={() =>
-                              add({
-                                type: 'single_choice',
-                                order: fields.length + 1,
-                                points: 10,
-                                options: [
-                                  { content: '', isCorrect: true, order: 1 },
-                                  { content: '', isCorrect: false, order: 2 },
-                                ],
-                              })
-                            }
+                            size="small"
+                            type="primary"
+                            ghost
+                            onClick={() => {
+                              handleClose()
+                              navigate(`/quizzes/${initialData.contentId}`)
+                            }}
                           >
-                            Thêm câu hỏi
+                            Chỉnh sửa câu hỏi
                           </Button>
-                        </>
+                        </Space>
+                      ) : (
+                        <Typography.Text type="secondary">
+                          Không thể tải thông tin quiz
+                        </Typography.Text>
                       )}
-                    </Form.List>
-                  </>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </Form>
-    </Modal>
+                    </Card>
+                  ) : (
+                    <>
+                      {/* Quiz settings */}
+                      <Typography.Text strong>Cài đặt Quiz</Typography.Text>
+                      <Row gutter={16} style={{ marginTop: 12 }}>
+                        <Col span={8}>
+                          <Form.Item
+                            name={['quiz', 'passingScore']}
+                            label="Điểm đạt"
+                            initialValue={70}
+                            rules={[{ required: true, message: 'Nhập điểm đạt' }]}
+                          >
+                            <InputNumber
+                              min={0}
+                              max={100}
+                              style={{ width: '100%' }}
+                              addonAfter="%"
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item name={['quiz', 'maxAttempts']} label="Số lần thử tối đa">
+                            <InputNumber
+                              min={1}
+                              style={{ width: '100%' }}
+                              placeholder="Không giới hạn"
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item name={['quiz', 'timeLimit']} label="Giới hạn thời gian">
+                            <InputNumber
+                              min={0}
+                              style={{ width: '100%' }}
+                              placeholder="Không giới hạn"
+                              addonAfter="giây"
+                            />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+
+                      <Divider orientation="horizontal" style={{ fontSize: 13 }}>
+                        Danh sách câu hỏi
+                      </Divider>
+
+                      {/* Questions */}
+                      <Form.List name={['quiz', 'questions']}>
+                        {(fields, { add, remove }) => (
+                          <>
+                            {fields.length === 0 && (
+                              <div
+                                style={{
+                                  textAlign: 'center',
+                                  padding: '24px 0',
+                                  color: '#999',
+                                  border: '1px dashed #d9d9d9',
+                                  borderRadius: 8,
+                                  marginBottom: 12,
+                                }}
+                              >
+                                <Typography.Text type="secondary">
+                                  Chưa có câu hỏi nào. Bấm &quot;Thêm câu hỏi&quot; để bắt đầu.
+                                </Typography.Text>
+                              </div>
+                            )}
+
+                            {fields.map((field, index) => (
+                              <QuestionBuilder
+                                key={field.key}
+                                field={field}
+                                index={index}
+                                remove={remove}
+                                form={form}
+                              />
+                            ))}
+
+                            <Button
+                              type="dashed"
+                              block
+                              icon={<PlusOutlined />}
+                              onClick={() =>
+                                add({
+                                  type: 'single_choice',
+                                  order: fields.length + 1,
+                                  points: 10,
+                                  options: [
+                                    { content: '', isCorrect: true, order: 1 },
+                                    { content: '', isCorrect: false, order: 2 },
+                                  ],
+                                })
+                              }
+                            >
+                              Thêm câu hỏi
+                            </Button>
+                          </>
+                        )}
+                      </Form.List>
+                    </>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </Form>
+      </Modal>
+
+      <PdfPreviewModal
+        open={openPdfModal}
+        title={existingDocFile?.name}
+        url={existingDocFile?.url}
+        onCancel={() => setOpenPdfModal(false)}
+      />
+    </>
   )
 }

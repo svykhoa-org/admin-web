@@ -1,9 +1,10 @@
 // ─── Existing file descriptor (for pre-populating upload components) ─────────
 
 export interface ExistingFileData {
-  url: string
+  url?: string
   name: string
   type: 'image' | 'video' | 'document'
+  onView?: () => void
 }
 
 // ─── Upload Status ─────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import {
   CloseOutlined,
   DownloadOutlined,
   ExclamationCircleOutlined,
+  EyeOutlined,
   InboxOutlined,
   LoadingOutlined,
   StopOutlined,
@@ -89,14 +90,27 @@ function ExistingFilePreview({ file, onRemove }: { file: ExistingFileData; onRem
         <div className="text-sm font-medium text-gray-900 truncate">{file.name}</div>
         <div className="text-xs text-gray-400">{label}</div>
       </div>
-      <a href={file.url} target="_blank" rel="noopener noreferrer">
-        <Button
-          type="text"
-          size="small"
-          icon={<DownloadOutlined />}
-          className="shrink-0 text-gray-400"
-        />
-      </a>
+      {(file.url || file.onView) && (
+        <>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            className="shrink-0 text-gray-400"
+            onClick={file.onView ?? (() => file.url && window.open(file.url, '_blank'))}
+          />
+          {file.url && (
+            <a href={file.url} download rel="noopener noreferrer">
+              <Button
+                type="text"
+                size="small"
+                icon={<DownloadOutlined />}
+                className="shrink-0 text-gray-400"
+              />
+            </a>
+          )}
+        </>
+      )}
       <Button
         type="text"
         size="small"
@@ -178,16 +192,17 @@ export function UploadSingleFile<TResult>({
   const [result, setResult] = useState<TResult | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | undefined>()
-  // Track the URL that the user explicitly dismissed so we can re-show if the
-  // prop changes to a different file without needing a sync setState in effect.
-  const [removedExistingUrl, setRemovedExistingUrl] = useState<string | null>(null)
+  const [existingDismissed, setExistingDismissed] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
 
-  // existingFile is "active" as long as it's present and the user hasn't dismissed it
-  const existingActive = !!existingFile && existingFile.url !== removedExistingUrl
+  const existingActive = !!existingFile && !existingDismissed
+
+  useEffect(() => {
+    setExistingDismissed(false)
+  }, [existingFile])
 
   function handleRemoveExisting() {
-    setRemovedExistingUrl(existingFile?.url ?? null)
+    setExistingDismissed(true)
     onRemoveExisting?.()
   }
 
