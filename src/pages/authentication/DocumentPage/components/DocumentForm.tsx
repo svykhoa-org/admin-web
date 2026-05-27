@@ -12,10 +12,12 @@ import {
   uploadDocumentFile,
   type CreateDocumentInput,
 } from '@/services/Document'
+import { getAssetAccessUrl } from '@/services/Asset'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { getUrlFileResource } from '@/utils/getUrlFileResource'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AxiosError } from 'axios'
+import { DownloadOutlined, EyeOutlined } from '@ant-design/icons'
 import {
   App,
   Avatar,
@@ -60,6 +62,7 @@ export const DocumentForm = ({ id }: Props) => {
   const isEditMode = !!id
   const [openThumbnailModal, setOpenThumbnailModal] = useState(false)
   const [openPreviewPdfModal, setOpenPreviewPdfModal] = useState(false)
+  const [fileAccessUrl, setFileAccessUrl] = useState<string | undefined>()
 
   const fetchDocumentDetail = useCallback(
     (detailId: string) => getDocumentDetail({ id: detailId }),
@@ -112,6 +115,17 @@ export const DocumentForm = ({ id }: Props) => {
       status: detailData.status,
       fileResource: detailData.file || null,
     })
+
+    const file = detailData.file
+    if (file?.url) {
+      setFileAccessUrl(file.url)
+    } else if (file?.id) {
+      getAssetAccessUrl(file.id)
+        .then(setFileAccessUrl)
+        .catch(() => setFileAccessUrl(undefined))
+    } else {
+      setFileAccessUrl(undefined)
+    }
   }, [detailData, reset])
 
   const isSubmitting = createRequest.isLoading || updateRequest.isLoading
@@ -305,12 +319,38 @@ export const DocumentForm = ({ id }: Props) => {
                     <UploadFileResource
                       value={field.value as FileResource | null | undefined}
                       uploadFile={handleUploadDocumentFile}
-                      onChange={file => field.onChange(file ?? null)}
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                      onChange={file => {
+                        field.onChange(file ?? null)
+                        if (file?.url) setFileAccessUrl(file.url)
+                        else if (file?.id) {
+                          getAssetAccessUrl(file.id)
+                            .then(setFileAccessUrl)
+                            .catch(() => setFileAccessUrl(undefined))
+                        } else {
+                          setFileAccessUrl(undefined)
+                        }
+                      }}
+                      accept=".pdf"
                       maxSizeInMb={50}
                     />
                   )}
                 />
+                {fileAccessUrl && (
+                  <Space size={8} style={{ marginTop: 8 }}>
+                    <Button
+                      size="small"
+                      icon={<EyeOutlined />}
+                      href={fileAccessUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Xem
+                    </Button>
+                    <Button size="small" icon={<DownloadOutlined />} href={fileAccessUrl} download>
+                      Tải xuống
+                    </Button>
+                  </Space>
+                )}
               </Form.Item>
             </div>
 
@@ -353,7 +393,7 @@ export const DocumentForm = ({ id }: Props) => {
         <PdfPreviewModal
           open={openPreviewPdfModal}
           title="Preview PDF"
-          pdfUrl={getPublicUrl(detailData?.preview) || ''}
+          url={getPublicUrl(detailData?.preview) || undefined}
           onCancel={() => setOpenPreviewPdfModal(false)}
         />
       </Space>
