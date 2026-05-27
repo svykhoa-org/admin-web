@@ -25,12 +25,13 @@ interface Props {
   open: boolean
   title?: string
   url?: string
+  zIndex?: number
   onCancel: () => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const PdfPreviewModal = ({ open, title, url, onCancel }: Props) => {
+export const PdfPreviewModal = ({ open, title, url, zIndex, onCancel }: Props) => {
   const [numPages, setNumPages] = useState(0)
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX)
   const [isLoading, setIsLoading] = useState(true)
@@ -76,6 +77,7 @@ export const PdfPreviewModal = ({ open, title, url, onCancel }: Props) => {
       footer={null}
       width={960}
       onCancel={onCancel}
+      zIndex={zIndex}
       destroyOnHidden
       afterClose={handleAfterClose}
       styles={{ body: { padding: 0 } }}

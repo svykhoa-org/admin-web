@@ -746,6 +746,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
         open={openPdfModal}
         title={existingDocFile?.name}
         url={existingDocFile?.url}
+        zIndex={1200}
         onCancel={() => setOpenPdfModal(false)}
       />
     </>
