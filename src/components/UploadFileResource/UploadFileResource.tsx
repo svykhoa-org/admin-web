@@ -1,5 +1,5 @@
 import type { FileResource } from '@/models/FileResource'
-import { DeleteOutlined, InboxOutlined, LinkOutlined } from '@ant-design/icons'
+import { DeleteOutlined, DownloadOutlined, EyeOutlined, InboxOutlined } from '@ant-design/icons'
 import { Alert, Button, Space, Typography, Upload } from 'antd'
 import type { UploadProps } from 'antd'
 import { useMemo, useState } from 'react'
@@ -13,6 +13,7 @@ interface UploadFileResourceProps {
   disabled?: boolean
   accept?: string
   maxSizeInMb?: number
+  accessUrl?: string
 }
 
 export const UploadFileResource = ({
@@ -22,6 +23,7 @@ export const UploadFileResource = ({
   disabled,
   accept,
   maxSizeInMb = 20,
+  accessUrl,
 }: UploadFileResourceProps) => {
   const [isUploading, setIsUploading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -59,6 +61,8 @@ export const UploadFileResource = ({
     onChange?.(undefined)
     setErrorMessage(null)
   }
+
+  const fileUrl = displayedValue?.url || accessUrl
 
   return (
     <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -98,10 +102,30 @@ export const UploadFileResource = ({
             {displayedValue.mimeType && (
               <Typography.Text type="secondary">{displayedValue.mimeType}</Typography.Text>
             )}
-            {displayedValue.url && (
-              <Typography.Link href={displayedValue.url} target="_blank">
-                <LinkOutlined /> Xem file
-              </Typography.Link>
+            {fileUrl && (
+              <Space size={4}>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ padding: 0 }}
+                >
+                  Xem
+                </Button>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  href={fileUrl}
+                  download
+                  style={{ padding: 0 }}
+                >
+                  Tải xuống
+                </Button>
+              </Space>
             )}
           </Space>
 

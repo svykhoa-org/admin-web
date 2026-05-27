@@ -101,11 +101,11 @@ export function UploadMultipleDocument({
     <UploadMultipleFile<FileResource>
       uploadFn={uploadFn}
       onChange={onChange}
-      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+      accept=".pdf"
       maxSizeMB={maxSizeMB}
       maxCount={maxCount}
       disabled={disabled}
-      hint="Hỗ trợ: PDF, Word, Excel, PowerPoint, TXT"
+      hint="Chỉ hỗ trợ tệp PDF"
       downloadUrl={resource => resource.url}
       renderFileItem={props => <DocumentFileItem {...props} />}
     />

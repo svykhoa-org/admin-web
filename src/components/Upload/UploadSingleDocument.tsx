@@ -1,6 +1,6 @@
 import type { FileResource } from '@/models/FileResource'
 import { getAssetAccessUrl, uploadSingleAsset } from '@/services/Asset'
-import { CloseOutlined, DownloadOutlined } from '@ant-design/icons'
+import { CloseOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import { mapAssetToFileResource } from './assetResource'
 import { UploadSingleFile } from './base/UploadSingleFile'
@@ -45,11 +45,11 @@ export function UploadSingleDocument({
       uploadFn={uploadFn}
       onSuccess={onSuccess}
       onRemove={onRemove}
-      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+      accept=".pdf"
       maxSizeMB={maxSizeMB}
       disabled={disabled}
-      placeholder="Kéo thả tài liệu vào đây hoặc bấm để chọn"
-      hint="Hỗ trợ: PDF, Word, Excel, PowerPoint, TXT"
+      placeholder="Kéo thả tài liệu PDF vào đây hoặc bấm để chọn"
+      hint="Chỉ hỗ trợ tệp PDF"
       existingFile={existingFile}
       hideUploadOnFilled={hideUploadOnFilled}
       onRemoveExisting={onRemoveExisting}
@@ -68,14 +68,24 @@ export function UploadSingleDocument({
               </div>
             </div>
             {resource.url && (
-              <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<DownloadOutlined />}
-                  className="shrink-0 text-gray-400"
-                />
-              </a>
+              <>
+                <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    className="shrink-0 text-gray-400"
+                  />
+                </a>
+                <a href={resource.url} download rel="noopener noreferrer">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<DownloadOutlined />}
+                    className="shrink-0 text-gray-400"
+                  />
+                </a>
+              </>
             )}
             <Button
               type="text"
