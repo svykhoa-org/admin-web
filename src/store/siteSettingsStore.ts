@@ -33,8 +33,10 @@ export const useSiteSettingsStore = create<SiteSettingsState & SiteSettingsActio
     try {
       const data = await updateSiteSettings(input)
       set({ settings: data })
-    } finally {
+    } catch (error) {
       set({ isSaving: false })
+      throw error
     }
+    set({ isSaving: false })
   },
 }))

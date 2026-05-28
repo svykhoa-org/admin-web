@@ -42,7 +42,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       footer={null}
       title={null}
       closable
-      top={60}
+      style={{ top: 60 }}
       styles={{
         body: {
           height: 600,
