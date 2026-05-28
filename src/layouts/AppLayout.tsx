@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Avatar, Dropdown, Button, Typography, theme, type MenuProps } from 'antd'
 import {
@@ -6,23 +6,39 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
   UserOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { UploadTray } from '@/components/UploadTray'
 import { useAuthStore } from '@/store/authStore'
-import logo from '@/assets/logo.png'
+import fallbackLogo from '@/assets/logo.png'
 import { ItemType, sideMenuConfig, type SideMenuEntry } from './sideMenuConfig'
 import classNames from 'classnames'
+import { useSiteSettingsStore } from '@/store/siteSettingsStore'
+import { SettingsModal } from '@/components/ModalVariants/SettingsModal/SettingsModal'
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
   const { token } = theme.useToken()
+  const { settings, fetchSettings } = useSiteSettingsStore()
+
+  useEffect(() => {
+    void fetchSettings()
+  }, [])
+
+  useEffect(() => {
+    const name = settings?.siteName ?? 'Admin'
+    document.title = `${name} CMS`
+  }, [settings?.siteName])
+
+  const logoSrc = settings?.logoUrl ?? fallbackLogo
 
   const buildMenuItems = (config: SideMenuEntry[]): MenuProps['items'] =>
     config.map(entry => {
@@ -98,7 +114,7 @@ export default function AppLayout() {
           )}
         >
           <img
-            src={logo}
+            src={logoSrc}
             alt="Admin logo"
             className={`w-auto object-contain transition-[height] duration-200 ${collapsed ? 'h-5' : 'h-9'}`}
           />
@@ -112,6 +128,31 @@ export default function AppLayout() {
           onClick={({ key }) => navigate(key)}
           style={{ border: 'none' }}
         />
+
+        <div style={{ borderTop: `1px solid ${token.colorBorderSecondary}`, padding: '8px' }}>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              width: '100%',
+              padding: collapsed ? '8px 0' : '8px 12px',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              borderRadius: token.borderRadius,
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              color: token.colorTextSecondary,
+              fontSize: 13,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = token.colorFillSecondary)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            <SettingOutlined style={{ fontSize: 16 }} />
+            {!collapsed && <span>Settings</span>}
+          </button>
+        </div>
       </Sider>
 
       <Layout className="overflow-hidden">
@@ -153,6 +194,7 @@ export default function AppLayout() {
         </Content>
         <UploadTray />
       </Layout>
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Layout>
   )
 }
