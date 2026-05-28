@@ -82,7 +82,11 @@ export function SiteSettingsPanel() {
 
   async function handleSave() {
     try {
-      const values = await form.validateFields()
+      const rawValues = await form.validateFields()
+      // Strip empty strings so they don't fail @IsUrl()/@IsEmail() validators
+      const values = Object.fromEntries(
+        Object.entries(rawValues).map(([k, v]) => [k, v === '' ? undefined : v]),
+      ) as typeof rawValues
       await saveSettings({
         ...values,
         logoId: logoId ?? undefined,

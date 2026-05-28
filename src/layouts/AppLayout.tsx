@@ -15,6 +15,7 @@ import { ItemType, sideMenuConfig, type SideMenuEntry } from './sideMenuConfig'
 import classNames from 'classnames'
 import { useSiteSettingsStore } from '@/store/siteSettingsStore'
 import { SettingsModal } from '@/components/ModalVariants/SettingsModal/SettingsModal'
+import { resolveUploadUrl } from '@/components/Upload/assetResource'
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -38,7 +39,7 @@ export default function AppLayout() {
     document.title = `${name} CMS`
   }, [settings?.siteName])
 
-  const logoSrc = settings?.logoUrl ?? fallbackLogo
+  const logoSrc = resolveUploadUrl(settings?.logoUrl || '') ?? fallbackLogo
 
   const buildMenuItems = (config: SideMenuEntry[]): MenuProps['items'] =>
     config.map(entry => {
@@ -146,8 +147,8 @@ export default function AppLayout() {
               color: token.colorTextSecondary,
               fontSize: 13,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = token.colorFillSecondary)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            onMouseEnter={e => (e.currentTarget.style.background = token.colorFillSecondary)}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <SettingOutlined style={{ fontSize: 16 }} />
             {!collapsed && <span>Settings</span>}
