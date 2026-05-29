@@ -13,7 +13,7 @@ interface SiteSettingsActions {
   saveSettings: (input: UpdateSiteSettingsInput) => Promise<void>
 }
 
-export const useSiteSettingsStore = create<SiteSettingsState & SiteSettingsActions>((set) => ({
+export const useSiteSettingsStore = create<SiteSettingsState & SiteSettingsActions>(set => ({
   settings: null,
   isLoading: false,
   isSaving: false,
@@ -28,7 +28,7 @@ export const useSiteSettingsStore = create<SiteSettingsState & SiteSettingsActio
     }
   },
 
-  saveSettings: async (input) => {
+  saveSettings: async input => {
     set({ isSaving: true })
     try {
       const data = await updateSiteSettings(input)
