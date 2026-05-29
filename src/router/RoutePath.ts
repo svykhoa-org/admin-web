@@ -44,17 +44,6 @@ export const RoutePath = {
     getPath: (id: string) => `/documents/${id}/edit`,
   },
 
-  // Document Order
-  DocumentOrderPage: {
-    route: 'document-orders',
-    path: '/document-orders',
-  },
-  DocumentOrderDetailPage: {
-    route: ':id',
-    path: '/document-orders/:id',
-    getPath: (id: string) => `/document-orders/${id}`,
-  },
-
   // Document License
   DocumentLicensePage: {
     route: 'document-licenses',
@@ -128,5 +117,16 @@ export const RoutePath = {
   CertificatePage: {
     route: 'certificates',
     path: '/certificates',
+  },
+
+  // Order
+  OrderPage: {
+    route: 'orders',
+    path: '/orders',
+  },
+  OrderDetailPage: {
+    route: ':id',
+    path: '/orders/:id',
+    getPath: (id: string) => `/orders/${id}`,
   },
 }
