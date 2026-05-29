@@ -4,8 +4,8 @@ import type { Order } from '@/models/Order'
 import { getOrderDetail, refundOrder } from '@/services/Order'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
-import { App, Button, Card, Descriptions, Space, Spin, Tag, Typography } from 'antd'
-import { useCallback, useEffect } from 'react'
+import { App, Button, Card, Descriptions, Modal, Space, Spin, Tag, Typography } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 interface Props {
@@ -38,6 +38,7 @@ const paymentMethodLabelMap: Record<OrderPaymentMethod, string> = {
 export const OrderDetail = ({ id }: Props) => {
   const navigate = useNavigate()
   const { message, modal } = App.useApp()
+  const [metadataModalOpen, setMetadataModalOpen] = useState(false)
 
   const fetchDetail = useCallback((detailId: string) => getOrderDetail({ id: detailId }), [])
   const detailRequest = useDetail(fetchDetail)
@@ -128,9 +129,22 @@ export const OrderDetail = ({ id }: Props) => {
               </Descriptions.Item>
               <Descriptions.Item label="Metadata thanh toán">
                 {order.paymentMetadata ? (
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                    {JSON.stringify(order.paymentMetadata, null, 2)}
-                  </pre>
+                  <>
+                    <Button size="small" onClick={() => setMetadataModalOpen(true)}>
+                      Xem metadata
+                    </Button>
+                    <Modal
+                      title="Payment Metadata"
+                      open={metadataModalOpen}
+                      onCancel={() => setMetadataModalOpen(false)}
+                      footer={<Button onClick={() => setMetadataModalOpen(false)}>Đóng</Button>}
+                      width={640}
+                    >
+                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: 12 }}>
+                        {JSON.stringify(order.paymentMetadata, null, 2)}
+                      </pre>
+                    </Modal>
+                  </>
                 ) : (
                   <Typography.Text type="secondary">-</Typography.Text>
                 )}
