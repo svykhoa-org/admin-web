@@ -11,16 +11,12 @@ import {
 } from 'chart.js'
 import { Card, Empty } from 'antd'
 import { Line } from 'react-chartjs-2'
+import type { RevenueByDayItem } from '@/models/AnalyticsDashboard'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-interface RevenuePoint {
-  date: string
-  value: number
-}
-
 interface RevenueLineChartCardProps {
-  data: RevenuePoint[]
+  data: RevenueByDayItem[]
   loading: boolean
 }
 
@@ -29,7 +25,13 @@ const options: ChartOptions<'line'> = {
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      display: false,
+      display: true,
+      position: 'top',
+    },
+    tooltip: {
+      callbacks: {
+        label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString('vi-VN')} VND`,
+      },
     },
   },
   scales: {
@@ -57,10 +59,19 @@ export function RevenueLineChartCard({ data, loading }: RevenueLineChartCardProp
     labels: data.map(item => item.date),
     datasets: [
       {
-        label: 'Doanh thu theo ngày (VND)',
-        data: data.map(item => item.value),
+        label: 'Khoá học',
+        data: data.map(item => item.courseRevenue),
         borderColor: '#1677ff',
-        backgroundColor: 'rgba(22,119,255,0.15)',
+        backgroundColor: 'rgba(22,119,255,0.10)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 2,
+      },
+      {
+        label: 'Tài liệu',
+        data: data.map(item => item.documentRevenue),
+        borderColor: '#722ed1',
+        backgroundColor: 'rgba(114,46,209,0.10)',
         fill: true,
         tension: 0.35,
         pointRadius: 2,
