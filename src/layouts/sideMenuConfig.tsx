@@ -5,6 +5,7 @@ import {
   FileTextOutlined,
   ProfileOutlined,
   SafetyCertificateOutlined,
+  ShoppingOutlined,
   TeamOutlined,
   PlaySquareOutlined,
   TagsOutlined,
@@ -109,15 +110,22 @@ export const sideMenuConfig: SideMenuEntry[] = [
       },
       {
         type: ItemType.LINK,
-        key: '/document-orders',
-        icon: <ProfileOutlined />,
-        label: 'Đơn hàng tài liệu',
-      },
-      {
-        type: ItemType.LINK,
         key: '/document-licenses',
         icon: <SafetyCertificateOutlined />,
         label: 'License tài liệu',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_ORDER',
+    label: 'Quản lý đơn hàng',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/orders',
+        icon: <ShoppingOutlined />,
+        label: 'Đơn hàng',
       },
     ],
   },
