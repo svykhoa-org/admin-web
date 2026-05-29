@@ -1,6 +1,6 @@
 import type { AbstractModel } from './AbstractModel'
 import type { Document } from './Document'
-import type { DocumentOrder } from './DocumentOrder'
+import type { Order } from './Order'
 import type { User } from './User'
 
 export enum DocumentLicenseStatus {
@@ -14,9 +14,9 @@ export interface DocumentLicense extends AbstractModel {
   documentId: string
   document?: Document
   documentOrderId: string
-  documentOrder?: DocumentOrder
+  documentOrder?: Order
   status: DocumentLicenseStatus
-  revokedAt: number | null // timestamp
+  revokedAt: number | null
   revokedBy: string | null
   revokeReason: string | null
 }
