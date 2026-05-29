@@ -17,6 +17,13 @@ export interface TopDocumentItem {
   revenue: number
 }
 
+export interface TopCourseItem {
+  courseId: string
+  title: string
+  enrollments: number
+  revenue: number
+}
+
 export interface AnalyticsDashboard {
   totalRevenue: number
   totalDocuments: number
@@ -26,4 +33,10 @@ export interface AnalyticsDashboard {
   revenueByDay: RevenueByDayItem[]
   downloadsByDay: DownloadsByDayItem[]
   topDocuments: TopDocumentItem[]
+  pendingOrders: number
+  totalActiveEnrollments: number
+  newEnrollments: number
+  totalPublishedCourses: number
+  enrollmentsByDay: { date: string; count: number }[]
+  topCourses: TopCourseItem[]
 }
