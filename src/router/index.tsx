@@ -15,12 +15,12 @@ import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassif
 import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyUpdatePage'
 import { DocumentLicenseDetailPage } from '@/pages/authentication/DocumentLicensePage/DocumentLicenseDetailPage'
 import { DocumentLicenseListPage } from '@/pages/authentication/DocumentLicensePage/DocumentLicenseListPage'
-import { DocumentOrderDetailPage } from '@/pages/authentication/DocumentOrderPage/DocumentOrderDetailPage'
-import { DocumentOrderListPage } from '@/pages/authentication/DocumentOrderPage/DocumentOrderListPage'
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
 import { EnrollmentListPage } from '@/pages/authentication/EnrollmentPage/EnrollmentListPage'
+import { OrderDetailPage } from '@/pages/authentication/OrderPage/OrderDetailPage'
+import { OrderListPage } from '@/pages/authentication/OrderPage/OrderListPage'
 import { QuizDetailPage } from '@/pages/authentication/QuizPage/QuizDetailPage'
 import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
 import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
@@ -99,19 +99,6 @@ const router = createBrowserRouter([
             ],
           },
           {
-            path: RoutePath.DocumentOrderPage.route,
-            children: [
-              {
-                index: true,
-                element: <DocumentOrderListPage />,
-              },
-              {
-                path: RoutePath.DocumentOrderDetailPage.route,
-                element: <DocumentOrderDetailPage />,
-              },
-            ],
-          },
-          {
             path: RoutePath.DocumentLicensePage.route,
             children: [
               {
@@ -157,6 +144,13 @@ const router = createBrowserRouter([
           {
             path: RoutePath.CertificatePage.route,
             children: [{ index: true, element: <CertificateListPage /> }],
+          },
+          {
+            path: RoutePath.OrderPage.route,
+            children: [
+              { index: true, element: <OrderListPage /> },
+              { path: RoutePath.OrderDetailPage.route, element: <OrderDetailPage /> },
+            ],
           },
           {
             path: RoutePath.UserPage.route,
