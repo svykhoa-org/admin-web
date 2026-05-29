@@ -1,4 +1,5 @@
 import { Card, List, Space, Tag, Typography } from 'antd'
+import { useNavigate } from 'react-router-dom'
 import type { TopCourseItem } from '@/models/AnalyticsDashboard'
 
 interface TopCoursesCardProps {
@@ -15,13 +16,18 @@ const currencyFormatter = new Intl.NumberFormat('vi-VN', {
 const numberFormatter = new Intl.NumberFormat('vi-VN')
 
 export function TopCoursesCard({ data, loading }: TopCoursesCardProps) {
+  const navigate = useNavigate()
+
   return (
     <Card title="Khoá học đăng ký nhiều nhất" loading={loading}>
       <List
         locale={{ emptyText: 'Chưa có dữ liệu' }}
         dataSource={data}
         renderItem={(item, index) => (
-          <List.Item>
+          <List.Item
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate(`/courses/${item.courseId}`)}
+          >
             <Space className="w-full justify-between" align="center">
               <Space size={10}>
                 <Tag color="orange">#{index + 1}</Tag>

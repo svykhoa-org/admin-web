@@ -1,4 +1,5 @@
 import { Card, List, Space, Tag, Typography } from 'antd'
+import { useNavigate } from 'react-router-dom'
 import type { TopDocumentItem } from '@/models/AnalyticsDashboard'
 
 interface TopDownloadedDocumentsCardProps {
@@ -15,13 +16,18 @@ const currencyFormatter = new Intl.NumberFormat('vi-VN', {
 const numberFormatter = new Intl.NumberFormat('vi-VN')
 
 export function TopDownloadedDocumentsCard({ data, loading }: TopDownloadedDocumentsCardProps) {
+  const navigate = useNavigate()
+
   return (
     <Card title="Tài liệu tải nhiều nhất" loading={loading}>
       <List
         locale={{ emptyText: 'Chưa có dữ liệu' }}
         dataSource={data}
         renderItem={(item, index) => (
-          <List.Item>
+          <List.Item
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate(`/documents/${item.documentId}/edit`)}
+          >
             <Space className="w-full justify-between" align="center">
               <Space size={10}>
                 <Tag color="blue">#{index + 1}</Tag>
