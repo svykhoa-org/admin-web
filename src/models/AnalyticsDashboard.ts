@@ -33,6 +33,7 @@ export interface AnalyticsDashboard {
   revenueByDay: RevenueByDayItem[]
   downloadsByDay: DownloadsByDayItem[]
   topDocuments: TopDocumentItem[]
+  totalCompletedOrders: number
   pendingOrders: number
   totalActiveEnrollments: number
   newEnrollments: number

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { ReloadOutlined } from '@ant-design/icons'
 import { Alert, Button, Col, Row, Segmented, Space, Typography } from 'antd'
 import { useRequest } from '@/hooks'
@@ -8,9 +7,7 @@ import { getAnalyticsDashboard } from '@/services/Analytics'
 import type { RevenueByDayItem } from '@/models/AnalyticsDashboard'
 import { DashboardSummaryCards } from './components/DashboardSummaryCards'
 import { RevenueLineChartCard } from './components/RevenueLineChartCard'
-import { DownloadsBarChartCard } from './components/DownloadsBarChartCard'
 import { TopDownloadedDocumentsCard } from './components/TopDownloadedDocumentsCard'
-import { EnrollmentsLineChartCard } from './components/EnrollmentsLineChartCard'
 import { TopCoursesCard } from './components/TopCoursesCard'
 
 const { Title } = Typography
@@ -46,24 +43,6 @@ function getTimeRange(range: DashboardRange): TimeRange {
   return { start, end }
 }
 
-function fillDaysCount(
-  start: Date,
-  end: Date,
-  entries: Array<{ date: string; count: number }>,
-): Array<{ date: string; count: number }> {
-  const valueByDate = new Map(entries.map(item => [item.date, item.count]))
-  const result: Array<{ date: string; count: number }> = []
-
-  const cursor = new Date(start)
-  while (cursor <= end) {
-    const key = formatDateKey(cursor)
-    result.push({ date: key, count: valueByDate.get(key) ?? 0 })
-    cursor.setDate(cursor.getDate() + 1)
-  }
-
-  return result
-}
-
 function fillRevenueByDay(start: Date, end: Date, entries: RevenueByDayItem[]): RevenueByDayItem[] {
   const byDate = new Map(entries.map(item => [item.date, item]))
   const result: RevenueByDayItem[] = []
@@ -79,7 +58,6 @@ function fillRevenueByDay(start: Date, end: Date, entries: RevenueByDayItem[]): 
 }
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
   const [range, setRange] = useState<DashboardRange>('1m')
 
   const { data, isLoading, error, execute } = useRequest(getAnalyticsDashboard)
@@ -100,21 +78,6 @@ export default function DashboardPage() {
   const revenueByDay = useMemo(
     () => fillRevenueByDay(timeRange.start, timeRange.end, data?.revenueByDay ?? []),
     [data?.revenueByDay, timeRange.end, timeRange.start],
-  )
-
-  const downloadsByDay = useMemo(
-    () =>
-      fillDaysCount(
-        timeRange.start,
-        timeRange.end,
-        data?.downloadsByDay.map(item => ({ date: item.date, count: item.count })) ?? [],
-      ),
-    [data?.downloadsByDay, timeRange.end, timeRange.start],
-  )
-
-  const enrollmentsByDay = useMemo(
-    () => fillDaysCount(timeRange.start, timeRange.end, data?.enrollmentsByDay ?? []),
-    [data?.enrollmentsByDay, timeRange.end, timeRange.start],
   )
 
   return (
@@ -150,18 +113,13 @@ export default function DashboardPage() {
 
       <DashboardSummaryCards
         loading={isLoading}
-        onPendingOrdersClick={() => navigate('/orders?status=PENDING')}
         data={
           data
             ? {
                 totalRevenue: data.totalRevenue,
+                totalCompletedOrders: data.totalCompletedOrders,
                 totalUsers: data.totalUsers,
-                newUsers: data.newUsers,
                 totalDocuments: data.totalDocuments,
-                totalDownloads: data.totalDownloads,
-                totalActiveEnrollments: data.totalActiveEnrollments,
-                newEnrollments: data.newEnrollments,
-                pendingOrders: data.pendingOrders,
                 totalPublishedCourses: data.totalPublishedCourses,
               }
             : null
@@ -169,11 +127,8 @@ export default function DashboardPage() {
       />
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
+        <Col xs={24}>
           <RevenueLineChartCard loading={isLoading} data={revenueByDay} />
-        </Col>
-        <Col xs={24} lg={8}>
-          <EnrollmentsLineChartCard loading={isLoading} data={enrollmentsByDay} />
         </Col>
       </Row>
 
@@ -183,12 +138,6 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} lg={12}>
           <TopCoursesCard loading={isLoading} data={data?.topCourses ?? []} />
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24}>
-          <DownloadsBarChartCard loading={isLoading} data={downloadsByDay} />
         </Col>
       </Row>
     </Space>
