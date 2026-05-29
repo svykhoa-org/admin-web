@@ -178,17 +178,17 @@ export default function DashboardPage() {
       </Row>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <DownloadsBarChartCard loading={isLoading} data={downloadsByDay} />
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <TopDownloadedDocumentsCard loading={isLoading} data={data?.topDocuments ?? []} />
         </Col>
         <Col xs={24} lg={12}>
           <TopCoursesCard loading={isLoading} data={data?.topCourses ?? []} />
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <DownloadsBarChartCard loading={isLoading} data={downloadsByDay} />
         </Col>
       </Row>
     </Space>
