@@ -115,7 +115,7 @@ export const CourseCategoryForm = ({ id }: Props) => {
   // Parent options: exclude self and any descendant
   const parentOptions = categories
     .filter(c => c.id !== id)
-    .filter(c => !id || !c.path.includes(id))
+    .filter(c => !id || !c.path?.includes(id))
     .map(c => ({ label: c.name, value: c.id }))
 
   if (isEditMode && isDetailLoading && !detailData) {
