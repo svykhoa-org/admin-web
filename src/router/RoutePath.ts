@@ -112,6 +112,11 @@ export const RoutePath = {
     route: 'enrollments',
     path: '/enrollments',
   },
+  EnrollmentDetailPage: {
+    route: ':id',
+    path: '/enrollments/:id',
+    getPath: (id: string) => `/enrollments/${id}`,
+  },
 
   // Certificate
   CertificatePage: {
@@ -128,5 +133,15 @@ export const RoutePath = {
     route: ':id',
     path: '/orders/:id',
     getPath: (id: string) => `/orders/${id}`,
+  },
+
+  // Settings
+  SettingsPage: {
+    route: 'settings',
+    path: '/settings',
+  },
+  GeneralSettingsPage: {
+    route: 'general',
+    path: '/settings/general',
   },
 }

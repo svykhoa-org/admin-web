@@ -25,6 +25,11 @@
   width: 140px;
 }
 
+.upload-media-card--block {
+  width: 100%;
+  max-height: 300px;
+}
+
 /* Preview image/video fills the card */
 .upload-media-card__preview {
   width: 100%;

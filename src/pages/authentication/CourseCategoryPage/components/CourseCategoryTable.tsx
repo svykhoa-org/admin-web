@@ -70,6 +70,12 @@ export const CourseCategoryTable = () => {
       ),
     },
     {
+      title: 'Danh mục cha',
+      dataIndex: ['parent', 'name'],
+      key: 'parentName',
+      render: (value?: string) => value || <Typography.Text type="secondary">-</Typography.Text>,
+    },
+    {
       title: 'Khoá học',
       key: 'counts',
       width: 180,

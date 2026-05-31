@@ -1,6 +1,8 @@
 import type { FileResource } from '@/models/FileResource'
-import { getAssetAccessUrl, uploadSingleAsset } from '@/services/Asset'
-import { mapAssetToFileResource } from './assetResource'
+import { FileVisibility } from '@/models/FileResource'
+import { confirmPresignedUpload, getAssetAccessUrl, requestPresignedUpload } from '@/services/Asset'
+import axios from 'axios'
+import { resolveUploadUrl } from './assetResource'
 import { UploadMultipleFile } from './base/UploadMultipleFile'
 import type { FileItemRenderProps, UploadFileFn } from './base/UploadMultipleFile'
 import { FileItemStatus } from './types'
@@ -8,11 +10,33 @@ import { getFileIconInfo } from './utils'
 
 // ─── Upload fn ────────────────────────────────────────────────────────────────
 
-const uploadFn: UploadFileFn<FileResource> = (file, signal, onProgress) => {
-  return uploadSingleAsset(file, signal, onProgress).then(async asset => {
-    const url = await getAssetAccessUrl(asset.id).catch(() => undefined)
-    return mapAssetToFileResource(asset, url)
+const uploadFn: UploadFileFn<FileResource> = async (file, signal, onProgress) => {
+  const contentType = file.type || 'application/pdf'
+
+  const { assetId, uploadUrl } = await requestPresignedUpload({
+    filename: file.name,
+    contentType,
   })
+
+  await axios.put(resolveUploadUrl(uploadUrl), file, {
+    signal,
+    headers: { 'Content-Type': contentType },
+    onUploadProgress: e => onProgress(e.loaded, e.total ?? file.size),
+  })
+
+  await confirmPresignedUpload(assetId)
+
+  const url = await getAssetAccessUrl(assetId).catch(() => undefined)
+
+  return {
+    id: assetId,
+    originalName: file.name,
+    fileName: file.name,
+    mimeType: contentType,
+    size: file.size,
+    visibility: FileVisibility.PRIVATE,
+    url,
+  }
 }
 
 // ─── File item ────────────────────────────────────────────────────────────────

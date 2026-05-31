@@ -3,7 +3,6 @@ import { DocumentSelect } from '@/components/SelectionVariants'
 import { UploadSingleDocument, UploadSingleVideo } from '@/components/Upload'
 import type { ExistingFileData } from '@/components/Upload'
 import { LessonType, type Lesson } from '@/models/Course'
-import { DocumentStatus } from '@/models/Document'
 import type { FileResource } from '@/models/FileResource'
 import { createDocument, getDocumentDetail, getDocumentDownloadUrl } from '@/services/Document'
 import { createLesson, updateLesson } from '@/services/Lesson'
@@ -82,6 +81,10 @@ interface QuestionBuilderProps {
 
 const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) => {
   const qType = Form.useWatch(['quiz', 'questions', field.name, 'type'], form) as string | undefined
+  const correctOptionIndex = Form.useWatch(
+    ['quiz', 'questions', field.name, 'correctOptionIndex'],
+    form,
+  ) as number | undefined
 
   return (
     <Card
@@ -139,62 +142,107 @@ const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) =
         </Col>
       </Row>
 
+      <Form.Item name={[field.name, 'correctOptionIndex']} hidden noStyle>
+        <InputNumber />
+      </Form.Item>
+
       {/* Choice options */}
       {(qType === 'single_choice' || qType === 'multiple_choice') && (
         <Form.List name={[field.name, 'options']}>
-          {(optFields, { add: addOpt, remove: removeOpt }) => (
-            <Space direction="vertical" size={6} style={{ width: '100%' }}>
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {qType === 'single_choice'
-                  ? 'Đánh dấu đúng 1 đáp án'
-                  : 'Đánh dấu tất cả đáp án đúng'}
-              </Typography.Text>
+          {(optFields, { add: addOpt, remove: removeOpt }) => {
+            const isSingle = qType === 'single_choice'
+            return (
+              <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {isSingle ? 'Chọn đúng 1 đáp án' : 'Đánh dấu tất cả đáp án đúng'}
+                </Typography.Text>
 
-              {optFields.map((optField, optIdx) => (
-                <Row key={optField.key} gutter={8} align="middle">
-                  <Col flex="auto">
-                    <Form.Item
-                      name={[optField.name, 'content']}
-                      style={{ margin: 0 }}
-                      rules={[{ required: true, message: 'Nhập đáp án' }]}
-                    >
-                      <Input placeholder={`Đáp án ${optIdx + 1}`} />
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Form.Item
-                      name={[optField.name, 'isCorrect']}
-                      valuePropName="checked"
-                      style={{ margin: 0 }}
-                    >
-                      <Checkbox>Đúng</Checkbox>
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      disabled={optFields.length <= 2}
-                      onClick={() => removeOpt(optField.name)}
-                    />
-                  </Col>
-                </Row>
-              ))}
+                {isSingle ? (
+                  <Radio.Group
+                    value={correctOptionIndex}
+                    onChange={e =>
+                      form.setFieldValue(
+                        ['quiz', 'questions', field.name, 'correctOptionIndex'],
+                        e.target.value as number,
+                      )
+                    }
+                    style={{ width: '100%' }}
+                  >
+                    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                      {optFields.map((optField, optIdx) => (
+                        <Row key={optField.key} gutter={8} align="middle">
+                          <Col flex="auto">
+                            <Form.Item
+                              name={[optField.name, 'content']}
+                              style={{ margin: 0 }}
+                              rules={[{ required: true, message: 'Nhập đáp án' }]}
+                            >
+                              <Input placeholder={`Đáp án ${optIdx + 1}`} />
+                            </Form.Item>
+                          </Col>
+                          <Col>
+                            <Radio value={optIdx}>Đúng</Radio>
+                          </Col>
+                          <Col>
+                            <Button
+                              type="text"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              disabled={optFields.length <= 2}
+                              onClick={() => removeOpt(optField.name)}
+                            />
+                          </Col>
+                        </Row>
+                      ))}
+                    </Space>
+                  </Radio.Group>
+                ) : (
+                  optFields.map((optField, optIdx) => (
+                    <Row key={optField.key} gutter={8} align="middle">
+                      <Col flex="auto">
+                        <Form.Item
+                          name={[optField.name, 'content']}
+                          style={{ margin: 0 }}
+                          rules={[{ required: true, message: 'Nhập đáp án' }]}
+                        >
+                          <Input placeholder={`Đáp án ${optIdx + 1}`} />
+                        </Form.Item>
+                      </Col>
+                      <Col>
+                        <Form.Item
+                          name={[optField.name, 'isCorrect']}
+                          valuePropName="checked"
+                          style={{ margin: 0 }}
+                        >
+                          <Checkbox>Đúng</Checkbox>
+                        </Form.Item>
+                      </Col>
+                      <Col>
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          disabled={optFields.length <= 2}
+                          onClick={() => removeOpt(optField.name)}
+                        />
+                      </Col>
+                    </Row>
+                  ))
+                )}
 
-              <Button
-                type="dashed"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() =>
-                  addOpt({ content: '', isCorrect: false, order: optFields.length + 1 })
-                }
-              >
-                Thêm đáp án
-              </Button>
-            </Space>
-          )}
+                <Button
+                  type="dashed"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => addOpt({ content: '', order: optFields.length + 1 })}
+                >
+                  Thêm đáp án
+                </Button>
+              </Space>
+            )
+          }}
         </Form.List>
       )}
 
@@ -358,7 +406,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
           passingScore: number
           maxAttempts?: number
           timeLimit?: number
-          questions?: QuestionInput[]
+          questions?: (QuestionInput & { correctOptionIndex?: number })[]
         }
 
         if (!quizValues?.questions?.length) {
@@ -366,12 +414,19 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
           return
         }
 
-        // Enrich options with auto-incrementing order
-        const enrichedQuestions: QuestionInput[] = (quizValues.questions ?? []).map((q, qIdx) => ({
-          ...q,
-          order: q.order ?? qIdx + 1,
-          options: q.options?.map((opt, oIdx) => ({ ...opt, order: oIdx + 1 })),
-        }))
+        const enrichedQuestions: QuestionInput[] = (quizValues.questions ?? []).map((q, qIdx) => {
+          const { correctOptionIndex, ...rest } = q
+          const isSingle = q.type === 'single_choice'
+          return {
+            ...rest,
+            order: q.order ?? qIdx + 1,
+            options: q.options?.map((opt, oIdx) => ({
+              content: opt.content,
+              order: oIdx + 1,
+              isCorrect: isSingle ? oIdx === correctOptionIndex : opt.isCorrect,
+            })),
+          }
+        })
 
         const quiz = await createQuiz({
           title: values.title as string,
@@ -525,17 +580,20 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
 
               {/* ── Video ── */}
               {lessonType === LessonType.VIDEO && (
-                <UploadSingleVideo
-                  existingVideoId={
-                    mode === 'edit' && initialData?.type === LessonType.VIDEO
-                      ? (initialData.contentId ?? undefined)
-                      : undefined
-                  }
-                  label={form.getFieldValue('title') as string | undefined}
-                  onVideoReady={setVideoId}
-                  onVideoRemoved={() => setVideoId(undefined)}
-                  hideUploadOnFilled={true}
-                />
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <UploadSingleVideo
+                    existingVideoId={
+                      mode === 'edit' && initialData?.type === LessonType.VIDEO
+                        ? (initialData.contentId ?? undefined)
+                        : undefined
+                    }
+                    label={form.getFieldValue('title') as string | undefined}
+                    onVideoReady={setVideoId}
+                    onVideoRemoved={() => setVideoId(undefined)}
+                    hideUploadOnFilled={true}
+                    size="block"
+                  />
+                </Space>
               )}
 
               {/* ── Document ── */}
@@ -585,7 +643,6 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                             const doc = await createDocument({
                               title: resource.originalName ?? resource.fileName ?? 'Tài liệu',
                               price: 0,
-                              status: DocumentStatus.PUBLISHED,
                               fileId: resource.id,
                             })
                             form.setFieldValue('documentId', doc.id)
@@ -612,7 +669,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                             <Tag color="purple">{quizDetail.questions?.length ?? 0} câu hỏi</Tag>
                             <Tag color="blue">Điểm đạt: {quizDetail.passingScore}%</Tag>
                             {quizDetail.timeLimit && (
-                              <Tag color="orange">Thời gian: {quizDetail.timeLimit}s</Tag>
+                              <Tag color="orange">Thời gian: {quizDetail.timeLimit} phút</Tag>
                             )}
                             {quizDetail.maxAttempts && (
                               <Tag>Tối đa {quizDetail.maxAttempts} lần thử</Tag>
@@ -671,7 +728,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                               min={0}
                               style={{ width: '100%' }}
                               placeholder="Không giới hạn"
-                              addonAfter="giây"
+                              addonAfter="phút"
                             />
                           </Form.Item>
                         </Col>
@@ -721,9 +778,10 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                                   type: 'single_choice',
                                   order: fields.length + 1,
                                   points: 10,
+                                  correctOptionIndex: 0,
                                   options: [
-                                    { content: '', isCorrect: true, order: 1 },
-                                    { content: '', isCorrect: false, order: 2 },
+                                    { content: '', order: 1 },
+                                    { content: '', order: 2 },
                                   ],
                                 })
                               }

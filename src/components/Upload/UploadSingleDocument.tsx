@@ -1,20 +1,90 @@
 import type { FileResource } from '@/models/FileResource'
-import { getAssetAccessUrl, uploadSingleAsset } from '@/services/Asset'
+import { FileVisibility } from '@/models/FileResource'
+import {
+  completeMultipartUpload,
+  confirmPresignedUpload,
+  getAssetAccessUrl,
+  initMultipartUpload,
+  requestPresignedUpload,
+} from '@/services/Asset'
 import { CloseOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
-import { mapAssetToFileResource } from './assetResource'
+import axios from 'axios'
+import { resolveUploadUrl } from './assetResource'
 import { UploadSingleFile } from './base/UploadSingleFile'
 import type { UploadFileFn } from './base/UploadSingleFile'
 import type { ExistingFileData } from './types'
 import { getFileIconInfo } from './utils'
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const MULTIPART_THRESHOLD = 50 * 1024 * 1024 // 50 MB
+
 // ─── Upload fn ────────────────────────────────────────────────────────────────
 
-const uploadFn: UploadFileFn<FileResource> = (file, signal, onProgress) => {
-  return uploadSingleAsset(file, signal, onProgress).then(async asset => {
-    const url = await getAssetAccessUrl(asset.id).catch(() => undefined)
-    return mapAssetToFileResource(asset, url)
-  })
+const uploadFn: UploadFileFn<FileResource> = async (file, signal, onProgress) => {
+  const contentType = file.type || 'application/pdf'
+  let assetId: string
+
+  if (file.size < MULTIPART_THRESHOLD) {
+    // ── Single presigned PUT ──
+    const { assetId: id, uploadUrl } = await requestPresignedUpload({
+      filename: file.name,
+      contentType,
+    })
+    assetId = id
+
+    await axios.put(resolveUploadUrl(uploadUrl), file, {
+      signal,
+      headers: { 'Content-Type': contentType },
+      onUploadProgress: e => onProgress(e.loaded, e.total ?? file.size),
+    })
+
+    await confirmPresignedUpload(assetId)
+  } else {
+    // ── Multipart upload ──
+    const session = await initMultipartUpload({
+      filename: file.name,
+      fileSize: file.size,
+      contentType,
+    })
+    assetId = session.assetId
+
+    const completedParts: { partNumber: number; etag: string }[] = []
+    let completedBytes = 0
+
+    for (const part of session.parts) {
+      if (signal.aborted) throw new DOMException('Upload cancelled', 'AbortError')
+
+      const start = (part.partNumber - 1) * session.chunkSize
+      const end = Math.min(start + session.chunkSize, file.size)
+
+      const response = await axios.put(resolveUploadUrl(part.url), file.slice(start, end), {
+        signal,
+        headers: { 'Content-Type': 'application/octet-stream' },
+        onUploadProgress: e => onProgress(completedBytes + e.loaded, file.size),
+      })
+
+      const etag = (response.headers['etag'] as string | undefined) ?? ''
+      completedParts.push({ partNumber: part.partNumber, etag })
+      completedBytes += end - start
+      onProgress(completedBytes, file.size)
+    }
+
+    await completeMultipartUpload(assetId, completedParts)
+  }
+
+  const url = await getAssetAccessUrl(assetId).catch(() => undefined)
+
+  return {
+    id: assetId,
+    originalName: file.name,
+    fileName: file.name,
+    mimeType: contentType,
+    size: file.size,
+    visibility: FileVisibility.PRIVATE,
+    url,
+  }
 }
 
 // ─── Public types ─────────────────────────────────────────────────────────────
@@ -27,6 +97,8 @@ export interface UploadSingleDocumentProps {
   existingFile?: ExistingFileData
   hideUploadOnFilled?: boolean
   onRemoveExisting?: () => void
+  /** When provided, clicking the eye icon calls this instead of opening a new tab */
+  onPreview?: (url: string) => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -39,6 +111,7 @@ export function UploadSingleDocument({
   existingFile,
   hideUploadOnFilled,
   onRemoveExisting,
+  onPreview,
 }: UploadSingleDocumentProps) {
   return (
     <UploadSingleFile<FileResource>
@@ -69,14 +142,24 @@ export function UploadSingleDocument({
             </div>
             {resource.url && (
               <>
-                <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                {onPreview ? (
                   <Button
                     type="text"
                     size="small"
                     icon={<EyeOutlined />}
+                    onClick={() => onPreview(resource.url!)}
                     className="shrink-0 text-gray-400"
                   />
-                </a>
+                ) : (
+                  <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      className="shrink-0 text-gray-400"
+                    />
+                  </a>
+                )}
                 <a href={resource.url} download rel="noopener noreferrer">
                   <Button
                     type="text"

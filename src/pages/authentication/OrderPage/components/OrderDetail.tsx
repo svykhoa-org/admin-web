@@ -4,7 +4,7 @@ import type { Order } from '@/models/Order'
 import { getOrderDetail, refundOrder } from '@/services/Order'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
-import { App, Button, Card, Descriptions, Modal, Space, Spin, Tag, Typography } from 'antd'
+import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin, Tag, Typography } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -61,8 +61,23 @@ export const OrderDetail = ({ id }: Props) => {
     (currentOrder: Order) => {
       void modal.confirm({
         title: 'Xác nhận hoàn tiền',
-        content: `Xác nhận đánh dấu hoàn tiền đơn ${currentOrder.orderCode}? Hành động này sẽ thu hồi quyền truy cập của người dùng.`,
-        okText: 'Hoàn tiền',
+        content: (
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Alert
+              type="warning"
+              showIcon
+              message="Quy trình hoàn tiền thủ công"
+              description="Hệ thống chưa tự động chuyển tiền. Bạn cần thực hiện hoàn tiền cho khách qua kênh thanh toán bên ngoài, sau đó xác nhận tại đây để đánh dấu trạng thái đơn."
+            />
+            <Typography.Text>
+              Xác nhận đánh dấu hoàn tiền đơn{' '}
+              <Typography.Text strong>{currentOrder.orderCode}</Typography.Text>? Hành động này sẽ
+              thu hồi quyền truy cập của người dùng.
+            </Typography.Text>
+          </Space>
+        ),
+        width: 640,
+        okText: 'Đã hoàn tiền',
         okButtonProps: { danger: true },
         cancelText: 'Hủy',
         onOk: async () => {
@@ -138,7 +153,8 @@ export const OrderDetail = ({ id }: Props) => {
                       open={metadataModalOpen}
                       onCancel={() => setMetadataModalOpen(false)}
                       footer={<Button onClick={() => setMetadataModalOpen(false)}>Đóng</Button>}
-                      width={640}
+                      width={700}
+                      centered
                     >
                       <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: 12 }}>
                         {JSON.stringify(order.paymentMetadata, null, 2)}

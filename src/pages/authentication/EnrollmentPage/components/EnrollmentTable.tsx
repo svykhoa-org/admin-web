@@ -5,8 +5,10 @@ import type { Enrollment } from '@/models/Enrollment'
 import { EnrollmentStatus } from '@/models/Enrollment'
 import { listEnrollment } from '@/services/Enrollment'
 import { formatTimestamp } from '@/utils/time'
-import { Avatar, Card, Progress, Select, Space, Tag, Typography } from 'antd'
+import { EyeOutlined } from '@ant-design/icons'
+import { Avatar, Button, Card, Progress, Select, Space, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
+import { useNavigate } from 'react-router-dom'
 
 const statusColors: Record<EnrollmentStatus, string> = {
   [EnrollmentStatus.ACTIVE]: 'green',
@@ -31,6 +33,7 @@ interface ListParams {
 }
 
 export const EnrollmentTable = () => {
+  const navigate = useNavigate()
   const {
     items,
     data: listData,
@@ -134,6 +137,19 @@ export const EnrollmentTable = () => {
       width: 160,
       render: (v?: string | null) =>
         v ? formatTimestamp(v) : <Typography.Text type="secondary">Không giới hạn</Typography.Text>,
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 48,
+      align: 'center',
+      render: (_: unknown, record: Enrollment) => (
+        <Button
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => navigate(`/enrollments/${record.id}`)}
+        />
+      ),
     },
   ]
 

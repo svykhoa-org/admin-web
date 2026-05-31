@@ -1,4 +1,3 @@
-import { DocumentStatus } from '@/models/Document'
 import { fileResourceSchema } from '@/components/UploadFileResource/schemas/fileResourceSchema'
 import { z } from 'zod'
 
@@ -20,10 +19,17 @@ export const documentFormSchema = z.object({
     })
     .nonnegative('Giá phải lớn hơn hoặc bằng 0'),
   categoryId: optionalTrimmedString,
-  status: z.enum(DocumentStatus),
+  thumbnailId: z
+    .string()
+    .nullable()
+    .refine(v => v !== null, 'Vui lòng tải lên ảnh đại diện'),
   fileResource: fileResourceSchema
     .nullable()
     .refine(value => value !== null, 'Vui lòng tải lên một tệp tài liệu'),
+  previewId: z
+    .string()
+    .nullable()
+    .refine(v => v !== null, 'Vui lòng tải lên Preview PDF'),
 })
 
 export type DocumentFormValues = z.input<typeof documentFormSchema>
@@ -34,6 +40,7 @@ export const DOCUMENT_FORM_DEFAULT_VALUES: DocumentFormValues = {
   description: undefined,
   price: 0,
   categoryId: undefined,
-  status: DocumentStatus.DRAFT,
+  thumbnailId: null,
   fileResource: null,
+  previewId: null,
 }

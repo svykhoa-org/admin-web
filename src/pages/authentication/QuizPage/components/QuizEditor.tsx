@@ -13,6 +13,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Radio,
   Row,
   Select,
   Space,
@@ -44,6 +45,13 @@ interface QuestionBuilderProps {
 
 const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) => {
   const qType = Form.useWatch(['questions', field.name, 'type'], form) as QuestionType | undefined
+  // correctOptionIndex là scalar ở level câu hỏi — useWatch hoạt động ổn định hơn so với watch nested options array
+  const correctOptionIndex = Form.useWatch(
+    ['questions', field.name, 'correctOptionIndex'],
+    form,
+  ) as number | undefined
+
+  const isSingle = qType === QuestionType.SINGLE_CHOICE || qType === QuestionType.TRUE_FALSE
 
   return (
     <Card
@@ -97,6 +105,11 @@ const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) =
         </Col>
       </Row>
 
+      {/* Đăng ký correctOptionIndex vào form store để Form.useWatch hoạt động */}
+      <Form.Item name={[field.name, 'correctOptionIndex']} hidden noStyle>
+        <InputNumber />
+      </Form.Item>
+
       {(qType === QuestionType.SINGLE_CHOICE ||
         qType === QuestionType.MULTIPLE_CHOICE ||
         qType === QuestionType.TRUE_FALSE) && (
@@ -104,51 +117,89 @@ const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) =
           {(optFields, { add: addOpt, remove: removeOpt }) => (
             <Space direction="vertical" size={6} style={{ width: '100%' }}>
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {qType === QuestionType.SINGLE_CHOICE || qType === QuestionType.TRUE_FALSE
-                  ? 'Đánh dấu đúng 1 đáp án'
-                  : 'Đánh dấu tất cả đáp án đúng'}
+                {isSingle ? 'Chọn đúng 1 đáp án' : 'Đánh dấu tất cả đáp án đúng'}
               </Typography.Text>
 
-              {optFields.map((optField, optIdx) => (
-                <Row key={optField.key} gutter={8} align="middle">
-                  <Col flex="auto">
-                    <Form.Item
-                      name={[optField.name, 'content']}
-                      style={{ margin: 0 }}
-                      rules={[{ required: true, message: 'Nhập đáp án' }]}
-                    >
-                      <Input placeholder={`Đáp án ${optIdx + 1}`} />
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Form.Item
-                      name={[optField.name, 'isCorrect']}
-                      valuePropName="checked"
-                      style={{ margin: 0 }}
-                    >
-                      <Checkbox>Đúng</Checkbox>
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      disabled={optFields.length <= 2}
-                      onClick={() => removeOpt(optField.name)}
-                    />
-                  </Col>
-                </Row>
-              ))}
+              {isSingle ? (
+                <Radio.Group
+                  value={correctOptionIndex}
+                  onChange={e =>
+                    form.setFieldValue(
+                      ['questions', field.name, 'correctOptionIndex'],
+                      e.target.value as number,
+                    )
+                  }
+                  style={{ width: '100%' }}
+                >
+                  <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                    {optFields.map((optField, optIdx) => (
+                      <Row key={optField.key} gutter={8} align="middle">
+                        <Col flex="auto">
+                          <Form.Item
+                            name={[optField.name, 'content']}
+                            style={{ margin: 0 }}
+                            rules={[{ required: true, message: 'Nhập đáp án' }]}
+                          >
+                            <Input placeholder={`Đáp án ${optIdx + 1}`} />
+                          </Form.Item>
+                        </Col>
+                        <Col>
+                          <Radio value={optIdx}>Đúng</Radio>
+                        </Col>
+                        <Col>
+                          <Button
+                            type="text"
+                            danger
+                            size="small"
+                            icon={<DeleteOutlined />}
+                            disabled={optFields.length <= 2}
+                            onClick={() => removeOpt(optField.name)}
+                          />
+                        </Col>
+                      </Row>
+                    ))}
+                  </Space>
+                </Radio.Group>
+              ) : (
+                optFields.map((optField, optIdx) => (
+                  <Row key={optField.key} gutter={8} align="middle">
+                    <Col flex="auto">
+                      <Form.Item
+                        name={[optField.name, 'content']}
+                        style={{ margin: 0 }}
+                        rules={[{ required: true, message: 'Nhập đáp án' }]}
+                      >
+                        <Input placeholder={`Đáp án ${optIdx + 1}`} />
+                      </Form.Item>
+                    </Col>
+                    <Col>
+                      <Form.Item
+                        name={[optField.name, 'isCorrect']}
+                        valuePropName="checked"
+                        style={{ margin: 0 }}
+                      >
+                        <Checkbox>Đúng</Checkbox>
+                      </Form.Item>
+                    </Col>
+                    <Col>
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        disabled={optFields.length <= 2}
+                        onClick={() => removeOpt(optField.name)}
+                      />
+                    </Col>
+                  </Row>
+                ))
+              )}
 
               <Button
                 type="dashed"
                 size="small"
                 icon={<PlusOutlined />}
-                onClick={() =>
-                  addOpt({ content: '', isCorrect: false, order: optFields.length + 1 })
-                }
+                onClick={() => addOpt({ content: '', order: optFields.length + 1 })}
               >
                 Thêm đáp án
               </Button>
@@ -239,18 +290,22 @@ export const QuizEditor = ({ quizId }: Props) => {
       timeLimit: quiz.timeLimit ?? undefined,
     })
     questionsForm.setFieldsValue({
-      questions: (quiz.questions ?? []).map(q => ({
-        content: q.content,
-        type: q.type,
-        order: q.order,
-        points: q.points,
-        options: q.options?.map(o => ({
-          content: o.content,
-          isCorrect: o.isCorrect,
-          order: o.order,
-        })),
-        acceptedAnswers: q.acceptedAnswers?.map(a => ({ value: a.value })),
-      })),
+      questions: (quiz.questions ?? []).map(q => {
+        const isSingle = q.type === 'single_choice' || q.type === 'true_false'
+        return {
+          content: q.content,
+          type: q.type,
+          order: q.order,
+          points: q.points,
+          correctOptionIndex: isSingle ? (q.options?.findIndex(o => o.isCorrect) ?? 0) : undefined,
+          options: q.options?.map(o => ({
+            content: o.content,
+            isCorrect: o.isCorrect,
+            order: o.order,
+          })),
+          acceptedAnswers: q.acceptedAnswers?.map(a => ({ value: a.value })),
+        }
+      }),
     })
   }, [quiz, settingsForm, questionsForm])
 
@@ -274,12 +329,23 @@ export const QuizEditor = ({ quizId }: Props) => {
   const handleSaveQuestions = async () => {
     try {
       const values = await questionsForm.validateFields()
-      const rawQuestions = (values.questions ?? []) as QuestionInput[]
-      const enriched = rawQuestions.map((q, qIdx) => ({
-        ...q,
-        order: q.order ?? qIdx + 1,
-        options: q.options?.map((opt, oIdx) => ({ ...opt, order: oIdx + 1 })),
-      }))
+      const rawQuestions = (values.questions ?? []) as (QuestionInput & {
+        correctOptionIndex?: number
+      })[]
+      const enriched: QuestionInput[] = rawQuestions.map((q, qIdx) => {
+        const { correctOptionIndex, ...rest } = q
+        const isSingle =
+          (q.type as string) === 'single_choice' || (q.type as string) === 'true_false'
+        return {
+          ...rest,
+          order: q.order ?? qIdx + 1,
+          options: q.options?.map((opt, oIdx) => ({
+            content: opt.content,
+            order: oIdx + 1,
+            isCorrect: isSingle ? oIdx === correctOptionIndex : opt.isCorrect,
+          })),
+        }
+      })
       await updateRequest.execute(quizId, { questions: enriched })
       void message.success('Cập nhật câu hỏi thành công')
       void executeDetail(quizId)
@@ -341,7 +407,7 @@ export const QuizEditor = ({ quizId }: Props) => {
                   min={0}
                   style={{ width: '100%' }}
                   placeholder="Không giới hạn"
-                  addonAfter="giây"
+                  addonAfter="phút"
                 />
               </Form.Item>
             </Col>
@@ -411,9 +477,10 @@ export const QuizEditor = ({ quizId }: Props) => {
                       type: QuestionType.SINGLE_CHOICE,
                       order: fields.length + 1,
                       points: 10,
+                      correctOptionIndex: 0,
                       options: [
-                        { content: '', isCorrect: true, order: 1 },
-                        { content: '', isCorrect: false, order: 2 },
+                        { content: '', order: 1 },
+                        { content: '', order: 2 },
                       ],
                     })
                   }

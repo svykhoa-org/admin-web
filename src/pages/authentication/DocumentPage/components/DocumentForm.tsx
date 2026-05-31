@@ -1,36 +1,24 @@
 import { ImagePreviewModal } from '@/components/ModalVariants/ImagePreviewModal'
 import { PdfPreviewModal } from '@/components/ModalVariants/PdfPreviewModal'
 import { DocumentClassifySelect } from '@/components/SelectionVariants'
-import { UploadFileResource } from '@/components/UploadFileResource/UploadFileResource'
+import { UploadSingleDocument, UploadSingleImage } from '@/components/Upload'
 import { useCreate, useDetail, useUpdate } from '@/hooks'
-import { DocumentStatus } from '@/models/Document'
-import type { FileResource } from '@/models/FileResource'
+import { DocumentStatus, type Document } from '@/models/Document'
 import {
   createDocument,
   getDocumentDetail,
+  publishDocument,
+  unpublishDocument,
   updateDocument,
-  uploadDocumentFile,
   type CreateDocumentInput,
 } from '@/services/Document'
-import { getAssetAccessUrl } from '@/services/Asset'
 import { isApiResponseError } from '@/utils/apiResponse'
-import { getUrlFileResource } from '@/utils/getUrlFileResource'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AxiosError } from 'axios'
-import { DownloadOutlined, EyeOutlined } from '@ant-design/icons'
-import {
-  App,
-  Avatar,
-  Button,
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Space,
-  Typography,
-} from 'antd'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowLeftOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons'
+import { App, Button, Card, Form, Input, Popconfirm, Space, Spin, Tag, Typography } from 'antd'
+import { PriceInput } from '@/components/InputVariants/PriceInput'
+import { useCallback, useEffect, useState } from 'react'
 import { Controller, useForm, type SubmitErrorHandler } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -39,30 +27,32 @@ import {
   type DocumentFormSubmitValues,
   type DocumentFormValues,
 } from '../schemas/documentFormSchema'
-import { getPublicUrl } from '@/utils/resource/getPublicUrl'
 
 interface Props {
   id?: string
 }
 
-const statusOptions = [
-  {
-    label: 'Nháp',
-    value: DocumentStatus.DRAFT,
-  },
-  {
-    label: 'Đã xuất bản',
-    value: DocumentStatus.PUBLISHED,
-  },
-]
+const statusColorMap: Record<DocumentStatus, string> = {
+  [DocumentStatus.DRAFT]: 'default',
+  [DocumentStatus.PUBLISHED]: 'success',
+}
+
+const statusLabelMap: Record<DocumentStatus, string> = {
+  [DocumentStatus.DRAFT]: 'Nháp',
+  [DocumentStatus.PUBLISHED]: 'Đã xuất bản',
+}
 
 export const DocumentForm = ({ id }: Props) => {
   const navigate = useNavigate()
   const { message } = App.useApp()
   const isEditMode = !!id
+
   const [openThumbnailModal, setOpenThumbnailModal] = useState(false)
-  const [openPreviewPdfModal, setOpenPreviewPdfModal] = useState(false)
-  const [fileAccessUrl, setFileAccessUrl] = useState<string | undefined>()
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | undefined>()
+  const [filePdfUrl, setFilePdfUrl] = useState<string | undefined>()
+  const [hasNewThumbnail, setHasNewThumbnail] = useState(false)
+  const [localDocument, setLocalDocument] = useState<Document | null>(null)
+  const [isStatusLoading, setIsStatusLoading] = useState(false)
 
   const fetchDocumentDetail = useCallback(
     (detailId: string) => getDocumentDetail({ id: detailId }),
@@ -94,54 +84,71 @@ export const DocumentForm = ({ id }: Props) => {
     reset: resetDetail,
   } = detailRequest
 
+  const documentDisplay = localDocument ?? detailData
+
   useEffect(() => {
     if (!isEditMode || !id) {
       reset(DOCUMENT_FORM_DEFAULT_VALUES)
       resetDetail()
       return
     }
-
     void executeDetail(id)
   }, [executeDetail, id, isEditMode, reset, resetDetail])
 
   useEffect(() => {
     if (!detailData) return
-
     reset({
       title: detailData.title,
       description: detailData.description || undefined,
       price: detailData.price,
       categoryId: detailData.categoryId || undefined,
-      status: detailData.status,
+      thumbnailId: detailData.thumbnail?.id || null,
       fileResource: detailData.file || null,
+      previewId: detailData.preview?.id || null,
     })
-
-    const file = detailData.file
-    if (file?.url) {
-      setFileAccessUrl(file.url)
-    } else if (file?.id) {
-      getAssetAccessUrl(file.id)
-        .then(setFileAccessUrl)
-        .catch(() => setFileAccessUrl(undefined))
-    } else {
-      setFileAccessUrl(undefined)
-    }
   }, [detailData, reset])
 
   const isSubmitting = createRequest.isLoading || updateRequest.isLoading
-  const thumbnailUrl = useMemo(
-    () => getUrlFileResource(detailData?.thumbnail?.url),
-    [detailData?.thumbnail?.url],
-  )
+
+  const thumbnailUrl = documentDisplay?.thumbnail?.url || undefined
+
+  const handlePublish = async () => {
+    if (!id) return
+    setIsStatusLoading(true)
+    try {
+      const updated = await publishDocument({ id })
+      setLocalDocument(updated)
+      void message.success('Xuất bản tài liệu thành công')
+    } catch (error) {
+      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+    } finally {
+      setIsStatusLoading(false)
+    }
+  }
+
+  const handleUnpublish = async () => {
+    if (!id) return
+    setIsStatusLoading(true)
+    try {
+      const updated = await unpublishDocument({ id })
+      setLocalDocument(updated)
+      void message.success('Thu hồi xuất bản thành công')
+    } catch (error) {
+      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+    } finally {
+      setIsStatusLoading(false)
+    }
+  }
 
   const onSubmit = async (values: DocumentFormSubmitValues) => {
-    const payload = {
+    const payload: CreateDocumentInput = {
       title: values.title,
       description: values.description?.trim() || undefined,
       price: values.price,
       categoryId: values.categoryId?.trim() || undefined,
-      status: values.status,
+      thumbnailId: values.thumbnailId!,
       fileId: values.fileResource.id,
+      previewId: values.previewId!,
     }
 
     try {
@@ -152,7 +159,6 @@ export const DocumentForm = ({ id }: Props) => {
         await createRequest.execute(payload)
         void message.success('Tạo tài liệu thành công')
       }
-
       navigate('/documents', { replace: true })
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string | string[] }>
@@ -167,17 +173,7 @@ export const DocumentForm = ({ id }: Props) => {
   }
 
   const onInvalidSubmit: SubmitErrorHandler<DocumentFormValues> = invalidErrors => {
-    const erroredFields = Object.keys(invalidErrors)
-    const missingFields = Object.entries(invalidErrors)
-      .filter(([, error]) => error?.type === 'required' || error?.type === 'invalid_type')
-      .map(([field]) => field)
-
-    console.error('[DocumentForm] Invalid submit', {
-      erroredFields,
-      missingFields,
-      errors: invalidErrors,
-    })
-
+    console.error('[DocumentForm] Invalid submit', invalidErrors)
     void message.warning('Vui lòng kiểm tra lại các trường bắt buộc trước khi lưu.')
   }
 
@@ -189,214 +185,321 @@ export const DocumentForm = ({ id }: Props) => {
         ? (errors.fileResource as { id?: { message?: string } }).id?.message
         : undefined
 
-  const handleUploadDocumentFile = async (file: File) => uploadDocumentFile({ file })
-
-  return (
-    <Card>
-      <Space orientation="vertical" size={20} style={{ width: '100%' }}>
-        <div>
-          <Typography.Title level={3} style={{ marginBottom: 4 }}>
-            {isEditMode ? 'Cập nhật tài liệu' : 'Tạo tài liệu'}
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Quản trị thông tin tài liệu theo chuẩn dữ liệu và phân loại.
-          </Typography.Text>
-        </div>
-
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit, onInvalidSubmit)}>
-          <div className="grid grid-cols-3 gap-4">
-            {detailData && detailData.thumbnail && (
-              <div className="col-span-full">
-                <Avatar
-                  src={getPublicUrl(detailData.thumbnail)}
-                  className="size-40"
-                  shape="square"
-                />
-              </div>
-            )}
-
-            <Form.Item
-              label="Tiêu đề"
-              validateStatus={errors.title ? 'error' : ''}
-              help={errors.title?.message}
-              required
-            >
-              <Controller
-                name="title"
-                control={control}
-                render={({ field }) => (
-                  <Input {...field} placeholder="Ví dụ: Hướng dẫn phẫu thuật" />
-                )}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Giá"
-              validateStatus={errors.price ? 'error' : ''}
-              help={errors.price?.message}
-              required
-            >
-              <Controller
-                name="price"
-                control={control}
-                render={({ field }) => (
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    step={1000}
-                    value={field.value}
-                    onChange={value => field.onChange(value ?? 0)}
+  const formContent = (
+    <Form layout="vertical" onFinish={handleSubmit(onSubmit, onInvalidSubmit)}>
+      <div className="grid grid-cols-3 gap-4">
+        {/* ── Thumbnail ── */}
+        <div className="col-span-full">
+          <Form.Item
+            label="Ảnh đại diện"
+            validateStatus={errors.thumbnailId ? 'error' : ''}
+            help={errors.thumbnailId?.message}
+            required
+          >
+            <Controller
+              name="thumbnailId"
+              control={control}
+              render={({ field }) => (
+                <div className="w-36 shrink-0">
+                  <UploadSingleImage
+                    size="sm"
+                    onSuccess={resource => {
+                      field.onChange(resource.id)
+                      setHasNewThumbnail(true)
+                    }}
+                    onRemove={() => {
+                      field.onChange(detailData?.thumbnail?.id || null)
+                      setHasNewThumbnail(false)
+                    }}
+                    maxSizeMB={5}
                   />
-                )}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Phân loại"
-              validateStatus={errors.categoryId ? 'error' : ''}
-              help={errors.categoryId?.message}
-            >
-              <Controller
-                name="categoryId"
-                control={control}
-                render={({ field }) => (
-                  <DocumentClassifySelect
-                    value={field.value}
-                    onChange={value => field.onChange(value)}
-                    onBlur={field.onBlur}
-                  />
-                )}
-              />
-            </Form.Item>
-
-            <div className="col-span-2">
-              <Form.Item
-                label="Mô tả"
-                validateStatus={errors.description ? 'error' : ''}
-                help={errors.description?.message}
-              >
-                <Controller
-                  name="description"
-                  control={control}
-                  render={({ field }) => (
-                    <Input.TextArea {...field} rows={4} placeholder="Mô tả ngắn" />
-                  )}
-                />
-              </Form.Item>
-            </div>
-
-            <Form.Item
-              label="Trạng thái"
-              validateStatus={errors.status ? 'error' : ''}
-              help={errors.status?.message}
-              required
-            >
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={statusOptions}
-                    value={field.value}
-                    onChange={value => field.onChange(value)}
-                    onBlur={field.onBlur}
-                  />
-                )}
-              />
-            </Form.Item>
-
-            <div className="col-span-full">
-              <Form.Item
-                label="Tệp tài liệu"
-                validateStatus={errors.fileResource ? 'error' : ''}
-                help={fileResourceErrorMessage}
-                required
-              >
-                <Controller
-                  name="fileResource"
-                  control={control}
-                  render={({ field }) => (
-                    <UploadFileResource
-                      value={field.value as FileResource | null | undefined}
-                      uploadFile={handleUploadDocumentFile}
-                      onChange={file => {
-                        field.onChange(file ?? null)
-                        if (file?.url) setFileAccessUrl(file.url)
-                        else if (file?.id) {
-                          getAssetAccessUrl(file.id)
-                            .then(setFileAccessUrl)
-                            .catch(() => setFileAccessUrl(undefined))
-                        } else {
-                          setFileAccessUrl(undefined)
-                        }
-                      }}
-                      accept=".pdf"
-                      maxSizeInMb={50}
+                  {thumbnailUrl && !hasNewThumbnail && (
+                    <img
+                      src={thumbnailUrl}
+                      alt="thumbnail"
+                      className="mt-2 rounded-lg w-full object-cover cursor-pointer"
+                      style={{ maxHeight: 140 }}
+                      onClick={() => setOpenThumbnailModal(true)}
                     />
                   )}
+                </div>
+              )}
+            />
+          </Form.Item>
+        </div>
+
+        {/* ── Core fields ── */}
+        <Form.Item
+          label="Tiêu đề"
+          validateStatus={errors.title ? 'error' : ''}
+          help={errors.title?.message}
+          required
+        >
+          <Controller
+            name="title"
+            control={control}
+            render={({ field }) => <Input {...field} placeholder="Ví dụ: Hướng dẫn phẫu thuật" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Giá"
+          validateStatus={errors.price ? 'error' : ''}
+          help={errors.price?.message}
+          required
+        >
+          <Controller
+            name="price"
+            control={control}
+            render={({ field }) => (
+              <PriceInput
+                value={field.value}
+                onChange={value => field.onChange(value ?? 0)}
+                onBlur={field.onBlur}
+                status={errors.price ? 'error' : undefined}
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Phân loại"
+          validateStatus={errors.categoryId ? 'error' : ''}
+          help={errors.categoryId?.message}
+        >
+          <Controller
+            name="categoryId"
+            control={control}
+            render={({ field }) => (
+              <DocumentClassifySelect
+                value={field.value}
+                onChange={value => field.onChange(value)}
+                onBlur={field.onBlur}
+              />
+            )}
+          />
+        </Form.Item>
+
+        <div className="col-span-2">
+          <Form.Item
+            label="Mô tả"
+            validateStatus={errors.description ? 'error' : ''}
+            help={errors.description?.message}
+          >
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <Input.TextArea {...field} rows={4} placeholder="Mô tả ngắn" />
+              )}
+            />
+          </Form.Item>
+        </div>
+
+        {/* ── File upload ── */}
+        <div className="col-span-full">
+          <Form.Item
+            label="Tệp tài liệu"
+            validateStatus={errors.fileResource ? 'error' : ''}
+            help={fileResourceErrorMessage}
+            required
+          >
+            <Controller
+              name="fileResource"
+              control={control}
+              render={({ field }) => (
+                <UploadSingleDocument
+                  onSuccess={resource => field.onChange(resource)}
+                  onRemove={() => field.onChange(null)}
+                  onRemoveExisting={() => field.onChange(null)}
+                  hideUploadOnFilled
+                  maxSizeMB={100}
+                  existingFile={
+                    documentDisplay?.file
+                      ? {
+                          url: documentDisplay.file.url || undefined,
+                          name:
+                            documentDisplay.file.originalName ??
+                            documentDisplay.file.fileName ??
+                            'Tài liệu',
+                          type: 'document',
+                          onView: () => setFilePdfUrl(documentDisplay?.file?.url || undefined),
+                        }
+                      : undefined
+                  }
+                  onPreview={url => setFilePdfUrl(url)}
                 />
-                {fileAccessUrl && (
-                  <Space size={8} style={{ marginTop: 8 }}>
-                    <Button
-                      size="small"
-                      icon={<EyeOutlined />}
-                      href={fileAccessUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Xem
-                    </Button>
-                    <Button size="small" icon={<DownloadOutlined />} href={fileAccessUrl} download>
-                      Tải xuống
-                    </Button>
-                  </Space>
-                )}
-              </Form.Item>
-            </div>
+              )}
+            />
+          </Form.Item>
+        </div>
 
-            <Form.Item>
-              <Space>
+        {/* ── Preview PDF (after file) ── */}
+        <div className="col-span-full">
+          <Form.Item
+            label="Preview PDF"
+            validateStatus={errors.previewId ? 'error' : ''}
+            help={errors.previewId?.message}
+            required
+          >
+            <Controller
+              name="previewId"
+              control={control}
+              render={({ field }) => (
+                <UploadSingleDocument
+                  onSuccess={resource => field.onChange(resource.id)}
+                  onRemove={() => field.onChange(detailData?.preview?.id || null)}
+                  onRemoveExisting={() => field.onChange(null)}
+                  maxSizeMB={50}
+                  hideUploadOnFilled
+                  existingFile={
+                    documentDisplay?.preview
+                      ? {
+                          url: documentDisplay.preview.url || undefined,
+                          name:
+                            documentDisplay.preview.originalName ??
+                            documentDisplay.preview.fileName ??
+                            'Preview PDF',
+                          type: 'document',
+                          onView: () =>
+                            setPreviewPdfUrl(documentDisplay?.preview?.url || undefined),
+                        }
+                      : undefined
+                  }
+                  onPreview={url => setPreviewPdfUrl(url)}
+                />
+              )}
+            />
+          </Form.Item>
+        </div>
+      </div>
+
+      <Space className="mt-4">
+        <Button htmlType="button" onClick={() => navigate('/documents', { replace: true })}>
+          Hủy
+        </Button>
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={isSubmitting || (isEditMode && isDetailLoading)}
+        >
+          {isEditMode ? 'Cập nhật' : 'Tạo mới'}
+        </Button>
+      </Space>
+    </Form>
+  )
+
+  // ── Edit mode ────────────────────────────────────────────────────────────────
+
+  if (isEditMode) {
+    if (isDetailLoading && !documentDisplay) {
+      return (
+        <div className="flex justify-center items-center py-20">
+          <Spin size="large" />
+        </div>
+      )
+    }
+
+    if (!documentDisplay) {
+      return (
+        <Card>
+          <Typography.Text type="secondary">Không tìm thấy tài liệu.</Typography.Text>
+        </Card>
+      )
+    }
+
+    return (
+      <Space vertical size={16} style={{ width: '100%' }}>
+        {/* Header card — title + status + actions */}
+        <Card>
+          <Space className="w-full justify-between" wrap>
+            <Space>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate('/documents')}
+                type="text"
+              />
+              <div>
+                <Space align="center">
+                  <Typography.Title level={4} style={{ margin: 0 }}>
+                    {documentDisplay.title}
+                  </Typography.Title>
+                  <Tag color={statusColorMap[documentDisplay.status]}>
+                    {statusLabelMap[documentDisplay.status]}
+                  </Tag>
+                </Space>
+                <Typography.Text type="secondary">
+                  {documentDisplay.price.toLocaleString('vi-VN')} VNĐ
+                </Typography.Text>
+              </div>
+            </Space>
+
+            <Space>
+              {documentDisplay.status === DocumentStatus.DRAFT && (
                 <Button
-                  type="default"
-                  disabled={!detailData?.preview}
-                  onClick={() => setOpenPreviewPdfModal(true)}
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  loading={isStatusLoading}
+                  onClick={() => void handlePublish()}
                 >
-                  Xem preview PDF
+                  Xuất bản
                 </Button>
-                {!detailData?.preview && (
-                  <Typography.Text type="secondary">Chưa có preview PDF</Typography.Text>
-                )}
-              </Space>
-            </Form.Item>
-          </div>
-
-          <Space className="mt-4">
-            <Button htmlType="button" onClick={() => navigate('/documents', { replace: true })}>
-              Hủy
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isSubmitting || (isEditMode && isDetailLoading)}
-            >
-              {isEditMode ? 'Cập nhật' : 'Tạo mới'}
-            </Button>
+              )}
+              {documentDisplay.status === DocumentStatus.PUBLISHED && (
+                <Popconfirm
+                  title="Thu hồi xuất bản?"
+                  description="Tài liệu sẽ bị ẩn khỏi danh sách công khai."
+                  onConfirm={() => void handleUnpublish()}
+                  okText="Thu hồi"
+                  cancelText="Hủy"
+                >
+                  <Button icon={<StopOutlined />} loading={isStatusLoading}>
+                    Thu hồi xuất bản
+                  </Button>
+                </Popconfirm>
+              )}
+            </Space>
           </Space>
-        </Form>
+        </Card>
+
+        {/* Content card */}
+        <Card>{formContent}</Card>
 
         <ImagePreviewModal
           open={openThumbnailModal}
-          title="Thumbnail"
+          title="Ảnh đại diện"
           imageUrl={thumbnailUrl}
           onCancel={() => setOpenThumbnailModal(false)}
         />
         <PdfPreviewModal
-          open={openPreviewPdfModal}
+          open={!!previewPdfUrl}
           title="Preview PDF"
-          url={getPublicUrl(detailData?.preview) || undefined}
-          onCancel={() => setOpenPreviewPdfModal(false)}
+          url={previewPdfUrl}
+          onCancel={() => setPreviewPdfUrl(undefined)}
+        />
+        <PdfPreviewModal
+          open={!!filePdfUrl}
+          title="Xem tài liệu"
+          url={filePdfUrl}
+          onCancel={() => setFilePdfUrl(undefined)}
         />
       </Space>
+    )
+  }
+
+  // ── Create mode ──────────────────────────────────────────────────────────────
+
+  return (
+    <Card>
+      <div className="mb-4">
+        <Typography.Title level={3} style={{ marginBottom: 4 }}>
+          Tạo tài liệu
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          Quản trị thông tin tài liệu theo chuẩn dữ liệu và phân loại.
+        </Typography.Text>
+      </div>
+      {formContent}
     </Card>
   )
 }

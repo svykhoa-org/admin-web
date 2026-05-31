@@ -8,8 +8,6 @@ import { UploadSingleImage } from '@/components/Upload/UploadSingleImage'
 const { Title } = Typography
 const { TextArea } = Input
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface FormValues {
   siteName?: string
   tagline?: string
@@ -23,9 +21,7 @@ interface FormValues {
   instagramUrl?: string
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
-export function SiteSettingsPanel() {
+export function GeneralSettingsForm() {
   const { message } = App.useApp()
   const [form] = Form.useForm<FormValues>()
 
@@ -36,14 +32,12 @@ export function SiteSettingsPanel() {
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | undefined>()
   const [faviconPreviewUrl, setFaviconPreviewUrl] = useState<string | undefined>()
 
-  // Fetch on mount if not yet loaded
   useEffect(() => {
     if (settings === null) {
       void fetchSettings()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync form when settings load
   useEffect(() => {
     if (!settings) return
 
@@ -83,7 +77,6 @@ export function SiteSettingsPanel() {
   async function handleSave() {
     try {
       const rawValues = await form.validateFields()
-      // Strip empty strings so they don't fail @IsUrl()/@IsEmail() validators
       const values = Object.fromEntries(
         Object.entries(rawValues).map(([k, v]) => [k, v === '' ? undefined : v]),
       ) as typeof rawValues
@@ -95,7 +88,6 @@ export function SiteSettingsPanel() {
       void message.success('Đã lưu cài đặt thành công')
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) {
-        // Ant Design validation error — fields will show inline errors
         return
       }
       const msg = isApiResponseError(err) ? err.message : 'Lưu thất bại. Vui lòng thử lại.'
@@ -107,7 +99,6 @@ export function SiteSettingsPanel() {
 
   return (
     <Form form={form} layout="vertical" disabled={disabled}>
-      {/* ── Brand ── */}
       <Title level={5} style={{ marginBottom: 16, marginTop: 0 }}>
         Thương hiệu
       </Title>
@@ -142,7 +133,7 @@ export function SiteSettingsPanel() {
               onSuccess={handleLogoSuccess}
               disabled={disabled}
               size="sm"
-              maxSizeMB={2}
+              maxSizeMB={5}
             />
           </Form.Item>
         </Col>
@@ -167,13 +158,12 @@ export function SiteSettingsPanel() {
               onSuccess={handleFaviconSuccess}
               disabled={disabled}
               size="sm"
-              maxSizeMB={1}
+              maxSizeMB={5}
             />
           </Form.Item>
         </Col>
       </Row>
 
-      {/* ── Contact ── */}
       <Title level={5} style={{ marginBottom: 16 }}>
         Liên hệ
       </Title>
@@ -199,7 +189,6 @@ export function SiteSettingsPanel() {
         <Input placeholder="https://zalo.me/..." />
       </Form.Item>
 
-      {/* ── Social ── */}
       <Title level={5} style={{ marginBottom: 16 }}>
         Mạng xã hội
       </Title>
@@ -227,7 +216,6 @@ export function SiteSettingsPanel() {
         </Col>
       </Row>
 
-      {/* ── Save button ── */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
         <Button
           type="primary"

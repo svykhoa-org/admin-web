@@ -8,7 +8,7 @@ import './upload.css'
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export type MediaType = 'image' | 'video'
-export type MediaCardSize = 'full' | 'sm'
+export type MediaCardSize = 'full' | 'sm' | 'block'
 
 export interface MediaCardProps {
   status: UploadStatus
@@ -52,7 +52,12 @@ export function MediaCard({
   const PlaceholderIcon = mediaType === 'image' ? PictureOutlined : VideoCameraOutlined
 
   return (
-    <div className={cx('upload-media-card', { 'upload-media-card--sm': size === 'sm' })}>
+    <div
+      className={cx('upload-media-card', {
+        'upload-media-card--sm': size === 'sm',
+        'upload-media-card--block': size === 'block',
+      })}
+    >
       {/* ── Preview image ── */}
       {previewUrl && (
         <img

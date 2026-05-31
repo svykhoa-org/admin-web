@@ -4,6 +4,7 @@ import { CloseOutlined, WarningOutlined } from '@ant-design/icons'
 import { Alert, Button, Modal, Upload } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { MediaCard } from './MediaCard'
+import type { MediaCardSize } from './MediaCard'
 import { UploadStatus } from './types'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ export interface UploadSingleVideoProps {
    * Set false to keep the upload zone visible alongside the player (allows replacement).
    */
   hideUploadOnFilled?: boolean
+  /** Upload card size. Use 'block' to stretch to 100% width. Default: 'full' (400px) */
+  size?: MediaCardSize
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -41,6 +44,7 @@ export function UploadSingleVideo({
   multipartThresholdMB = 50,
   maxConcurrent = 3,
   hideUploadOnFilled = true,
+  size = 'full',
 }: UploadSingleVideoProps) {
   const [taskId, setTaskId] = useState<string | null>(null)
   const [resumeBannerFile, setResumeBannerFile] = useState<File | null>(null)
@@ -214,6 +218,7 @@ export function UploadSingleVideo({
             accept="video/*"
             showUploadList={false}
             disabled={isUploading}
+            style={size === 'block' ? { display: 'block' } : undefined}
             beforeUpload={file => {
               handleFileSelected(file)
               return false
@@ -223,6 +228,7 @@ export function UploadSingleVideo({
               status={status}
               progress={task?.progress ?? 0}
               mediaType="video"
+              size={size}
               onRemove={isUploading ? () => taskId && void cancel(taskId) : undefined}
               errorMsg={task?.errorMsg}
             />

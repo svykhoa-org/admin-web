@@ -127,7 +127,11 @@ export const UserTable = () => {
       dataIndex: 'fullName',
       key: 'fullName',
       fixed: 'left',
-      render: (value: string) => <Typography.Text strong>{value}</Typography.Text>,
+      render: (value: string, record) => (
+        <Typography.Link strong onClick={() => navigate(`/users/${record.id}`)}>
+          {value}
+        </Typography.Link>
+      ),
     },
     {
       title: 'Email',

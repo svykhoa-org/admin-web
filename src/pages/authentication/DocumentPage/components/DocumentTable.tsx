@@ -4,10 +4,21 @@ import { DocumentClassifySelect } from '@/components/SelectionVariants'
 import { useDelete, useList } from '@/hooks'
 import { DocumentStatus, type Document } from '@/models/Document'
 import { RoutePath } from '@/router/RoutePath'
-import { listDocument, removeDocument } from '@/services/Document'
+import {
+  listDocument,
+  publishDocument,
+  removeDocument,
+  unpublishDocument,
+} from '@/services/Document'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
-import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
+import {
+  CheckCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  EllipsisOutlined,
+  StopOutlined,
+} from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Input, Select, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useState } from 'react'
@@ -94,6 +105,21 @@ export const DocumentTable = () => {
     }
   }
 
+  const handlePublishToggle = async (record: Document) => {
+    try {
+      if (record.status === DocumentStatus.PUBLISHED) {
+        await unpublishDocument({ id: record.id })
+        void message.success('Thu hồi xuất bản thành công')
+      } else {
+        await publishDocument({ id: record.id })
+        void message.success('Xuất bản tài liệu thành công')
+      }
+      refresh()
+    } catch (error) {
+      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+    }
+  }
+
   const statusOptions = Object.entries(statusLabelMap).map(([value, label]) => ({
     label,
     value,
@@ -154,23 +180,32 @@ export const DocumentTable = () => {
       key: 'actions',
       width: 48,
       fixed: 'right',
-      render: (_, record) => (
-        <Dropdown
-          trigger={['click']}
-          menu={{
-            items: [
-              { key: 'edit', label: 'Sửa', icon: <EditOutlined /> },
-              { key: 'delete', label: 'Xóa', icon: <DeleteOutlined />, danger: true },
-            ],
-            onClick: ({ key }) => {
-              if (key === 'edit') navigate(RoutePath.DocumentUpdatePage.getPath(record.id))
-              if (key === 'delete') openDeleteModal([record.id])
-            },
-          }}
-        >
-          <Button size="small" icon={<EllipsisOutlined />} />
-        </Dropdown>
-      ),
+      render: (_, record) => {
+        const isPublished = record.status === DocumentStatus.PUBLISHED
+        return (
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: [
+                { key: 'edit', label: 'Sửa', icon: <EditOutlined /> },
+                {
+                  key: 'publish',
+                  label: isPublished ? 'Thu hồi xuất bản' : 'Xuất bản',
+                  icon: isPublished ? <StopOutlined /> : <CheckCircleOutlined />,
+                },
+                { key: 'delete', label: 'Xóa', icon: <DeleteOutlined />, danger: true },
+              ],
+              onClick: ({ key }) => {
+                if (key === 'edit') navigate(RoutePath.DocumentUpdatePage.getPath(record.id))
+                if (key === 'publish') void handlePublishToggle(record)
+                if (key === 'delete') openDeleteModal([record.id])
+              },
+            }}
+          >
+            <Button size="small" icon={<EllipsisOutlined />} />
+          </Dropdown>
+        )
+      },
     },
   ]
 

@@ -132,6 +132,7 @@ export const UserDetail = ({ id }: Props) => {
         )}
 
         <Space>
+          <Button onClick={() => navigate('/users', { replace: true })}>Quay lại</Button>
           {detailData && (
             <Button
               danger={detailData.status === UserStatus.Active}
@@ -142,7 +143,6 @@ export const UserDetail = ({ id }: Props) => {
               {detailData.status === UserStatus.Active ? 'Khóa' : 'Mở khóa'}
             </Button>
           )}
-          <Button onClick={() => navigate('/users', { replace: true })}>Quay lại</Button>
         </Space>
       </Space>
     </Card>

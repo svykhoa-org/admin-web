@@ -19,16 +19,19 @@ import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/Document
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
 import { EnrollmentListPage } from '@/pages/authentication/EnrollmentPage/EnrollmentListPage'
+import { EnrollmentProgressPage } from '@/pages/authentication/EnrollmentPage/EnrollmentProgressPage'
 import { OrderDetailPage } from '@/pages/authentication/OrderPage/OrderDetailPage'
 import { OrderListPage } from '@/pages/authentication/OrderPage/OrderListPage'
 import { QuizDetailPage } from '@/pages/authentication/QuizPage/QuizDetailPage'
+import { GeneralSettingsPage } from '@/pages/authentication/SettingsPage/GeneralSettingsPage'
+import { SettingsLayout } from '@/pages/authentication/SettingsPage/SettingsLayout'
 import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
 import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
 import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
 import ComponentsPage from '@/pages/dev/ComponentsPage'
 import LoginPage from '@/pages/unauthentication/LoginPage'
 import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import { RoutePath } from './RoutePath'
 
@@ -139,7 +142,10 @@ const router = createBrowserRouter([
           },
           {
             path: RoutePath.EnrollmentPage.route,
-            children: [{ index: true, element: <EnrollmentListPage /> }],
+            children: [
+              { index: true, element: <EnrollmentListPage /> },
+              { path: RoutePath.EnrollmentDetailPage.route, element: <EnrollmentProgressPage /> },
+            ],
           },
           {
             path: RoutePath.CertificatePage.route,
@@ -167,6 +173,17 @@ const router = createBrowserRouter([
                 path: RoutePath.UserDetailPage.route,
                 element: <UserDetailPage />,
               },
+            ],
+          },
+          {
+            path: RoutePath.SettingsPage.route,
+            element: <SettingsLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to={RoutePath.GeneralSettingsPage.path} replace />,
+              },
+              { path: RoutePath.GeneralSettingsPage.route, element: <GeneralSettingsPage /> },
             ],
           },
         ],

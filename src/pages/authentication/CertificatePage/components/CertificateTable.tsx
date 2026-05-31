@@ -139,7 +139,7 @@ export const CertificateTable = () => {
       title: 'Chứng chỉ vật lý',
       dataIndex: 'physicalStatus',
       key: 'physicalStatus',
-      width: 130,
+      width: 140,
       render: (v: PhysicalCertificateStatus) => (
         <Tag color={physicalStatusColors[v]}>{physicalStatusLabels[v]}</Tag>
       ),
@@ -147,7 +147,7 @@ export const CertificateTable = () => {
     {
       title: 'Hành động',
       key: 'actions',
-      width: 200,
+      width: 120,
       render: (_, record) => (
         <Space>
           {record.physicalStatus === PhysicalCertificateStatus.PENDING && (

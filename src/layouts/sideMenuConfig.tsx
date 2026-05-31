@@ -3,7 +3,6 @@ import {
   DashboardOutlined,
   FolderOpenOutlined,
   FileTextOutlined,
-  ProfileOutlined,
   SafetyCertificateOutlined,
   ShoppingOutlined,
   TeamOutlined,
@@ -98,15 +97,15 @@ export const sideMenuConfig: SideMenuEntry[] = [
     children: [
       {
         type: ItemType.LINK,
-        key: '/document-classify',
-        icon: <FolderOpenOutlined />,
-        label: 'Loại tài liệu',
-      },
-      {
-        type: ItemType.LINK,
         key: '/documents',
         icon: <FileTextOutlined />,
         label: 'Tài liệu',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/document-classify',
+        icon: <FolderOpenOutlined />,
+        label: 'Loại tài liệu',
       },
       {
         type: ItemType.LINK,

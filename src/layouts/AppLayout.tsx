@@ -14,15 +14,14 @@ import fallbackLogo from '@/assets/logo.png'
 import { ItemType, sideMenuConfig, type SideMenuEntry } from './sideMenuConfig'
 import classNames from 'classnames'
 import { useSiteSettingsStore } from '@/store/siteSettingsStore'
-import { SettingsModal } from '@/components/ModalVariants/SettingsModal/SettingsModal'
 import { resolveUploadUrl } from '@/components/Upload/assetResource'
+import { RoutePath } from '@/router/RoutePath'
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore(s => s.user)
@@ -130,29 +129,25 @@ export default function AppLayout() {
           style={{ border: 'none' }}
         />
 
-        <div style={{ borderTop: `1px solid ${token.colorBorderSecondary}`, padding: '8px' }}>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              width: '100%',
-              padding: collapsed ? '8px 0' : '8px 12px',
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              borderRadius: token.borderRadius,
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              color: token.colorTextSecondary,
-              fontSize: 13,
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = token.colorFillSecondary)}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <SettingOutlined style={{ fontSize: 16 }} />
-            {!collapsed && <span>Settings</span>}
-          </button>
+        <div style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}>
+          <Menu
+            theme="light"
+            mode="inline"
+            selectedKeys={
+              location.pathname.startsWith(RoutePath.SettingsPage.path)
+                ? [RoutePath.SettingsPage.path]
+                : []
+            }
+            items={[
+              {
+                key: RoutePath.SettingsPage.path,
+                icon: <SettingOutlined />,
+                label: 'Cài đặt',
+              },
+            ]}
+            onClick={() => navigate(RoutePath.SettingsPage.path)}
+            style={{ border: 'none' }}
+          />
         </div>
       </Sider>
 
@@ -195,7 +190,6 @@ export default function AppLayout() {
         </Content>
         <UploadTray />
       </Layout>
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Layout>
   )
 }

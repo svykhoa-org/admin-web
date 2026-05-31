@@ -108,7 +108,7 @@ const LessonTable = ({
       dataIndex: 'order',
       key: 'order',
       width: 48,
-      render: (value: number) => <Typography.Text type="secondary">{value}</Typography.Text>,
+      render: (value: number) => <Typography.Text type="secondary">{value + 1}</Typography.Text>,
     },
     {
       title: 'Tiêu đề bài học',
@@ -351,7 +351,7 @@ export const CourseModuleManager = ({ courseId }: Props) => {
     key: mod.id,
     label: (
       <Space>
-        <Tag>{mod.order}</Tag>
+        <Tag>{mod.order + 1}</Tag>
         <Typography.Text strong>{mod.title}</Typography.Text>
         {mod.locked && <Tag color="orange">Khoá</Tag>}
         <Typography.Text type="secondary">
