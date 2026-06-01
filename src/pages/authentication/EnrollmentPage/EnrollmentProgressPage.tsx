@@ -5,6 +5,7 @@ import {
   QuestionCircleOutlined,
 } from '@ant-design/icons'
 import { Avatar, Badge, Button, Card, Collapse, Progress, Space, Spin, Tag, Typography } from 'antd'
+import type { BadgeProps } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { LessonProgressDetail, QuizAttempt } from '@/models/EnrollmentProgress'
@@ -30,7 +31,7 @@ const statusLabels: Record<EnrollmentStatus, string> = {
   [EnrollmentStatus.REFUNDED]: 'Đã hoàn tiền',
 }
 
-const lessonProgressColors: Record<LessonProgressStatus, string> = {
+const lessonProgressColors: Record<LessonProgressStatus, BadgeProps['status']> = {
   [LessonProgressStatus.NOT_STARTED]: 'default',
   [LessonProgressStatus.IN_PROGRESS]: 'processing',
   [LessonProgressStatus.COMPLETED]: 'success',
