@@ -39,9 +39,14 @@ export const createCourseFormSchema = (t: TFunction<FlatNamespace[]>) => {
       .max(200, t('CommonLocales:FieldError.max_length', { field: titleField, value: 200 })),
     subTitle: z.string().trim().max(300).optional(),
     description: z.string().trim().optional(),
-    price: z.number({ error: t('CommonLocales:FieldError.invalid', { field: priceField }) }).gt(0, {
-      error: t('CommonLocales:FieldError.greater_than', { field: priceField, value: 0 }),
-    }),
+    price: z
+      .number({ error: t('CommonLocales:FieldError.invalid', { field: priceField }) })
+      .min(0, {
+        error: t('CommonLocales:FieldError.greater_than_or_equal', {
+          field: priceField,
+          value: 0,
+        }),
+      }),
     accessDurationDays: z.number().int().min(1).optional(),
     maxEnrollments: z.number().int().min(1).optional(),
     selfPaced: z.boolean().optional(),
