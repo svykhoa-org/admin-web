@@ -56,6 +56,16 @@ export interface LessonProgress extends AbstractModel {
   watchedSeconds: number
 }
 
+export type ProctoringSnapshotStatus = 'submitted' | 'declined' | 'timeout'
+
+export interface ProctoringSnapshotDetail {
+  id: string
+  url: string | null
+  status: ProctoringSnapshotStatus
+  videoPositionSeconds: number
+  capturedAt: string
+}
+
 export interface LessonProgressDetail {
   lessonId: string
   title: string
@@ -65,6 +75,7 @@ export interface LessonProgressDetail {
   isRequired: boolean
   progress: LessonProgress | null
   quizAttempts: QuizAttempt[] | null
+  proctoringSnapshots: ProctoringSnapshotDetail[] | null
 }
 
 export interface ModuleProgressDetail {

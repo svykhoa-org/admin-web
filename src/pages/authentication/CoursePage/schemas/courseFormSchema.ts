@@ -50,6 +50,16 @@ export const createCourseFormSchema = (t: TFunction<FlatNamespace[]>) => {
     suitableFor: z.string().trim().optional(),
     cmeCredits: z.number().min(0).optional(),
     certifyingOrganization: z.string().trim().optional(),
+    // ── Giám sát học tập (proctoring) ──
+    proctoringEnabled: z.boolean().optional(),
+    proctoringCameraRequired: z.boolean().optional(),
+    proctoringMaxInactivitySeconds: z.number().int().min(5).optional(),
+    proctoringPresenceEnabled: z.boolean().optional(),
+    proctoringRandomMode: z.boolean().optional(),
+    proctoringIntervalMinutes: z.number().int().min(1).optional(),
+    proctoringRandomMinMinutes: z.number().int().min(1).optional(),
+    proctoringRandomMaxMinutes: z.number().int().min(1).optional(),
+    proctoringMaxChecksPerVideo: z.number().int().min(1).optional(),
   })
 }
 
@@ -70,4 +80,13 @@ export const COURSE_FORM_DEFAULT_VALUES: CourseFormValues = {
   suitableFor: undefined,
   cmeCredits: undefined,
   certifyingOrganization: undefined,
+  proctoringEnabled: false,
+  proctoringCameraRequired: false,
+  proctoringMaxInactivitySeconds: 60,
+  proctoringPresenceEnabled: false,
+  proctoringRandomMode: false,
+  proctoringIntervalMinutes: 10,
+  proctoringRandomMinMinutes: 5,
+  proctoringRandomMaxMinutes: 15,
+  proctoringMaxChecksPerVideo: 3,
 }

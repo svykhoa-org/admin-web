@@ -144,6 +144,19 @@ export const CourseForm = ({ id }: Props) => {
       suitableFor: parseTextareaToArray(values.suitableFor),
       cmeCredits: values.cmeCredits,
       certifyingOrganization: values.certifyingOrganization?.trim() || undefined,
+      proctoringConfig: {
+        enabled: !!values.proctoringEnabled,
+        cameraRequired: !!values.proctoringCameraRequired,
+        maxInactivitySeconds: values.proctoringMaxInactivitySeconds ?? 60,
+        presenceCheck: {
+          enabled: !!values.proctoringPresenceEnabled,
+          mode: values.proctoringRandomMode ? 'random' : 'fixed',
+          intervalMinutes: values.proctoringIntervalMinutes ?? 10,
+          randomMinMinutes: values.proctoringRandomMinMinutes ?? 5,
+          randomMaxMinutes: values.proctoringRandomMaxMinutes ?? 15,
+          maxChecksPerVideo: values.proctoringMaxChecksPerVideo ?? 3,
+        },
+      },
     }
 
     if (isEditMode && id) {
@@ -207,6 +220,21 @@ export const CourseForm = ({ id }: Props) => {
               suitableFor: arrayToTextarea(detailData.suitableFor),
               cmeCredits: detailData.cmeCredits ?? undefined,
               certifyingOrganization: detailData.certifyingOrganization ?? undefined,
+              proctoringEnabled: detailData.proctoringConfig?.enabled ?? false,
+              proctoringCameraRequired: detailData.proctoringConfig?.cameraRequired ?? false,
+              proctoringMaxInactivitySeconds:
+                detailData.proctoringConfig?.maxInactivitySeconds ?? 60,
+              proctoringPresenceEnabled:
+                detailData.proctoringConfig?.presenceCheck?.enabled ?? false,
+              proctoringRandomMode: detailData.proctoringConfig?.presenceCheck?.mode === 'random',
+              proctoringIntervalMinutes:
+                detailData.proctoringConfig?.presenceCheck?.intervalMinutes ?? 10,
+              proctoringRandomMinMinutes:
+                detailData.proctoringConfig?.presenceCheck?.randomMinMinutes ?? 5,
+              proctoringRandomMaxMinutes:
+                detailData.proctoringConfig?.presenceCheck?.randomMaxMinutes ?? 15,
+              proctoringMaxChecksPerVideo:
+                detailData.proctoringConfig?.presenceCheck?.maxChecksPerVideo ?? 3,
             }
           : COURSE_FORM_DEFAULT_VALUES
       }
@@ -353,6 +381,74 @@ export const CourseForm = ({ id }: Props) => {
               label="Tổ chức cấp chứng chỉ"
               type="text"
               className="col-span-2"
+            />
+          </div>
+
+          <Divider style={{ margin: 0 }} />
+
+          {/* ── Giám sát học tập (proctoring) ───────────────── */}
+          <Typography.Title level={5} style={{ margin: 0 }}>
+            Giám sát học tập
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ marginTop: -8 }}>
+            Áp dụng cho bài video chưa hoàn thành. Tự dừng video khi không thao tác và yêu cầu chụp
+            ảnh xác nhận sự hiện diện.
+          </Typography.Text>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field name="proctoringEnabled" label="Bật giám sát" type="checkbox" />
+            <Field
+              name="proctoringCameraRequired"
+              label="Bắt buộc camera"
+              type="checkbox"
+              tooltip="Nếu bật: thiếu ảnh xác nhận sẽ không cho hoàn thành bài học"
+            />
+            <Field
+              name="proctoringMaxInactivitySeconds"
+              label="Thời gian idle tối đa (giây)"
+              type="number"
+              fieldProps={{ min: 5 }}
+              tooltip="Không thao tác quá ngưỡng này khi đang phát → dừng video"
+            />
+          </div>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field
+              name="proctoringPresenceEnabled"
+              label="Check sự hiện diện"
+              type="checkbox"
+              tooltip="Mở popup chụp ảnh xác nhận trong khi học"
+            />
+            <Field
+              name="proctoringRandomMode"
+              label="Khoảng cách ngẫu nhiên"
+              type="checkbox"
+              tooltip="Bật: mỗi lần check cách nhau ngẫu nhiên. Tắt: cố định theo số phút."
+            />
+            <Field
+              name="proctoringMaxChecksPerVideo"
+              label="Số lần check / video"
+              type="number"
+              fieldProps={{ min: 1 }}
+            />
+          </div>
+          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+            <Field
+              name="proctoringIntervalMinutes"
+              label="Khoảng cố định (phút)"
+              type="number"
+              fieldProps={{ min: 1 }}
+              tooltip="Dùng khi không bật chế độ ngẫu nhiên"
+            />
+            <Field
+              name="proctoringRandomMinMinutes"
+              label="Ngẫu nhiên - tối thiểu (phút)"
+              type="number"
+              fieldProps={{ min: 1 }}
+            />
+            <Field
+              name="proctoringRandomMaxMinutes"
+              label="Ngẫu nhiên - tối đa (phút)"
+              type="number"
+              fieldProps={{ min: 1 }}
             />
           </div>
 

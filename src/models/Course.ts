@@ -41,6 +41,21 @@ export interface Course extends AbstractModel {
   cmeCredits?: number | null
   certifyingOrganization?: string | null
   totalDurationMinutes?: number
+  proctoringConfig?: ProctoringConfig | null
+}
+
+export interface ProctoringConfig {
+  enabled: boolean
+  cameraRequired: boolean
+  maxInactivitySeconds: number
+  presenceCheck: {
+    enabled: boolean
+    mode: 'fixed' | 'random'
+    intervalMinutes: number
+    randomMinMinutes: number
+    randomMaxMinutes: number
+    maxChecksPerVideo: number
+  }
 }
 
 export interface CourseModule extends AbstractModel {

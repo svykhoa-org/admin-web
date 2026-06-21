@@ -1,14 +1,32 @@
 import {
   ArrowLeftOutlined,
+  CameraOutlined,
   FileTextOutlined,
   PlayCircleOutlined,
   QuestionCircleOutlined,
 } from '@ant-design/icons'
-import { Avatar, Badge, Button, Card, Collapse, Progress, Space, Spin, Tag, Typography } from 'antd'
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Collapse,
+  Image,
+  Progress,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+} from 'antd'
 import type { BadgeProps } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { LessonProgressDetail, QuizAttempt } from '@/models/EnrollmentProgress'
+import type {
+  LessonProgressDetail,
+  ProctoringSnapshotDetail,
+  ProctoringSnapshotStatus,
+  QuizAttempt,
+} from '@/models/EnrollmentProgress'
 import { LessonProgressStatus } from '@/models/EnrollmentProgress'
 import { LessonType } from '@/models/Course'
 import { EnrollmentStatus } from '@/models/Enrollment'
@@ -64,62 +82,122 @@ function LessonRow({ lesson, onViewQuiz }: LessonRowProps) {
   const progressStatus = lesson.progress?.status ?? LessonProgressStatus.NOT_STARTED
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '10px 16px',
-        borderBottom: '1px solid #f0f0f0',
-      }}
-    >
-      <Space size={10} style={{ flex: 1, minWidth: 0 }}>
-        {lessonTypeIcon(lesson.type)}
-        <div style={{ minWidth: 0 }}>
-          <Typography.Text style={{ display: 'block' }}>
-            {lesson.order + 1}. {lesson.title}
-            {!lesson.isRequired && (
-              <Typography.Text type="secondary" style={{ fontSize: 11, marginLeft: 6 }}>
-                (không bắt buộc)
+    <div style={{ borderBottom: '1px solid #f0f0f0' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 16px',
+        }}
+      >
+        <Space size={10} style={{ flex: 1, minWidth: 0 }}>
+          {lessonTypeIcon(lesson.type)}
+          <div style={{ minWidth: 0 }}>
+            <Typography.Text style={{ display: 'block' }}>
+              {lesson.order + 1}. {lesson.title}
+              {!lesson.isRequired && (
+                <Typography.Text type="secondary" style={{ fontSize: 11, marginLeft: 6 }}>
+                  (không bắt buộc)
+                </Typography.Text>
+              )}
+            </Typography.Text>
+
+            {lesson.type === LessonType.VIDEO && lesson.durationMinutes > 0 && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {lesson.progress && lesson.progress.watchedSeconds > 0
+                  ? `Đã xem: ${formatSeconds(lesson.progress.watchedSeconds)} / ${lesson.durationMinutes}:00`
+                  : `${lesson.durationMinutes} phút`}
               </Typography.Text>
             )}
-          </Typography.Text>
 
-          {lesson.type === LessonType.VIDEO && lesson.durationMinutes > 0 && (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {lesson.progress && lesson.progress.watchedSeconds > 0
-                ? `Đã xem: ${formatSeconds(lesson.progress.watchedSeconds)} / ${lesson.durationMinutes}:00`
-                : `${lesson.durationMinutes} phút`}
-            </Typography.Text>
-          )}
+            {lesson.type === LessonType.QUIZ &&
+              lesson.quizAttempts &&
+              lesson.quizAttempts.length > 0 && (
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {lesson.quizAttempts.filter(a => a.status === 'submitted').length} lần nộp bài
+                </Typography.Text>
+              )}
+          </div>
+        </Space>
+
+        <Space size={8}>
+          <Badge
+            status={lessonProgressColors[progressStatus] || 'default'}
+            text={lessonProgressLabels[progressStatus]}
+          />
 
           {lesson.type === LessonType.QUIZ &&
             lesson.quizAttempts &&
-            lesson.quizAttempts.length > 0 && (
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {lesson.quizAttempts.filter(a => a.status === 'submitted').length} lần nộp bài
-              </Typography.Text>
+            lesson.quizAttempts.filter(a => a.status === 'submitted').length > 0 && (
+              <Button
+                size="small"
+                type="link"
+                onClick={() => onViewQuiz(lesson.title, lesson.quizAttempts!)}
+              >
+                Xem bài thi
+              </Button>
             )}
-        </div>
-      </Space>
+        </Space>
+      </div>
 
-      <Space size={8}>
-        <Badge
-          status={lessonProgressColors[progressStatus] || 'default'}
-          text={lessonProgressLabels[progressStatus]}
-        />
+      {lesson.type === LessonType.VIDEO &&
+        lesson.proctoringSnapshots &&
+        lesson.proctoringSnapshots.length > 0 && (
+          <ProctoringGallery snapshots={lesson.proctoringSnapshots} />
+        )}
+    </div>
+  )
+}
 
-        {lesson.type === LessonType.QUIZ &&
-          lesson.quizAttempts &&
-          lesson.quizAttempts.filter(a => a.status === 'submitted').length > 0 && (
-            <Button
-              size="small"
-              type="link"
-              onClick={() => onViewQuiz(lesson.title, lesson.quizAttempts!)}
-            >
-              Xem bài thi
-            </Button>
-          )}
+const snapshotStatusMeta: Record<ProctoringSnapshotStatus, { color: string; label: string }> = {
+  submitted: { color: 'green', label: 'Đã xác nhận' },
+  declined: { color: 'red', label: 'Từ chối' },
+  timeout: { color: 'orange', label: 'Quá hạn' },
+}
+
+function ProctoringGallery({ snapshots }: { snapshots: ProctoringSnapshotDetail[] }) {
+  return (
+    <div style={{ padding: '0 16px 12px 42px' }}>
+      <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
+        Ảnh giám sát ({snapshots.length})
+      </Typography.Text>
+      <Space size={8} wrap>
+        {snapshots.map(snap => {
+          const meta = snapshotStatusMeta[snap.status]
+          return (
+            <div key={snap.id} style={{ textAlign: 'center' }}>
+              {snap.url ? (
+                <Image
+                  src={snap.url}
+                  width={64}
+                  height={64}
+                  style={{ objectFit: 'cover', borderRadius: 8 }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 8,
+                    background: '#f0f0f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <CameraOutlined style={{ color: '#bfbfbf' }} />
+                </div>
+              )}
+              <Tag color={meta.color} style={{ marginTop: 4, marginRight: 0, fontSize: 10 }}>
+                {meta.label}
+              </Tag>
+              <Typography.Text type="secondary" style={{ display: 'block', fontSize: 10 }}>
+                {formatSeconds(snap.videoPositionSeconds)}
+              </Typography.Text>
+            </div>
+          )
+        })}
       </Space>
     </div>
   )

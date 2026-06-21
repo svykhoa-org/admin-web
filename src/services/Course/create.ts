@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios'
-import type { Course, CourseTagRef } from '@/models/Course'
+import type { Course, CourseTagRef, ProctoringConfig } from '@/models/Course'
 import type { ApiDetailResponse } from '@/types/api'
 import { unwrapDetail } from '@/utils/apiResponse'
 
@@ -24,6 +24,7 @@ export interface CreateCourseInput {
   cmeCredits?: number
   certifyingOrganization?: string
   totalDurationMinutes?: number
+  proctoringConfig?: ProctoringConfig
 }
 
 export type CreateCourseOutput = Course
