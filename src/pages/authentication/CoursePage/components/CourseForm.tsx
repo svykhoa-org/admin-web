@@ -147,14 +147,17 @@ export const CourseForm = ({ id }: Props) => {
       certifyingOrganization: values.certifyingOrganization?.trim() || undefined,
       proctoringConfig: {
         enabled: !!values.proctoringEnabled,
-        cameraRequired: !!values.proctoringCameraRequired,
-        maxInactivitySeconds: values.proctoringMaxInactivitySeconds ?? 60,
+        inactivityPause: {
+          enabled: !!values.proctoringInactivityEnabled,
+          thresholdMinutes: values.proctoringInactivityMinutes ?? 3,
+        },
         presenceCheck: {
           enabled: !!values.proctoringPresenceEnabled,
+          cameraRequired: !!values.proctoringCameraRequired,
           mode: values.proctoringRandomMode ? 'random' : 'fixed',
-          intervalMinutes: values.proctoringIntervalMinutes ?? 10,
-          randomMinMinutes: values.proctoringRandomMinMinutes ?? 5,
-          randomMaxMinutes: values.proctoringRandomMaxMinutes ?? 15,
+          intervalMinutes: values.proctoringIntervalMinutes ?? 20,
+          randomMinMinutes: values.proctoringRandomMinMinutes ?? 15,
+          randomMaxMinutes: values.proctoringRandomMaxMinutes ?? 30,
           maxChecksPerVideo: values.proctoringMaxChecksPerVideo ?? 3,
         },
       },
@@ -222,18 +225,21 @@ export const CourseForm = ({ id }: Props) => {
               cmeCredits: detailData.cmeCredits ?? undefined,
               certifyingOrganization: detailData.certifyingOrganization ?? undefined,
               proctoringEnabled: detailData.proctoringConfig?.enabled ?? false,
-              proctoringCameraRequired: detailData.proctoringConfig?.cameraRequired ?? false,
-              proctoringMaxInactivitySeconds:
-                detailData.proctoringConfig?.maxInactivitySeconds ?? 60,
+              proctoringInactivityEnabled:
+                detailData.proctoringConfig?.inactivityPause?.enabled ?? true,
+              proctoringInactivityMinutes:
+                detailData.proctoringConfig?.inactivityPause?.thresholdMinutes ?? 3,
               proctoringPresenceEnabled:
                 detailData.proctoringConfig?.presenceCheck?.enabled ?? false,
+              proctoringCameraRequired:
+                detailData.proctoringConfig?.presenceCheck?.cameraRequired ?? false,
               proctoringRandomMode: detailData.proctoringConfig?.presenceCheck?.mode === 'random',
               proctoringIntervalMinutes:
-                detailData.proctoringConfig?.presenceCheck?.intervalMinutes ?? 10,
+                detailData.proctoringConfig?.presenceCheck?.intervalMinutes ?? 20,
               proctoringRandomMinMinutes:
-                detailData.proctoringConfig?.presenceCheck?.randomMinMinutes ?? 5,
+                detailData.proctoringConfig?.presenceCheck?.randomMinMinutes ?? 15,
               proctoringRandomMaxMinutes:
-                detailData.proctoringConfig?.presenceCheck?.randomMaxMinutes ?? 15,
+                detailData.proctoringConfig?.presenceCheck?.randomMaxMinutes ?? 30,
               proctoringMaxChecksPerVideo:
                 detailData.proctoringConfig?.presenceCheck?.maxChecksPerVideo ?? 3,
             }

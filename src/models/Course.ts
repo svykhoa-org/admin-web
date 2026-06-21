@@ -46,10 +46,15 @@ export interface Course extends AbstractModel {
 
 export interface ProctoringConfig {
   enabled: boolean
-  cameraRequired: boolean
-  maxInactivitySeconds: number
+  // (1) Tạm dừng khi không thao tác.
+  inactivityPause: {
+    enabled: boolean
+    thresholdMinutes: number
+  }
+  // (2) Kiểm tra hiện diện qua camera.
   presenceCheck: {
     enabled: boolean
+    cameraRequired: boolean
     mode: 'fixed' | 'random'
     intervalMinutes: number
     randomMinMinutes: number

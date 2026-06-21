@@ -57,9 +57,12 @@ export const createCourseFormSchema = (t: TFunction<FlatNamespace[]>) => {
     certifyingOrganization: z.string().trim().optional(),
     // ── Giám sát học tập (proctoring) ──
     proctoringEnabled: z.boolean().optional(),
-    proctoringCameraRequired: z.boolean().optional(),
-    proctoringMaxInactivitySeconds: z.number().int().min(5).optional(),
+    // (1) Tạm dừng khi không thao tác
+    proctoringInactivityEnabled: z.boolean().optional(),
+    proctoringInactivityMinutes: z.number().int().min(1).optional(),
+    // (2) Kiểm tra hiện diện qua camera
     proctoringPresenceEnabled: z.boolean().optional(),
+    proctoringCameraRequired: z.boolean().optional(),
     proctoringRandomMode: z.boolean().optional(),
     proctoringIntervalMinutes: z.number().int().min(1).optional(),
     proctoringRandomMinMinutes: z.number().int().min(1).optional(),
@@ -86,12 +89,13 @@ export const COURSE_FORM_DEFAULT_VALUES: CourseFormValues = {
   cmeCredits: undefined,
   certifyingOrganization: undefined,
   proctoringEnabled: false,
-  proctoringCameraRequired: false,
-  proctoringMaxInactivitySeconds: 60,
+  proctoringInactivityEnabled: true,
+  proctoringInactivityMinutes: 3,
   proctoringPresenceEnabled: false,
+  proctoringCameraRequired: false,
   proctoringRandomMode: false,
-  proctoringIntervalMinutes: 10,
-  proctoringRandomMinMinutes: 5,
-  proctoringRandomMaxMinutes: 15,
+  proctoringIntervalMinutes: 20,
+  proctoringRandomMinMinutes: 15,
+  proctoringRandomMaxMinutes: 30,
   proctoringMaxChecksPerVideo: 3,
 }
