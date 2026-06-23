@@ -1,6 +1,6 @@
 import axiosInstance from '@/lib/axios'
-import type { ApiListData, ApiListResponse } from '@/types/api'
-import { unwrapList } from '@/utils/apiResponse'
+import type { ApiDetailResponse } from '@/types/api'
+import { unwrapDetail } from '@/utils/apiResponse'
 import type { VideoDto } from './createVideo'
 
 const VIDEO_ENDPOINT = '/videos'
@@ -13,7 +13,7 @@ export interface ListVideosInput {
   tagId?: string
 }
 
-export type ListVideosOutput = ApiListData<VideoDto>
+export type ListVideosOutput = VideoDto[]
 
 export async function listVideos(input?: ListVideosInput): Promise<ListVideosOutput> {
   const params: Record<string, unknown> = {}
@@ -23,9 +23,9 @@ export async function listVideos(input?: ListVideosInput): Promise<ListVideosOut
   if (input?.authorId) params.authorId = input.authorId
   if (input?.tagId) params.tagId = input.tagId
 
-  const response = await axiosInstance.get<ApiListResponse<VideoDto>>(VIDEO_ENDPOINT, {
+  const response = await axiosInstance.get<ApiDetailResponse<VideoDto[]>>(VIDEO_ENDPOINT, {
     params: Object.keys(params).length > 0 ? params : undefined,
   })
 
-  return unwrapList(response.data)
+  return unwrapDetail(response.data)
 }
