@@ -135,6 +135,12 @@ export const RoutePath = {
     getPath: (id: string) => `/orders/${id}`,
   },
 
+  // Video Library
+  VideoLibraryPage: {
+    route: 'videos',
+    path: '/videos',
+  },
+
   // Settings
   SettingsPage: {
     route: 'settings',

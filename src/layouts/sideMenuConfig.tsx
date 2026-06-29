@@ -10,6 +10,7 @@ import {
   TagsOutlined,
   AppstoreOutlined,
   OrderedListOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
@@ -87,6 +88,19 @@ export const sideMenuConfig: SideMenuEntry[] = [
         key: '/certificates',
         icon: <SafetyCertificateOutlined />,
         label: 'Chứng chỉ',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_VIDEO',
+    label: 'Quản lý video',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/videos',
+        icon: <VideoCameraOutlined />,
+        label: 'Kho Video',
       },
     ],
   },

@@ -1,4 +1,5 @@
 import AppLayout from '@/layouts/AppLayout'
+import { VideoLibraryPage } from '@/pages/authentication/VideoLibraryPage'
 import { CertificateListPage } from '@/pages/authentication/CertificatePage/CertificateListPage'
 import { CourseCategoryCreatePage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryCreatePage'
 import { CourseCategoryDetailPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryDetailPage'
@@ -174,6 +175,10 @@ const router = createBrowserRouter([
                 element: <UserDetailPage />,
               },
             ],
+          },
+          {
+            path: RoutePath.VideoLibraryPage.route,
+            children: [{ index: true, element: <VideoLibraryPage /> }],
           },
           {
             path: RoutePath.SettingsPage.route,
