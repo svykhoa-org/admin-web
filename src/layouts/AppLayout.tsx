@@ -102,11 +102,10 @@ export default function AppLayout() {
         trigger={null}
         theme="light"
         width={240}
+        className="[&_.ant-layout-sider-children]:flex [&_.ant-layout-sider-children]:flex-col [&_.ant-layout-sider-children]:overflow-hidden"
         style={{
           background: token.colorBgContainer,
           borderRight: `1px solid ${token.colorBorderSecondary}`,
-          display: 'flex',
-          flexDirection: 'column',
         }}
       >
         <div
@@ -122,7 +121,7 @@ export default function AppLayout() {
           />
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           <Menu
             theme="light"
             mode="inline"
