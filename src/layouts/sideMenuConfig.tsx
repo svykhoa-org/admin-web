@@ -11,11 +11,9 @@ import {
   AppstoreOutlined,
   OrderedListOutlined,
   VideoCameraOutlined,
-  CommentOutlined,
   FlagOutlined,
   FormatPainterOutlined,
   MessageOutlined,
-  UnorderedListOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
