@@ -105,6 +105,8 @@ export default function AppLayout() {
         style={{
           background: token.colorBgContainer,
           borderRight: `1px solid ${token.colorBorderSecondary}`,
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <div
@@ -120,14 +122,16 @@ export default function AppLayout() {
           />
         </div>
 
-        <Menu
-          theme="light"
-          mode="inline"
-          selectedKeys={[selectedMenuKey]}
-          items={sideMenuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{ border: 'none' }}
-        />
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <Menu
+            theme="light"
+            mode="inline"
+            selectedKeys={[selectedMenuKey]}
+            items={sideMenuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{ border: 'none' }}
+          />
+        </div>
 
         <div style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}>
           <Menu
