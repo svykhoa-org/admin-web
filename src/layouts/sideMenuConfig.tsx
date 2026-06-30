@@ -11,6 +11,11 @@ import {
   AppstoreOutlined,
   OrderedListOutlined,
   VideoCameraOutlined,
+  CommentOutlined,
+  FlagOutlined,
+  FormatPainterOutlined,
+  MessageOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
@@ -139,6 +144,43 @@ export const sideMenuConfig: SideMenuEntry[] = [
         key: '/orders',
         icon: <ShoppingOutlined />,
         label: 'Đơn hàng',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_FORUM',
+    label: 'Quản lý diễn đàn',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/forum/categories',
+        icon: <UnorderedListOutlined />,
+        label: 'Nhóm danh mục',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/forum/sub-categories',
+        icon: <CommentOutlined />,
+        label: 'Danh mục',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/forum/prefix-tags',
+        icon: <FormatPainterOutlined />,
+        label: 'Prefix Tag',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/forum/threads',
+        icon: <MessageOutlined />,
+        label: 'Kiểm duyệt bài viết',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/forum/reports',
+        icon: <FlagOutlined />,
+        label: 'Báo cáo vi phạm',
       },
     ],
   },

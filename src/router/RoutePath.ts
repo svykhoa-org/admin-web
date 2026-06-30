@@ -150,4 +150,26 @@ export const RoutePath = {
     route: 'general',
     path: '/settings/general',
   },
+
+  // Forum
+  ForumCategoryPage: {
+    route: 'forum/categories',
+    path: '/forum/categories',
+  },
+  ForumSubCategoryPage: {
+    route: 'forum/sub-categories',
+    path: '/forum/sub-categories',
+  },
+  ForumPrefixTagPage: {
+    route: 'forum/prefix-tags',
+    path: '/forum/prefix-tags',
+  },
+  ForumThreadModerationPage: {
+    route: 'forum/threads',
+    path: '/forum/threads',
+  },
+  ForumReportPage: {
+    route: 'forum/reports',
+    path: '/forum/reports',
+  },
 }
