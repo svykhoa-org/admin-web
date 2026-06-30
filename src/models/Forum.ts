@@ -3,6 +3,7 @@ import type { AbstractModel } from './AbstractModel'
 export type ForumCategoryGroup = AbstractModel & {
   name: string
   displayOrder: number
+  rank: string
 }
 
 export type ForumSubCategory = AbstractModel & {
@@ -11,6 +12,7 @@ export type ForumSubCategory = AbstractModel & {
   groupId: string
   group?: { id: string; name: string }
   displayOrder: number
+  rank: string
   threadCount: number
   messageCount: number
   requiresModeration: boolean

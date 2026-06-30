@@ -13,6 +13,7 @@ export async function listCategoryGroups(): Promise<ForumCategoryGroup[]> {
 export async function createCategoryGroup(data: {
   name: string
   displayOrder: number
+  rank?: string
 }): Promise<ForumCategoryGroup> {
   const res = await axiosInstance.post<ApiDetailResponse<ForumCategoryGroup>>(BASE, data)
   return unwrapDetail(res.data)
@@ -35,4 +36,8 @@ export async function deleteCategoryGroup(id: string): Promise<void> {
 
 export async function reorderCategoryGroup(id: string, direction: 'up' | 'down'): Promise<void> {
   await axiosInstance.patch(`${BASE}/${id}/reorder`, { direction })
+}
+
+export async function setGroupRank(id: string, rank: string): Promise<void> {
+  await axiosInstance.patch(`${BASE}/${id}/rank`, { rank })
 }

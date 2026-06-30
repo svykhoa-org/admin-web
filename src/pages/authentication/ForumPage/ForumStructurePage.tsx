@@ -7,21 +7,25 @@ import {
   deleteSubCategory,
   listCategoryGroups,
   listSubCategories,
-  reorderCategoryGroup,
-  reorderSubCategory,
+  setGroupRank,
+  setSubCategoryRank,
   updateCategoryGroup,
   updateSubCategory,
 } from '@/services/Forum'
 import { isApiResponseError } from '@/utils/apiResponse'
+import { DeleteOutlined, EditOutlined, HolderOutlined, PlusOutlined } from '@ant-design/icons'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import {
-  DeleteOutlined,
-  DownOutlined,
-  EditOutlined,
-  PlusOutlined,
-  UpOutlined,
-} from '@ant-design/icons'
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { App, Button, Card, Form, Input, Modal, Space, Switch, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
+import { LexoRank } from 'lexorank'
 import { useCallback, useEffect, useState } from 'react'
 
 const { Title } = Typography
@@ -31,6 +35,67 @@ type SubCatFormValues = {
   name: string
   description?: string
   requiresModeration: boolean
+}
+
+// Sortable row for Ant Design Table
+const SortableTableRow = (
+  props: React.HTMLAttributes<HTMLTableRowElement> & { 'data-row-key'?: string },
+) => {
+  const id = props['data-row-key'] ?? ''
+  const { setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return (
+    <tr
+      ref={setNodeRef}
+      {...props}
+      style={{
+        ...props.style,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    />
+  )
+}
+
+interface SortableGroupCardProps {
+  group: ForumCategoryGroup
+  children: React.ReactNode
+  extra: React.ReactNode
+  subCatCount: number
+}
+
+const SortableGroupCard = ({ group, children, extra, subCatCount }: SortableGroupCardProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: group.id,
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
+      <Card
+        size="small"
+        title={
+          <div className="flex items-center gap-2">
+            <HolderOutlined
+              {...attributes}
+              {...listeners}
+              className="cursor-grab text-gray-400 active:cursor-grabbing"
+            />
+            <span className="font-semibold">{group.name}</span>
+            <Tag color="blue">{subCatCount} danh mục</Tag>
+          </div>
+        }
+        extra={extra}
+      >
+        {children}
+      </Card>
+    </div>
+  )
 }
 
 export const ForumStructurePage = () => {
@@ -56,7 +121,8 @@ export const ForumStructurePage = () => {
     id: string
   } | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [reordering, setReordering] = useState(false)
+
+  const sensors = useSensors(useSensor(PointerSensor))
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -75,6 +141,64 @@ export const ForumStructurePage = () => {
     void load()
   }, [load])
 
+  const sortedGroups = [...groups].sort((a, b) => a.rank.localeCompare(b.rank))
+
+  const groupSubCats = (groupId: string) =>
+    subCats.filter(s => s.groupId === groupId).sort((a, b) => a.rank.localeCompare(b.rank))
+
+  // Group D&D
+  const handleGroupDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = sortedGroups.findIndex(g => g.id === active.id)
+    const newIndex = sortedGroups.findIndex(g => g.id === over.id)
+    const reordered = arrayMove(sortedGroups, oldIndex, newIndex)
+
+    setGroups(reordered)
+
+    const prev = reordered[newIndex - 1]
+    const next = reordered[newIndex + 1]
+    const prevRank = prev ? LexoRank.parse(prev.rank) : LexoRank.min()
+    const nextRank = next ? LexoRank.parse(next.rank) : LexoRank.max()
+    const newRank = prevRank.between(nextRank)
+
+    try {
+      await setGroupRank(active.id as string, newRank.toString())
+      setGroups(gs => gs.map(g => (g.id === active.id ? { ...g, rank: newRank.toString() } : g)))
+    } catch {
+      void message.error('Không thể lưu thứ tự')
+      void load()
+    }
+  }
+
+  // SubCat D&D
+  const handleSubCatDragEnd = async (event: DragEndEvent, groupId: string) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const sorted = groupSubCats(groupId)
+    const oldIndex = sorted.findIndex(s => s.id === active.id)
+    const newIndex = sorted.findIndex(s => s.id === over.id)
+    const reordered = arrayMove(sorted, oldIndex, newIndex)
+
+    setSubCats(prev => [...prev.filter(s => s.groupId !== groupId), ...reordered])
+
+    const prev = reordered[newIndex - 1]
+    const next = reordered[newIndex + 1]
+    const prevRank = prev ? LexoRank.parse(prev.rank) : LexoRank.min()
+    const nextRank = next ? LexoRank.parse(next.rank) : LexoRank.max()
+    const newRank = prevRank.between(nextRank)
+
+    try {
+      await setSubCategoryRank(active.id as string, newRank.toString())
+      setSubCats(ss => ss.map(s => (s.id === active.id ? { ...s, rank: newRank.toString() } : s)))
+    } catch {
+      void message.error('Không thể lưu thứ tự')
+      void load()
+    }
+  }
+
   // Group actions
   const openGroupModal = (group?: ForumCategoryGroup) => {
     setEditingGroup(group ?? null)
@@ -90,8 +214,11 @@ export const ForumStructurePage = () => {
         await updateCategoryGroup(editingGroup.id, { name: values.name })
         void message.success('Cập nhật nhóm thành công')
       } else {
-        const maxOrder = groups.reduce((m, g) => Math.max(m, g.displayOrder), -1)
-        await createCategoryGroup({ name: values.name, displayOrder: maxOrder + 1 })
+        const lastGroup = sortedGroups[sortedGroups.length - 1]
+        const newRank = lastGroup
+          ? LexoRank.parse(lastGroup.rank).genNext().toString()
+          : '0|000001:'
+        await createCategoryGroup({ name: values.name, displayOrder: groups.length, rank: newRank })
         void message.success('Tạo nhóm thành công')
       }
       setGroupModal(false)
@@ -100,18 +227,6 @@ export const ForumStructurePage = () => {
       void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
     } finally {
       setGroupSaving(false)
-    }
-  }
-
-  const handleReorderGroup = async (id: string, direction: 'up' | 'down') => {
-    setReordering(true)
-    try {
-      await reorderCategoryGroup(id, direction)
-      void load()
-    } catch {
-      void message.error('Không thể thay đổi thứ tự')
-    } finally {
-      setReordering(false)
     }
   }
 
@@ -143,14 +258,18 @@ export const ForumStructurePage = () => {
         })
         void message.success('Cập nhật danh mục thành công')
       } else {
-        const groupSubCats = subCats.filter(s => s.groupId === addingToGroupId)
-        const maxOrder = groupSubCats.reduce((m, s) => Math.max(m, s.displayOrder), -1)
+        const groupSubs = subCats
+          .filter(s => s.groupId === addingToGroupId)
+          .sort((a, b) => a.rank.localeCompare(b.rank))
+        const lastSub = groupSubs[groupSubs.length - 1]
+        const newRank = lastSub ? LexoRank.parse(lastSub.rank).genNext().toString() : '0|000001:'
         await createSubCategory({
           name: values.name,
           description: values.description,
           groupId: addingToGroupId!,
-          displayOrder: maxOrder + 1,
+          displayOrder: groupSubs.length,
           requiresModeration: values.requiresModeration,
+          rank: newRank,
         })
         void message.success('Tạo danh mục thành công')
       }
@@ -160,18 +279,6 @@ export const ForumStructurePage = () => {
       void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
     } finally {
       setSubCatSaving(false)
-    }
-  }
-
-  const handleReorderSubCat = async (id: string, direction: 'up' | 'down') => {
-    setReordering(true)
-    try {
-      await reorderSubCategory(id, direction)
-      void load()
-    } catch {
-      void message.error('Không thể thay đổi thứ tự')
-    } finally {
-      setReordering(false)
     }
   }
 
@@ -195,7 +302,84 @@ export const ForumStructurePage = () => {
     }
   }
 
-  const sortedGroups = [...groups].sort((a, b) => a.displayOrder - b.displayOrder)
+  const subCatColumns = (group: ForumCategoryGroup): ColumnsType<ForumSubCategory> => [
+    {
+      key: 'drag',
+      width: 32,
+      render: () => (
+        <HolderOutlined className="cursor-grab text-gray-300 hover:text-gray-500 active:cursor-grabbing" />
+      ),
+    },
+    {
+      title: '#',
+      key: 'index',
+      width: 48,
+      render: (_: unknown, __: ForumSubCategory, i: number) => (
+        <span className="text-gray-400 text-sm">{i + 1}</span>
+      ),
+    },
+    { title: 'Tên danh mục', dataIndex: 'name', key: 'name' },
+    {
+      title: 'Mô tả',
+      dataIndex: 'description',
+      key: 'description',
+      render: (v: string | null) => v ?? <span className="text-gray-300">—</span>,
+    },
+    {
+      title: 'Bài viết',
+      dataIndex: 'threadCount',
+      key: 'threadCount',
+      width: 90,
+      align: 'right',
+    },
+    {
+      title: 'Bình luận',
+      dataIndex: 'messageCount',
+      key: 'messageCount',
+      width: 90,
+      align: 'right',
+    },
+    {
+      title: 'Duyệt bài',
+      key: 'requiresModeration',
+      width: 90,
+      align: 'center',
+      render: (_: unknown, record: ForumSubCategory) => (
+        <Switch
+          size="small"
+          checked={record.requiresModeration}
+          onChange={async checked => {
+            try {
+              await updateSubCategory(record.id, { requiresModeration: checked })
+              void load()
+            } catch {
+              void message.error('Không thể cập nhật')
+            }
+          }}
+        />
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 120,
+      render: (_: unknown, record: ForumSubCategory) => (
+        <Space size="small">
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openSubCatModal(group.id, record)}
+          />
+          <Button
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => setDeleteState({ open: true, type: 'subcat', id: record.id })}
+          />
+        </Space>
+      ),
+    },
+  ]
 
   return (
     <div className="p-4">
@@ -208,162 +392,79 @@ export const ForumStructurePage = () => {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {sortedGroups.map((group, groupIndex) => {
-          const groupSubCats = subCats
-            .filter(s => s.groupId === group.id)
-            .sort((a, b) => a.displayOrder - b.displayOrder)
-
-          const subCatColumns: ColumnsType<ForumSubCategory> = [
-            {
-              title: '#',
-              key: 'index',
-              width: 48,
-              render: (_, __, i) => <span className="text-gray-400 text-sm">{i + 1}</span>,
-            },
-            { title: 'Tên danh mục', dataIndex: 'name', key: 'name' },
-            {
-              title: 'Mô tả',
-              dataIndex: 'description',
-              key: 'description',
-              render: (v: string | null) => v ?? <span className="text-gray-300">—</span>,
-            },
-            {
-              title: 'Bài viết',
-              dataIndex: 'threadCount',
-              key: 'threadCount',
-              width: 90,
-              align: 'right',
-            },
-            {
-              title: 'Bình luận',
-              dataIndex: 'messageCount',
-              key: 'messageCount',
-              width: 90,
-              align: 'right',
-            },
-            {
-              title: 'Duyệt bài',
-              key: 'requiresModeration',
-              width: 90,
-              align: 'center',
-              render: (_, record) => (
-                <Switch
-                  size="small"
-                  checked={record.requiresModeration}
-                  onChange={async checked => {
-                    try {
-                      await updateSubCategory(record.id, { requiresModeration: checked })
-                      void load()
-                    } catch {
-                      void message.error('Không thể cập nhật')
-                    }
-                  }}
-                />
-              ),
-            },
-            {
-              title: '',
-              key: 'actions',
-              width: 180,
-              render: (_, record, i) => (
-                <Space size="small">
-                  <Button
-                    size="small"
-                    icon={<UpOutlined />}
-                    disabled={reordering || i === 0}
-                    onClick={() => handleReorderSubCat(record.id, 'up')}
-                  />
-                  <Button
-                    size="small"
-                    icon={<DownOutlined />}
-                    disabled={reordering || i === groupSubCats.length - 1}
-                    onClick={() => handleReorderSubCat(record.id, 'down')}
-                  />
-                  <Button
-                    size="small"
-                    icon={<EditOutlined />}
-                    onClick={() => openSubCatModal(group.id, record)}
-                  />
-                  <Button
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => setDeleteState({ open: true, type: 'subcat', id: record.id })}
-                  />
-                </Space>
-              ),
-            },
-          ]
-
-          return (
-            <Card
-              key={group.id}
-              size="small"
-              title={
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-sm font-normal">{groupIndex + 1}.</span>
-                  <span className="font-semibold">{group.name}</span>
-                  <Tag color="blue">{groupSubCats.length} danh mục</Tag>
-                </div>
-              }
-              extra={
-                <Space size="small">
-                  <Button
-                    size="small"
-                    icon={<UpOutlined />}
-                    disabled={reordering || groupIndex === 0}
-                    onClick={() => handleReorderGroup(group.id, 'up')}
-                  />
-                  <Button
-                    size="small"
-                    icon={<DownOutlined />}
-                    disabled={reordering || groupIndex === sortedGroups.length - 1}
-                    onClick={() => handleReorderGroup(group.id, 'down')}
-                  />
-                  <Button
-                    size="small"
-                    icon={<EditOutlined />}
-                    onClick={() => openGroupModal(group)}
-                  />
-                  <Button
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => setDeleteState({ open: true, type: 'group', id: group.id })}
-                  />
-                  <Button
-                    size="small"
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => openSubCatModal(group.id)}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleGroupDragEnd}
+      >
+        <SortableContext items={sortedGroups.map(g => g.id)} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-4">
+            {sortedGroups.map(group => {
+              const subs = groupSubCats(group.id)
+              return (
+                <SortableGroupCard
+                  key={group.id}
+                  group={group}
+                  subCatCount={subs.length}
+                  extra={
+                    <Space size="small">
+                      <Button
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={() => openGroupModal(group)}
+                      />
+                      <Button
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => setDeleteState({ open: true, type: 'group', id: group.id })}
+                      />
+                      <Button
+                        size="small"
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => openSubCatModal(group.id)}
+                      >
+                        Thêm danh mục
+                      </Button>
+                    </Space>
+                  }
+                >
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={e => handleSubCatDragEnd(e, group.id)}
                   >
-                    Thêm danh mục
-                  </Button>
-                </Space>
-              }
-            >
-              <Table<ForumSubCategory>
-                columns={subCatColumns}
-                dataSource={groupSubCats}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                loading={loading}
-                locale={{ emptyText: 'Chưa có danh mục nào' }}
-              />
-            </Card>
-          )
-        })}
+                    <SortableContext
+                      items={subs.map(s => s.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <Table<ForumSubCategory>
+                        components={{ body: { row: SortableTableRow } }}
+                        columns={subCatColumns(group)}
+                        dataSource={subs}
+                        rowKey="id"
+                        pagination={false}
+                        size="small"
+                        loading={loading}
+                        locale={{ emptyText: 'Chưa có danh mục nào' }}
+                      />
+                    </SortableContext>
+                  </DndContext>
+                </SortableGroupCard>
+              )
+            })}
 
-        {sortedGroups.length === 0 && !loading && (
-          <Card>
-            <p className="py-8 text-center text-gray-400">
-              Chưa có nhóm danh mục nào. Nhấn "Thêm nhóm" để bắt đầu.
-            </p>
-          </Card>
-        )}
-      </div>
+            {sortedGroups.length === 0 && !loading && (
+              <Card>
+                <p className="py-8 text-center text-gray-400">
+                  Chưa có nhóm danh mục nào. Nhấn "Thêm nhóm" để bắt đầu.
+                </p>
+              </Card>
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Group modal */}
       <Modal
