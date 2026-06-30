@@ -32,3 +32,7 @@ export async function updateCategoryGroup(
 export async function deleteCategoryGroup(id: string): Promise<void> {
   await axiosInstance.delete(`${BASE}/${id}`)
 }
+
+export async function reorderCategoryGroup(id: string, direction: 'up' | 'down'): Promise<void> {
+  await axiosInstance.patch(`${BASE}/${id}/reorder`, { direction })
+}

@@ -29,6 +29,7 @@ import { SettingsLayout } from '@/pages/authentication/SettingsPage/SettingsLayo
 import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
 import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
 import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
+import { ForumStructurePage } from '@/pages/authentication/ForumPage/ForumStructurePage'
 import { ForumCategoryListPage } from '@/pages/authentication/ForumPage/ForumCategoryListPage'
 import { ForumSubCategoryListPage } from '@/pages/authentication/ForumPage/ForumSubCategoryListPage'
 import { ForumPrefixTagListPage } from '@/pages/authentication/ForumPage/ForumPrefixTagListPage'
@@ -195,6 +196,10 @@ const router = createBrowserRouter([
               },
               { path: RoutePath.GeneralSettingsPage.route, element: <GeneralSettingsPage /> },
             ],
+          },
+          {
+            path: RoutePath.ForumStructurePage.route,
+            element: <ForumStructurePage />,
           },
           {
             path: RoutePath.ForumCategoryPage.route,

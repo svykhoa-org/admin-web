@@ -13,6 +13,7 @@ export type ForumSubCategory = AbstractModel & {
   displayOrder: number
   threadCount: number
   messageCount: number
+  requiresModeration: boolean
 }
 
 export type ForumPrefixTag = AbstractModel & {

@@ -15,6 +15,7 @@ export async function createSubCategory(data: {
   description?: string
   groupId: string
   displayOrder: number
+  requiresModeration?: boolean
 }): Promise<ForumSubCategory> {
   const res = await axiosInstance.post<ApiDetailResponse<ForumSubCategory>>(BASE, data)
   return unwrapDetail(res.data)
@@ -22,7 +23,13 @@ export async function createSubCategory(data: {
 
 export async function updateSubCategory(
   id: string,
-  data: { name?: string; description?: string; groupId?: string; displayOrder?: number },
+  data: {
+    name?: string
+    description?: string
+    groupId?: string
+    displayOrder?: number
+    requiresModeration?: boolean
+  },
 ): Promise<ForumSubCategory> {
   const res = await axiosInstance.patch<ApiDetailResponse<ForumSubCategory>>(`${BASE}/${id}`, data)
   return unwrapDetail(res.data)
@@ -30,4 +37,8 @@ export async function updateSubCategory(
 
 export async function deleteSubCategory(id: string): Promise<void> {
   await axiosInstance.delete(`${BASE}/${id}`)
+}
+
+export async function reorderSubCategory(id: string, direction: 'up' | 'down'): Promise<void> {
+  await axiosInstance.patch(`${BASE}/${id}/reorder`, { direction })
 }

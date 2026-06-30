@@ -152,6 +152,10 @@ export const RoutePath = {
   },
 
   // Forum
+  ForumStructurePage: {
+    route: 'forum/structure',
+    path: '/forum/structure',
+  },
   ForumCategoryPage: {
     route: 'forum/categories',
     path: '/forum/categories',
