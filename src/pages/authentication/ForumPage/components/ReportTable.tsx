@@ -56,6 +56,12 @@ export const ReportTable = () => {
       render: (_, r) => r.reporter?.fullName ?? r.reporterId,
     },
     { title: 'Loại', dataIndex: 'targetType', key: 'targetType', width: 90 },
+    {
+      title: 'Target ID',
+      dataIndex: 'targetId',
+      key: 'targetId',
+      render: (val: string) => val.slice(0, 8) + '...',
+    },
     { title: 'Lý do', dataIndex: 'reason', key: 'reason' },
     {
       title: 'Trạng thái',
