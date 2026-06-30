@@ -30,8 +30,6 @@ import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
 import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
 import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
 import { ForumStructurePage } from '@/pages/authentication/ForumPage/ForumStructurePage'
-import { ForumCategoryListPage } from '@/pages/authentication/ForumPage/ForumCategoryListPage'
-import { ForumSubCategoryListPage } from '@/pages/authentication/ForumPage/ForumSubCategoryListPage'
 import { ForumPrefixTagListPage } from '@/pages/authentication/ForumPage/ForumPrefixTagListPage'
 import { ForumThreadModerationPage } from '@/pages/authentication/ForumPage/ForumThreadModerationPage'
 import { ForumReportPage } from '@/pages/authentication/ForumPage/ForumReportPage'
@@ -203,11 +201,11 @@ const router = createBrowserRouter([
           },
           {
             path: RoutePath.ForumCategoryPage.route,
-            element: <ForumCategoryListPage />,
+            element: <Navigate to="/forum/structure" replace />,
           },
           {
             path: RoutePath.ForumSubCategoryPage.route,
-            element: <ForumSubCategoryListPage />,
+            element: <Navigate to="/forum/structure" replace />,
           },
           {
             path: RoutePath.ForumPrefixTagPage.route,

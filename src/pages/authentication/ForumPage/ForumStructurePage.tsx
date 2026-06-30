@@ -20,19 +20,7 @@ import {
   PlusOutlined,
   UpOutlined,
 } from '@ant-design/icons'
-import {
-  App,
-  Button,
-  Card,
-  Form,
-  Input,
-  Modal,
-  Space,
-  Switch,
-  Table,
-  Tag,
-  Typography,
-} from 'antd'
+import { App, Button, Card, Form, Input, Modal, Space, Switch, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -68,6 +56,7 @@ export const ForumStructurePage = () => {
     id: string
   } | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [reordering, setReordering] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -115,11 +104,14 @@ export const ForumStructurePage = () => {
   }
 
   const handleReorderGroup = async (id: string, direction: 'up' | 'down') => {
+    setReordering(true)
     try {
       await reorderCategoryGroup(id, direction)
       void load()
     } catch {
       void message.error('Không thể thay đổi thứ tự')
+    } finally {
+      setReordering(false)
     }
   }
 
@@ -172,11 +164,14 @@ export const ForumStructurePage = () => {
   }
 
   const handleReorderSubCat = async (id: string, direction: 'up' | 'down') => {
+    setReordering(true)
     try {
       await reorderSubCategory(id, direction)
       void load()
     } catch {
       void message.error('Không thể thay đổi thứ tự')
+    } finally {
+      setReordering(false)
     }
   }
 
@@ -224,9 +219,7 @@ export const ForumStructurePage = () => {
               title: '#',
               key: 'index',
               width: 48,
-              render: (_, __, i) => (
-                <span className="text-gray-400 text-sm">{i + 1}</span>
-              ),
+              render: (_, __, i) => <span className="text-gray-400 text-sm">{i + 1}</span>,
             },
             { title: 'Tên danh mục', dataIndex: 'name', key: 'name' },
             {
@@ -278,13 +271,13 @@ export const ForumStructurePage = () => {
                   <Button
                     size="small"
                     icon={<UpOutlined />}
-                    disabled={i === 0}
+                    disabled={reordering || i === 0}
                     onClick={() => handleReorderSubCat(record.id, 'up')}
                   />
                   <Button
                     size="small"
                     icon={<DownOutlined />}
-                    disabled={i === groupSubCats.length - 1}
+                    disabled={reordering || i === groupSubCats.length - 1}
                     onClick={() => handleReorderSubCat(record.id, 'down')}
                   />
                   <Button
@@ -319,13 +312,13 @@ export const ForumStructurePage = () => {
                   <Button
                     size="small"
                     icon={<UpOutlined />}
-                    disabled={groupIndex === 0}
+                    disabled={reordering || groupIndex === 0}
                     onClick={() => handleReorderGroup(group.id, 'up')}
                   />
                   <Button
                     size="small"
                     icon={<DownOutlined />}
-                    disabled={groupIndex === sortedGroups.length - 1}
+                    disabled={reordering || groupIndex === sortedGroups.length - 1}
                     onClick={() => handleReorderGroup(group.id, 'down')}
                   />
                   <Button
@@ -337,9 +330,7 @@ export const ForumStructurePage = () => {
                     size="small"
                     danger
                     icon={<DeleteOutlined />}
-                    onClick={() =>
-                      setDeleteState({ open: true, type: 'group', id: group.id })
-                    }
+                    onClick={() => setDeleteState({ open: true, type: 'group', id: group.id })}
                   />
                   <Button
                     size="small"
@@ -429,7 +420,11 @@ export const ForumStructurePage = () => {
 
       <ConfirmDeleteModal
         open={deleteState?.open ?? false}
-        count={1}
+        count={
+          deleteState?.type === 'group'
+            ? 1 + subCats.filter(s => s.groupId === deleteState.id).length
+            : 1
+        }
         isLoading={deleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteState(null)}

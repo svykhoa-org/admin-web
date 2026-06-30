@@ -150,7 +150,12 @@ export const sideMenuConfig: SideMenuEntry[] = [
     key: 'GROUP_FORUM',
     label: 'Quản lý diễn đàn',
     children: [
-      { type: ItemType.LINK, key: '/forum/structure', icon: <AppstoreOutlined />, label: 'Cấu trúc diễn đàn' },
+      {
+        type: ItemType.LINK,
+        key: '/forum/structure',
+        icon: <AppstoreOutlined />,
+        label: 'Cấu trúc diễn đàn',
+      },
       {
         type: ItemType.LINK,
         key: '/forum/prefix-tags',
