@@ -42,16 +42,21 @@ const SortableTableRow = (
   props: React.HTMLAttributes<HTMLTableRowElement> & { 'data-row-key'?: string },
 ) => {
   const id = props['data-row-key'] ?? ''
-  const { setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  })
   return (
     <tr
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       {...props}
       style={{
         ...props.style,
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
+        cursor: 'grab',
       }}
     />
   )
@@ -122,7 +127,7 @@ export const ForumStructurePage = () => {
   } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const sensors = useSensors(useSensor(PointerSensor))
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const load = useCallback(async () => {
     setLoading(true)
