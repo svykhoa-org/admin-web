@@ -34,27 +34,29 @@ export const ThreadModerationTable = () => {
   const [total, setTotal] = useState(0)
   const PAGE_SIZE = 20
 
+  useEffect(() => {
+    listSubCategories()
+      .then(setSubCats)
+      .catch(() => void message.error('Không thể tải danh mục'))
+  }, [message])
+
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [result, cats] = await Promise.all([
-        listAdminThreads({
-          subCategoryId: filterSubCat || undefined,
-          status: (filterStatus as ThreadStatus) || undefined,
-          page,
-          limit: PAGE_SIZE,
-        }),
-        subCats.length === 0 ? listSubCategories() : Promise.resolve(subCats),
-      ])
+      const result = await listAdminThreads({
+        subCategoryId: filterSubCat || undefined,
+        status: (filterStatus as ThreadStatus) || undefined,
+        page,
+        limit: PAGE_SIZE,
+      })
       setItems(result.items)
       setTotal(result.total)
-      if (subCats.length === 0) setSubCats(cats)
     } catch {
       void message.error('Không thể tải danh sách bài viết')
     } finally {
       setIsLoading(false)
     }
-  }, [message, filterSubCat, filterStatus, page, subCats])
+  }, [message, filterSubCat, filterStatus, page])
 
   useEffect(() => {
     void load()

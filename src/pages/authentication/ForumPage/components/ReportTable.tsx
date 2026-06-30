@@ -93,11 +93,8 @@ export const ReportTable = () => {
           allowClear
           style={{ width: 160 }}
           value={filterStatus}
-          options={[
-            { label: 'Tất cả', value: undefined as unknown as ReportStatus },
-            ...STATUS_OPTIONS,
-          ]}
-          onChange={val => {
+          options={STATUS_OPTIONS}
+          onChange={(val: ReportStatus | undefined) => {
             setFilterStatus(val)
             setPage(1)
           }}
