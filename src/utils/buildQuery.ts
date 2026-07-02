@@ -4,16 +4,7 @@ type ScalarValue = string | number | boolean | null
 
 /** Operators whose value is a single scalar. */
 type ScalarOperator =
-  | 'eq'
-  | 'neq'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte'
-  | 'ilike'
-  | 'like'
-  | 'isnull'
-  | 'isnotnull'
+  'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'ilike' | 'like' | 'isnull' | 'isnotnull'
 
 /** Operators whose value is an array (in, nin) or a 2-element tuple (between). */
 type ArrayOperator = 'in' | 'nin'

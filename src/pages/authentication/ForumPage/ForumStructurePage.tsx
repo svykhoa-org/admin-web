@@ -13,7 +13,13 @@ import {
   updateSubCategory,
 } from '@/services/Forum'
 import { isApiResponseError } from '@/utils/apiResponse'
-import { DeleteOutlined, EditOutlined, HolderOutlined, PlusOutlined } from '@ant-design/icons'
+import {
+  DeleteOutlined,
+  EditOutlined,
+  HolderOutlined,
+  PlusOutlined,
+  RightOutlined,
+} from '@ant-design/icons'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import {
@@ -23,10 +29,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { App, Button, Card, Form, Input, Modal, Space, Switch, Table, Tag, Typography } from 'antd'
+import { App, Button, Card, Form, Input, Modal, Space, Switch, Table, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { LexoRank } from 'lexorank'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const { Title } = Typography
 
@@ -53,9 +59,9 @@ const SortableTableRow = (
       {...props}
       style={{
         ...props.style,
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
+        transform: CSS.Translate.toString(transform),
+        transition: isDragging ? undefined : transition,
+        opacity: isDragging ? 0.4 : 1,
         cursor: 'grab',
       }}
     />
@@ -67,9 +73,18 @@ interface SortableGroupCardProps {
   children: React.ReactNode
   extra: React.ReactNode
   subCatCount: number
+  collapsed: boolean
+  onToggle: () => void
 }
 
-const SortableGroupCard = ({ group, children, extra, subCatCount }: SortableGroupCardProps) => {
+const SortableGroupCard = ({
+  group,
+  children,
+  extra,
+  subCatCount,
+  collapsed,
+  onToggle,
+}: SortableGroupCardProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: group.id,
   })
@@ -77,27 +92,44 @@ const SortableGroupCard = ({ group, children, extra, subCatCount }: SortableGrou
     <div
       ref={setNodeRef}
       style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
+        transform: CSS.Translate.toString(transform),
+        transition: isDragging ? undefined : transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 999 : undefined,
+        position: 'relative',
       }}
     >
       <Card
-        size="small"
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <HolderOutlined
               {...attributes}
               {...listeners}
-              className="cursor-grab text-gray-400 active:cursor-grabbing"
+              className="cursor-grab text-gray-300 transition-colors hover:text-gray-500 active:cursor-grabbing"
             />
-            <span className="font-semibold">{group.name}</span>
-            <Tag color="blue">{subCatCount} danh mục</Tag>
+            <button
+              type="button"
+              onClick={onToggle}
+              className="flex flex-1 cursor-pointer items-center gap-2 text-left focus:outline-none border-none bg-white"
+            >
+              <RightOutlined
+                className="text-[10px] text-gray-400 transition-transform duration-200"
+                style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)' }}
+              />
+              <span className="text-sm font-semibold text-gray-800">{group.name}</span>
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                {subCatCount}
+              </span>
+            </button>
           </div>
         }
         extra={extra}
+        styles={{
+          header: { background: 'white' },
+          body: collapsed ? { display: 'none' } : undefined,
+        }}
       >
-        {children}
+        {collapsed ? null : children}
       </Card>
     </div>
   )
@@ -108,6 +140,8 @@ export const ForumStructurePage = () => {
   const [groups, setGroups] = useState<ForumCategoryGroup[]>([])
   const [subCats, setSubCats] = useState<ForumSubCategory[]>([])
   const [loading, setLoading] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const initializedRef = useRef(false)
 
   const [groupModal, setGroupModal] = useState(false)
   const [editingGroup, setEditingGroup] = useState<ForumCategoryGroup | null>(null)
@@ -145,6 +179,22 @@ export const ForumStructurePage = () => {
   useEffect(() => {
     void load()
   }, [load])
+
+  useEffect(() => {
+    if (!initializedRef.current && groups.length > 0) {
+      initializedRef.current = true
+      setCollapsedGroups(new Set(groups.map(g => g.id)))
+    }
+  }, [groups])
+
+  const toggleGroup = (id: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const sortedGroups = [...groups].sort((a, b) => a.rank.localeCompare(b.rank))
 
@@ -387,11 +437,16 @@ export const ForumStructurePage = () => {
   ]
 
   return (
-    <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <Title level={4} className="!mb-0">
-          Cấu trúc diễn đàn
-        </Title>
+    <div className="p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <Title level={4} className="mb-0!">
+            Cấu trúc diễn đàn
+          </Title>
+          <p className="mt-1 text-sm text-gray-400">
+            {sortedGroups.length} nhóm · Nhấn vào tên nhóm để mở/đóng danh mục
+          </p>
+        </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => openGroupModal()}>
           Thêm nhóm
         </Button>
@@ -403,14 +458,17 @@ export const ForumStructurePage = () => {
         onDragEnd={handleGroupDragEnd}
       >
         <SortableContext items={sortedGroups.map(g => g.id)} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {sortedGroups.map(group => {
               const subs = groupSubCats(group.id)
+              const collapsed = collapsedGroups.has(group.id)
               return (
                 <SortableGroupCard
                   key={group.id}
                   group={group}
                   subCatCount={subs.length}
+                  collapsed={collapsed}
+                  onToggle={() => toggleGroup(group.id)}
                   extra={
                     <Space size="small">
                       <Button
@@ -462,7 +520,7 @@ export const ForumStructurePage = () => {
 
             {sortedGroups.length === 0 && !loading && (
               <Card>
-                <p className="py-8 text-center text-gray-400">
+                <p className="py-10 text-center text-gray-400">
                   Chưa có nhóm danh mục nào. Nhấn "Thêm nhóm" để bắt đầu.
                 </p>
               </Card>

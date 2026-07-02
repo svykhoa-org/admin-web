@@ -11,10 +11,18 @@ import {
   setThreadStatus,
 } from '@/services/Forum'
 import { isApiResponseError } from '@/utils/apiResponse'
-import { DeleteOutlined, LockOutlined, PushpinOutlined, UnlockOutlined } from '@ant-design/icons'
+import { RoutePath } from '@/router/RoutePath'
+import {
+  DeleteOutlined,
+  EyeOutlined,
+  LockOutlined,
+  PushpinOutlined,
+  UnlockOutlined,
+} from '@ant-design/icons'
 import { App, Button, Card, Select, Space, Switch, Tooltip, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const STATUS_OPTIONS = [
   { label: 'Tất cả', value: '' },
@@ -25,6 +33,7 @@ const STATUS_OPTIONS = [
 
 export const ThreadModerationTable = () => {
   const { message } = App.useApp()
+  const navigate = useNavigate()
   const [items, setItems] = useState<ForumThread[]>([])
   const [subCats, setSubCats] = useState<ForumSubCategory[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -81,9 +90,13 @@ export const ThreadModerationTable = () => {
       key: 'title',
       render: (_, r) => (
         <Space direction="vertical" size={0}>
-          <Typography.Text strong style={{ fontSize: 13 }}>
+          <Typography.Link
+            strong
+            style={{ fontSize: 13 }}
+            onClick={() => navigate(RoutePath.ForumThreadDetailPage.getPath(r.id))}
+          >
             {r.title}
-          </Typography.Text>
+          </Typography.Link>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             {r.author?.fullName ?? r.authorId} · {r.subCategory?.name ?? r.subCategoryId}
           </Typography.Text>
@@ -148,21 +161,30 @@ export const ThreadModerationTable = () => {
       title: 'Lượt xem',
       dataIndex: 'viewCount',
       key: 'viewCount',
-      width: 90,
+      width: 100,
     },
     {
       title: '',
       key: 'actions',
-      width: 48,
+      width: 88,
       render: (_, record) => (
-        <Tooltip title="Xóa bài viết">
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => openDeleteModal([record.id])}
-          />
-        </Tooltip>
+        <Space size={4}>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(RoutePath.ForumThreadDetailPage.getPath(record.id))}
+            />
+          </Tooltip>
+          <Tooltip title="Xóa bài viết">
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => openDeleteModal([record.id])}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ]

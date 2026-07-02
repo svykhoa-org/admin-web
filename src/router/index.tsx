@@ -32,6 +32,7 @@ import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
 import { ForumStructurePage } from '@/pages/authentication/ForumPage/ForumStructurePage'
 import { ForumPrefixTagListPage } from '@/pages/authentication/ForumPage/ForumPrefixTagListPage'
 import { ForumThreadModerationPage } from '@/pages/authentication/ForumPage/ForumThreadModerationPage'
+import { ForumThreadDetailPage } from '@/pages/authentication/ForumPage/ForumThreadDetailPage'
 import { ForumReportPage } from '@/pages/authentication/ForumPage/ForumReportPage'
 import ComponentsPage from '@/pages/dev/ComponentsPage'
 import LoginPage from '@/pages/unauthentication/LoginPage'
@@ -214,6 +215,10 @@ const router = createBrowserRouter([
           {
             path: RoutePath.ForumThreadModerationPage.route,
             element: <ForumThreadModerationPage />,
+          },
+          {
+            path: RoutePath.ForumThreadDetailPage.route,
+            element: <ForumThreadDetailPage />,
           },
           {
             path: RoutePath.ForumReportPage.route,

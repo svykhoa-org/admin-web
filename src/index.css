@@ -27,3 +27,89 @@ body * {
 #root {
   min-height: 100vh;
 }
+
+/* Rendered HTML body of a forum thread / comment */
+.forum-content {
+  color: rgba(0, 0, 0, 0.82);
+  font-size: 15px;
+  line-height: 1.8;
+  word-break: break-word;
+}
+.forum-content > *:first-child {
+  margin-top: 0;
+}
+.forum-content > *:last-child {
+  margin-bottom: 0;
+}
+.forum-content h1,
+.forum-content h2,
+.forum-content h3 {
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1.4em 0 0.6em;
+}
+.forum-content h1 {
+  font-size: 1.5em;
+}
+.forum-content h2 {
+  font-size: 1.3em;
+}
+.forum-content h3 {
+  font-size: 1.12em;
+}
+.forum-content p {
+  margin: 0 0 1em;
+}
+.forum-content ul,
+.forum-content ol {
+  margin: 0 0 1em;
+  padding-left: 1.4em;
+}
+.forum-content li {
+  margin: 0.25em 0;
+}
+.forum-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.forum-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.forum-content blockquote {
+  margin: 0 0 1em;
+  padding: 0.2em 1em;
+  border-left: 3px solid rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.6);
+}
+.forum-content pre {
+  background: rgba(0, 0, 0, 0.04);
+  padding: 12px 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.forum-content code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9em;
+}
+/* Comment bodies are a touch more compact than the OP */
+.forum-content--compact {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Thread detail — modern reading layout */
+.thread-title {
+  letter-spacing: -0.02em;
+}
+.comment-row {
+  padding: 18px 0;
+  transition: background-color 0.18s ease;
+}
+.comment-row:hover {
+  background: rgba(15, 23, 42, 0.015);
+}
+.comment-row + .comment-row {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}

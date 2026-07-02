@@ -43,6 +43,18 @@ export type ForumThread = AbstractModel & {
   viewCount: number
   status: ThreadStatus
   lastReplyAt: string | null
+  reactionCount?: number
+  hasReacted?: boolean
+}
+
+export type ForumComment = AbstractModel & {
+  content: string
+  threadId: string
+  authorId: string
+  author?: { id: string; fullName: string; avatar: string | null }
+  parentId?: string | null
+  isEdited?: boolean
+  replies?: ForumComment[]
 }
 
 export enum ReportStatus {

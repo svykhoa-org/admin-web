@@ -172,6 +172,11 @@ export const RoutePath = {
     route: 'forum/threads',
     path: '/forum/threads',
   },
+  ForumThreadDetailPage: {
+    route: 'forum/threads/:id',
+    path: '/forum/threads/:id',
+    getPath: (id: string) => `/forum/threads/${id}`,
+  },
   ForumReportPage: {
     route: 'forum/reports',
     path: '/forum/reports',
