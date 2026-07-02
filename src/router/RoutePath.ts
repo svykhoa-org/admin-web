@@ -150,4 +150,35 @@ export const RoutePath = {
     route: 'general',
     path: '/settings/general',
   },
+
+  // Forum
+  ForumStructurePage: {
+    route: 'forum/structure',
+    path: '/forum/structure',
+  },
+  ForumCategoryPage: {
+    route: 'forum/categories',
+    path: '/forum/categories',
+  },
+  ForumSubCategoryPage: {
+    route: 'forum/sub-categories',
+    path: '/forum/sub-categories',
+  },
+  ForumPrefixTagPage: {
+    route: 'forum/prefix-tags',
+    path: '/forum/prefix-tags',
+  },
+  ForumThreadModerationPage: {
+    route: 'forum/threads',
+    path: '/forum/threads',
+  },
+  ForumThreadDetailPage: {
+    route: 'forum/threads/:id',
+    path: '/forum/threads/:id',
+    getPath: (id: string) => `/forum/threads/${id}`,
+  },
+  ForumReportPage: {
+    route: 'forum/reports',
+    path: '/forum/reports',
+  },
 }

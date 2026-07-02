@@ -29,6 +29,11 @@ import { SettingsLayout } from '@/pages/authentication/SettingsPage/SettingsLayo
 import { UserCreatePage } from '@/pages/authentication/UserPage/UserCreatePage'
 import { UserDetailPage } from '@/pages/authentication/UserPage/UserDetailPage'
 import { UserListPage } from '@/pages/authentication/UserPage/UserListPage'
+import { ForumStructurePage } from '@/pages/authentication/ForumPage/ForumStructurePage'
+import { ForumPrefixTagListPage } from '@/pages/authentication/ForumPage/ForumPrefixTagListPage'
+import { ForumThreadModerationPage } from '@/pages/authentication/ForumPage/ForumThreadModerationPage'
+import { ForumThreadDetailPage } from '@/pages/authentication/ForumPage/ForumThreadDetailPage'
+import { ForumReportPage } from '@/pages/authentication/ForumPage/ForumReportPage'
 import ComponentsPage from '@/pages/dev/ComponentsPage'
 import LoginPage from '@/pages/unauthentication/LoginPage'
 import NotFoundPage from '@/pages/unauthentication/NotFoundPage'
@@ -190,6 +195,34 @@ const router = createBrowserRouter([
               },
               { path: RoutePath.GeneralSettingsPage.route, element: <GeneralSettingsPage /> },
             ],
+          },
+          {
+            path: RoutePath.ForumStructurePage.route,
+            element: <ForumStructurePage />,
+          },
+          {
+            path: RoutePath.ForumCategoryPage.route,
+            element: <Navigate to="/forum/structure" replace />,
+          },
+          {
+            path: RoutePath.ForumSubCategoryPage.route,
+            element: <Navigate to="/forum/structure" replace />,
+          },
+          {
+            path: RoutePath.ForumPrefixTagPage.route,
+            element: <ForumPrefixTagListPage />,
+          },
+          {
+            path: RoutePath.ForumThreadModerationPage.route,
+            element: <ForumThreadModerationPage />,
+          },
+          {
+            path: RoutePath.ForumThreadDetailPage.route,
+            element: <ForumThreadDetailPage />,
+          },
+          {
+            path: RoutePath.ForumReportPage.route,
+            element: <ForumReportPage />,
           },
         ],
       },

@@ -102,6 +102,7 @@ export default function AppLayout() {
         trigger={null}
         theme="light"
         width={240}
+        className="[&_.ant-layout-sider-children]:flex [&_.ant-layout-sider-children]:flex-col [&_.ant-layout-sider-children]:overflow-hidden"
         style={{
           background: token.colorBgContainer,
           borderRight: `1px solid ${token.colorBorderSecondary}`,
@@ -120,14 +121,16 @@ export default function AppLayout() {
           />
         </div>
 
-        <Menu
-          theme="light"
-          mode="inline"
-          selectedKeys={[selectedMenuKey]}
-          items={sideMenuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{ border: 'none' }}
-        />
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+          <Menu
+            theme="light"
+            mode="inline"
+            selectedKeys={[selectedMenuKey]}
+            items={sideMenuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{ border: 'none' }}
+          />
+        </div>
 
         <div style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}>
           <Menu
