@@ -16,6 +16,7 @@ import { DocumentClassifyListPage } from '@/pages/authentication/DocumentClassif
 import { DocumentClassifyUpdatePage } from '@/pages/authentication/DocumentClassifyPage/DocumentClassifyUpdatePage'
 import { DocumentLicenseDetailPage } from '@/pages/authentication/DocumentLicensePage/DocumentLicenseDetailPage'
 import { DocumentLicenseListPage } from '@/pages/authentication/DocumentLicensePage/DocumentLicenseListPage'
+import { DocumentTracePage } from '@/pages/authentication/DocumentLicensePage/DocumentTracePage'
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
@@ -113,6 +114,10 @@ const router = createBrowserRouter([
               {
                 index: true,
                 element: <DocumentLicenseListPage />,
+              },
+              {
+                path: RoutePath.DocumentTracePage.route,
+                element: <DocumentTracePage />,
               },
               {
                 path: RoutePath.DocumentLicenseDetailPage.route,

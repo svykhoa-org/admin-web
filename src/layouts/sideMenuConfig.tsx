@@ -14,6 +14,7 @@ import {
   FlagOutlined,
   FormatPainterOutlined,
   MessageOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
@@ -129,6 +130,12 @@ export const sideMenuConfig: SideMenuEntry[] = [
         key: '/document-licenses',
         icon: <SafetyCertificateOutlined />,
         label: 'License tài liệu',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/document-licenses/trace',
+        icon: <FileSearchOutlined />,
+        label: 'Truy vết tài liệu',
       },
     ],
   },

@@ -54,6 +54,10 @@ export const RoutePath = {
     path: '/document-licenses/:id',
     getPath: (id: string) => `/document-licenses/${id}`,
   },
+  DocumentTracePage: {
+    route: 'trace',
+    path: '/document-licenses/trace',
+  },
 
   // User
   UserPage: {

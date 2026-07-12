@@ -1,6 +1,8 @@
 # svykhoa-admin AI Configuration Guide
 
-Welcome! This is the core configuration ruleset for Claude operating in the `svykhoa-admin` project.
+Core configuration ruleset for Claude operating in the `svykhoa-admin` (admin frontend) project. This
+is the app-specific canon; the workspace-level "how to think / how to build" doctrine lives one level
+up in the `production/` runner and is loaded from its `CLAUDE.md`. Dev server runs at `:5174`.
 
 ## Core Tech Stack
 
@@ -24,6 +26,14 @@ Welcome! This is the core configuration ruleset for Claude operating in the `svy
 - **Services**: All API queries via `axios` must be modularized into domain-specific folders inside `src/services/` (e.g., `src/services/User/`).
 - **Store**: Minimal, focused state slices using `zustand` located in `src/store/`.
 - **Typing & Formatting**: Follow existing `eslint.config.js` and `.prettierrc`. Enforce `import type` for TypeScript types (`@typescript-eslint/consistent-type-imports`).
+
+## Always Do (admin-specific — differs from svykhoa-client)
+
+- **Axios directly, NO TanStack Query.** Unlike `svykhoa-client`, admin does not use a query cache — services in `src/services/<Domain>/` are called directly; manage loading/error yourself and keep state in `src/store/` (zustand). Don't introduce TanStack Query to match client.
+- **antd v6** (client is on v5). Component APIs can differ between the two majors — verify against v6 when you copy a pattern from client.
+- **`ProtectedRoute` only checks logged-in, NOT role.** It is not a security boundary — real authorization is enforced server-side. Never rely on FE route guards for access control.
+- **Cross-project awareness.** When the API contract changes on `svykhoa-server`, update the matching service + model/type here to stay in sync (workspace runner's doctrine §0.9).
+- **Verify** by exercising the path in the running app (`:5174`), not just typecheck.
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
@@ -95,10 +105,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
 <!-- gitnexus:start -->
-
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **svykhoa-admin** (2173 symbols, 3948 relationships, 135 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **svykhoa-admin** (2404 symbols, 4429 relationships, 152 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -119,22 +128,22 @@ This project is indexed by GitNexus as **svykhoa-admin** (2173 symbols, 3948 rel
 
 ## Resources
 
-| Resource                                       | Use for                                  |
-| ---------------------------------------------- | ---------------------------------------- |
-| `gitnexus://repo/svykhoa-admin/context`        | Codebase overview, check index freshness |
-| `gitnexus://repo/svykhoa-admin/clusters`       | All functional areas                     |
-| `gitnexus://repo/svykhoa-admin/processes`      | All execution flows                      |
-| `gitnexus://repo/svykhoa-admin/process/{name}` | Step-by-step execution trace             |
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/svykhoa-admin/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/svykhoa-admin/clusters` | All functional areas |
+| `gitnexus://repo/svykhoa-admin/processes` | All execution flows |
+| `gitnexus://repo/svykhoa-admin/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 
-| Task                                         | Read this skill file                                        |
-| -------------------------------------------- | ----------------------------------------------------------- |
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md`       |
-| Blast radius / "What breaks if I change X?"  | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?"             | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md`       |
-| Rename / extract / split / refactor          | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md`     |
-| Tools, resources, schema reference           | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`           |
-| Index, status, clean, wiki CLI commands      | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md`             |
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
