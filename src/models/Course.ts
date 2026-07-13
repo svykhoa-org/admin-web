@@ -34,6 +34,7 @@ export interface Course extends AbstractModel {
   maxEnrollments?: number | null
   currentEnrollments?: number
   selfPaced?: boolean
+  requiresVerification?: boolean
   objectives?: string[]
   requirements?: string[]
   suitableFor?: string[]

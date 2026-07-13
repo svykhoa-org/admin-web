@@ -15,6 +15,7 @@ import {
   FormatPainterOutlined,
   MessageOutlined,
   FileSearchOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
@@ -55,6 +56,12 @@ export const sideMenuConfig: SideMenuEntry[] = [
         key: '/users',
         icon: <TeamOutlined />,
         label: 'Người dùng',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/verifications',
+        icon: <IdcardOutlined />,
+        label: 'Xác minh bác sĩ',
       },
     ],
   },

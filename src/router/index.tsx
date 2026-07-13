@@ -21,6 +21,8 @@ import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/Document
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
 import { EnrollmentListPage } from '@/pages/authentication/EnrollmentPage/EnrollmentListPage'
+import { VerificationListPage } from '@/pages/authentication/VerificationPage/VerificationListPage'
+import { VerificationDetailPage } from '@/pages/authentication/VerificationPage/VerificationDetailPage'
 import { EnrollmentProgressPage } from '@/pages/authentication/EnrollmentPage/EnrollmentProgressPage'
 import { OrderDetailPage } from '@/pages/authentication/OrderPage/OrderDetailPage'
 import { OrderListPage } from '@/pages/authentication/OrderPage/OrderListPage'
@@ -156,6 +158,13 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <EnrollmentListPage /> },
               { path: RoutePath.EnrollmentDetailPage.route, element: <EnrollmentProgressPage /> },
+            ],
+          },
+          {
+            path: RoutePath.VerificationPage.route,
+            children: [
+              { index: true, element: <VerificationListPage /> },
+              { path: RoutePath.VerificationDetailPage.route, element: <VerificationDetailPage /> },
             ],
           },
           {

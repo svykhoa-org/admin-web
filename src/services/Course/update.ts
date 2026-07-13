@@ -18,6 +18,7 @@ export interface UpdateCourseInput {
   accessDurationDays?: number
   maxEnrollments?: number
   selfPaced?: boolean
+  requiresVerification?: boolean
   objectives?: string[]
   requirements?: string[]
   suitableFor?: string[]

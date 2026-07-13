@@ -138,6 +138,7 @@ export const CourseForm = ({ id }: Props) => {
       accessDurationDays: values.accessDurationDays || undefined,
       maxEnrollments: values.maxEnrollments || undefined,
       selfPaced: values.selfPaced,
+      requiresVerification: values.requiresVerification,
       thumbnail: effectiveThumbnail,
       instructorIds: effectiveInstructorIds.length > 0 ? effectiveInstructorIds : undefined,
       objectives: parseTextareaToArray(values.objectives),
@@ -219,6 +220,7 @@ export const CourseForm = ({ id }: Props) => {
               accessDurationDays: detailData.accessDurationDays ?? undefined,
               maxEnrollments: detailData.maxEnrollments ?? undefined,
               selfPaced: detailData.selfPaced ?? true,
+              requiresVerification: detailData.requiresVerification ?? false,
               objectives: arrayToTextarea(detailData.objectives),
               requirements: arrayToTextarea(detailData.requirements),
               suitableFor: arrayToTextarea(detailData.suitableFor),
@@ -353,6 +355,11 @@ export const CourseForm = ({ id }: Props) => {
           </Typography.Title>
           <div className="grid grid-cols-4 gap-x-6 gap-y-0">
             <Field name="selfPaced" label="Học tự do" type="checkbox" />
+            <Field
+              name="requiresVerification"
+              label="Chỉ dành cho bác sĩ đã xác minh"
+              type="checkbox"
+            />
             <Field
               name="accessDurationDays"
               label="Thời hạn truy cập (ngày)"

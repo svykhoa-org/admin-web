@@ -122,6 +122,17 @@ export const RoutePath = {
     getPath: (id: string) => `/enrollments/${id}`,
   },
 
+  // Doctor Verification
+  VerificationPage: {
+    route: 'verifications',
+    path: '/verifications',
+  },
+  VerificationDetailPage: {
+    route: ':id',
+    path: '/verifications/:id',
+    getPath: (id: string) => `/verifications/${id}`,
+  },
+
   // Certificate
   CertificatePage: {
     route: 'certificates',
