@@ -18,6 +18,11 @@ export interface CreateCourseInput {
   maxEnrollments?: number
   selfPaced?: boolean
   requiresVerification?: boolean
+  isScheduled?: boolean
+  registrationStart?: string
+  registrationEnd?: string
+  startDate?: string
+  endDate?: string
   objectives?: string[]
   requirements?: string[]
   suitableFor?: string[]

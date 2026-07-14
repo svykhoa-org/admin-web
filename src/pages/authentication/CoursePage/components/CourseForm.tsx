@@ -49,7 +49,9 @@ import {
   type CourseFormSubmitValues,
 } from '../schemas/courseFormSchema'
 import { CourseModuleManager } from './CourseModuleManager'
+import { CourseRoster } from './CourseRoster'
 import { ProctoringSection } from './ProctoringSection'
+import { ScheduleSection } from './ScheduleSection'
 
 interface Props {
   id?: string
@@ -139,6 +141,11 @@ export const CourseForm = ({ id }: Props) => {
       maxEnrollments: values.maxEnrollments || undefined,
       selfPaced: values.selfPaced,
       requiresVerification: values.requiresVerification,
+      isScheduled: values.isScheduled,
+      registrationStart: values.registrationStart || undefined,
+      registrationEnd: values.registrationEnd || undefined,
+      startDate: values.startDate || undefined,
+      endDate: values.endDate || undefined,
       thumbnail: effectiveThumbnail,
       instructorIds: effectiveInstructorIds.length > 0 ? effectiveInstructorIds : undefined,
       objectives: parseTextareaToArray(values.objectives),
@@ -221,6 +228,11 @@ export const CourseForm = ({ id }: Props) => {
               maxEnrollments: detailData.maxEnrollments ?? undefined,
               selfPaced: detailData.selfPaced ?? true,
               requiresVerification: detailData.requiresVerification ?? false,
+              isScheduled: detailData.isScheduled ?? false,
+              registrationStart: detailData.registrationStart ?? undefined,
+              registrationEnd: detailData.registrationEnd ?? undefined,
+              startDate: detailData.startDate ?? undefined,
+              endDate: detailData.endDate ?? undefined,
               objectives: arrayToTextarea(detailData.objectives),
               requirements: arrayToTextarea(detailData.requirements),
               suitableFor: arrayToTextarea(detailData.suitableFor),
@@ -375,6 +387,11 @@ export const CourseForm = ({ id }: Props) => {
               fieldProps={{ min: 1 }}
             />
           </div>
+
+          <Divider style={{ margin: 0 }} />
+
+          {/* ── Lịch trình khoá học (theo đợt) ──────────────── */}
+          <ScheduleSection Field={Field} />
 
           <Divider style={{ margin: 0 }} />
 
@@ -544,6 +561,11 @@ export const CourseForm = ({ id }: Props) => {
                 key: 'modules',
                 label: 'Module & Bài học',
                 children: <CourseModuleManager courseId={id} />,
+              },
+              {
+                key: 'roster',
+                label: 'Học viên',
+                children: <CourseRoster courseId={id} />,
               },
             ]}
           />

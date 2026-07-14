@@ -35,6 +35,12 @@ export interface Course extends AbstractModel {
   currentEnrollments?: number
   selfPaced?: boolean
   requiresVerification?: boolean
+  // Cohort (scheduled) course: date fields below gate registration/learning/certification.
+  isScheduled?: boolean
+  registrationStart?: string | null
+  registrationEnd?: string | null
+  startDate?: string | null
+  endDate?: string | null
   objectives?: string[]
   requirements?: string[]
   suitableFor?: string[]
