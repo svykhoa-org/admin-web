@@ -25,11 +25,19 @@ const axiosInstance = axios.create({
   },
 })
 
-let isRefreshing = false
-let refreshQueue: Array<(token: string) => void> = []
+// Auth endpoints return 401/403 for genuine credential / refresh-token failures, not an expired
+// access token — never run the refresh-and-retry flow for them (else a wrong-password login 401
+// would fire a spurious POST /auth/refresh with a null token → 400 refreshToken should not be empty).
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/logout']
 
-const processQueue = (token: string) => {
-  refreshQueue.forEach(cb => cb(token))
+let isRefreshing = false
+let refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = []
+
+const processQueue = (error: unknown, token: string | null) => {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (token) resolve(token)
+    else reject(error)
+  })
   refreshQueue = []
 }
 
@@ -55,24 +63,33 @@ axiosInstance.interceptors.response.use(
     }
     const original = err.config
 
-    if (err.response?.status !== 401 || original?._retry) {
+    const isAuthEndpoint = AUTH_ENDPOINTS.some(path => original?.url?.includes(path))
+    if (err.response?.status !== 401 || original?._retry || isAuthEndpoint) {
+      return Promise.reject(error)
+    }
+
+    original._retry = true
+
+    // No refresh token → not authenticated; don't POST a null token (server rejects it 400).
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) {
+      clearTokens()
+      window.location.href = '/login'
       return Promise.reject(error)
     }
 
     if (isRefreshing) {
-      return new Promise<string>(resolve => {
-        refreshQueue.push(resolve)
+      return new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject })
       }).then(token => {
         original.headers.Authorization = `Bearer ${token}`
         return axiosInstance(original)
       })
     }
 
-    original._retry = true
     isRefreshing = true
 
     try {
-      const refreshToken = getRefreshToken()
       const { data } = await axios.post<{ data: { accessToken: string; refreshToken: string } }>(
         `${ENV.API_BASE_URL}/auth/refresh`,
         { refreshToken },
@@ -81,10 +98,13 @@ axiosInstance.interceptors.response.use(
       const newAccess = data.data.accessToken
       const newRefresh = data.data.refreshToken
       setTokens(newAccess, newRefresh)
-      processQueue(newAccess)
+      processQueue(null, newAccess)
       original.headers.Authorization = `Bearer ${newAccess}`
       return axiosInstance(original)
-    } catch {
+    } catch (refreshError) {
+      // Refresh failed (invalid/rotated refresh token → 403) — flush queued requests so they
+      // reject instead of hanging forever, then bounce to login.
+      processQueue(refreshError, null)
       clearTokens()
       window.location.href = '/login'
       return Promise.reject(error)
