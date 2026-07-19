@@ -31,6 +31,7 @@ const uploadFn: UploadFileFn<FileResource> = async (file, signal, onProgress) =>
     const { assetId: id, uploadUrl } = await requestPresignedUpload({
       filename: file.name,
       contentType,
+      visibility: 'PRIVATE',
     })
     assetId = id
 
@@ -47,6 +48,7 @@ const uploadFn: UploadFileFn<FileResource> = async (file, signal, onProgress) =>
       filename: file.name,
       fileSize: file.size,
       contentType,
+      visibility: 'PRIVATE',
     })
     assetId = session.assetId
 

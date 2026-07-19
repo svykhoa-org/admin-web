@@ -15,7 +15,7 @@ function uploadImage(
   signal: AbortSignal,
   onProgress: (loaded: number, total: number) => void,
 ): Promise<FileResource> {
-  return uploadSingleAsset(file, signal, onProgress).then(async asset => {
+  return uploadSingleAsset(file, 'PUBLIC', signal, onProgress).then(async asset => {
     const url = await getAssetAccessUrl(asset.id).catch(() => undefined)
     return mapAssetToFileResource(asset, url)
   })

@@ -22,6 +22,8 @@ export interface AssetRecord {
 export interface RequestPresignedUploadInput {
   filename: string
   contentType: string
+  // Required: khai báo public/private ngay lúc upload (server siết bắt buộc).
+  visibility: AssetVisibility
 }
 
 export interface RequestPresignedUploadOutput {
@@ -39,6 +41,8 @@ export interface InitMultipartUploadInput {
   filename: string
   fileSize: number
   contentType: string
+  // Required: khai báo public/private ngay lúc upload (server siết bắt buộc).
+  visibility: AssetVisibility
 }
 
 export interface InitMultipartUploadOutput {
@@ -62,11 +66,13 @@ export interface CompleteMultipartPart {
 
 export async function uploadSingleAsset(
   file: File,
+  visibility: AssetVisibility,
   signal?: AbortSignal,
   onProgress?: (loaded: number, total: number) => void,
 ): Promise<AssetRecord> {
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('visibility', visibility)
 
   const response = await axiosInstance.post<ApiDetailResponse<AssetRecord>>(
     `${ASSET_ENDPOINT}/upload`,

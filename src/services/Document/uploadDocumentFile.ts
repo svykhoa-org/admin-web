@@ -33,6 +33,7 @@ export async function uploadDocumentFile({
     const { assetId: id, uploadUrl } = await requestPresignedUpload({
       filename: file.name,
       contentType,
+      visibility: 'PRIVATE',
     })
     assetId = id
 
@@ -49,6 +50,7 @@ export async function uploadDocumentFile({
       filename: file.name,
       fileSize: file.size,
       contentType,
+      visibility: 'PRIVATE',
     })
     assetId = session.assetId
 

@@ -16,6 +16,7 @@ const uploadFn: UploadFileFn<FileResource> = async (file, signal, onProgress) =>
   const { assetId, uploadUrl } = await requestPresignedUpload({
     filename: file.name,
     contentType,
+    visibility: 'PRIVATE',
   })
 
   await axios.put(resolveUploadUrl(uploadUrl), file, {

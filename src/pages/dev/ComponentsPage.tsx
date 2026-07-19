@@ -19,7 +19,7 @@ const demoUploadFn: Parameters<typeof UploadSingleFile>[0]['uploadFn'] = (
   signal,
   onProgress,
 ) =>
-  uploadSingleAsset(file, signal, onProgress).then(async asset => {
+  uploadSingleAsset(file, 'PUBLIC', signal, onProgress).then(async asset => {
     const url = await getAssetAccessUrl(asset.id).catch(() => undefined)
     return mapAssetToFileResource(asset, url)
   })

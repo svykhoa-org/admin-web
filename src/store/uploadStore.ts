@@ -273,6 +273,7 @@ export const useUploadStore = create<UploadStoreState & UploadStoreActions>((set
     const { assetId, uploadUrl } = await requestPresignedUpload({
       filename: file.name,
       contentType: file.type || 'video/mp4',
+      visibility: 'PRIVATE',
     })
 
     // assetId available immediately → notify callback, lesson can be saved now
@@ -309,6 +310,7 @@ export const useUploadStore = create<UploadStoreState & UploadStoreActions>((set
         filename: file.name,
         fileSize: file.size,
         contentType: file.type || 'application/octet-stream',
+        visibility: 'PRIVATE',
       })
       session = { ...res, completedParts: [], initiatedAt: Date.now() }
       saveSession(file, session)
