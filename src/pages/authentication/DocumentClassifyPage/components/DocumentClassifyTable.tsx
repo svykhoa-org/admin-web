@@ -217,6 +217,7 @@ export const DocumentClassifyTable = () => {
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}
         onCancel={closeDeleteModal}
+        extraWarning="Tài liệu thuộc phân loại này sẽ mất phân loại (chuyển về Chưa phân loại), và các phân loại con (nếu có) sẽ được chuyển lên làm con của phân loại cha."
       />
     </>
   )

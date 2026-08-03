@@ -8,9 +8,18 @@ interface Props {
   isLoading?: boolean
   onConfirm: () => void
   onCancel: () => void
+  /** Cảnh báo bổ sung về tác dụng phụ của việc xóa (vd: ảnh hưởng dữ liệu liên quan). */
+  extraWarning?: React.ReactNode
 }
 
-export const ConfirmDeleteModal = ({ open, count, isLoading, onConfirm, onCancel }: Props) => (
+export const ConfirmDeleteModal = ({
+  open,
+  count,
+  isLoading,
+  onConfirm,
+  onCancel,
+  extraWarning,
+}: Props) => (
   <Modal
     open={open}
     title={
@@ -35,5 +44,10 @@ export const ConfirmDeleteModal = ({ open, count, isLoading, onConfirm, onCancel
       </Typography.Text>{' '}
       này không? Hành động này không thể hoàn tác.
     </Typography.Text>
+    {extraWarning && (
+      <Typography.Text type="warning" style={{ display: 'block', marginTop: 8 }}>
+        {extraWarning}
+      </Typography.Text>
+    )}
   </Modal>
 )
