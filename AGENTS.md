@@ -1,8 +1,126 @@
+# svykhoa-admin Agent Configuration Guide
+
+App-specific canon for coding agents operating in the `svykhoa-admin` (admin frontend) project. When
+Codex is launched from the parent `production/` runner, also follow its `AGENTS.md` and local `.ai/`
+harness. This file is self-contained when the repository is opened directly. Dev server runs at
+`:5174`.
+
+## Core Tech Stack
+
+- **Framework & Build**: React 19, Vite, TypeScript 5.9
+- **Routing**: `react-router-dom` v7
+- **Styling**: Tailwind CSS v4, Ant Design (`antd` v6)
+- **State Management**: `zustand`
+- **Forms & Validation**: `react-hook-form`, `zod`
+- **HTTP/API**: `axios`
+- **Charts**: `chart.js`, `react-chartjs-2`
+
+## Global Design Rules
+
+- All newly generated interactive UI elements MUST respect an 8px border radius using Tailwind (`rounded-lg`).
+- Avoid heavy drop shadows. Default to soft, ambient shadows (`shadow-sm` or equivalent custom variable).
+- Do not use hardcoded hex colors or arbitrary Tailwind color variables (e.g. `bg-blue-500`). Stick strictly to the global CSS variables defined in Tailwind config/index.css (e.g., `text-primary`, `bg-background`, `border-border`, etc.).
+
+## Code Structure & Architecture
+
+- **Pages**: Divided strictly by authentication context into `src/pages/authentication/` and `src/pages/unauthentication/`. The auth section is further split by functional domains (e.g., `DocumentPage`, `UserPage`).
+- **Services**: All API queries via `axios` must be modularized into domain-specific folders inside `src/services/` (e.g., `src/services/User/`).
+- **Store**: Minimal, focused state slices using `zustand` located in `src/store/`.
+- **Typing & Formatting**: Follow existing `eslint.config.js` and `.prettierrc`. Enforce `import type` for TypeScript types (`@typescript-eslint/consistent-type-imports`).
+
+## Always Do (admin-specific — differs from svykhoa-client)
+
+- **Axios directly, NO TanStack Query.** Unlike `svykhoa-client`, admin does not use a query cache — services in `src/services/<Domain>/` are called directly; manage loading/error yourself and keep state in `src/store/` (zustand). Don't introduce TanStack Query to match client.
+- **antd v6** (client is on v5). Component APIs can differ between the two majors — verify against v6 when you copy a pattern from client.
+- **`ProtectedRoute` only checks logged-in, NOT role.** It is not a security boundary — real authorization is enforced server-side. Never rely on FE route guards for access control.
+- **Cross-project awareness.** When the API contract changes on `svykhoa-server`, update the matching service + model/type here to stay in sync (workspace runner's doctrine §0.9).
+- **Verify** by exercising the path in the running app (`:5174`), not just typecheck.
+
+## Detailed local rule docs
+
+Before changing the matching area, read the relevant file under `.agents/rules/`:
+
+- `architecture.md` for routes, pages, services, stores, components, and layouts.
+- `design-system.md` for UI shape, shadow, color, Tailwind, and Ant Design conventions.
+- `tech-stack.md` before adding or replacing a dependency.
+- `testing-and-formatting.md` for Prettier, ESLint, TypeScript, and React Refresh constraints.
+
+These Markdown files are agent guidance, not Codex command-policy `.rules` files.
+
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
 <!-- gitnexus:start -->
 
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **svykhoa-admin** (2478 symbols, 4587 relationships, 157 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **svykhoa-admin** (2479 symbols, 4587 relationships, 157 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
