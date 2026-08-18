@@ -2,8 +2,15 @@ import { DataTable } from '@/components/DataTable/DataTable'
 import { UserSelect } from '@/components/SelectionVariants'
 import { useList } from '@/hooks'
 import type { Order } from '@/models/Order'
-import { OrderPaymentMethod, OrderProductType, OrderStatus } from '@/models/Order'
+import {
+  FulfillmentProjection,
+  OrderPaymentMethod,
+  OrderPaymentProjection,
+  OrderProductType,
+  OrderStatus,
+} from '@/models/Order'
 import { listOrder } from '@/services/Order'
+import { formatOrderAmount } from '@/utils/formatOrderAmount'
 import { formatTimestamp } from '@/utils/time'
 import { EyeOutlined } from '@ant-design/icons'
 import { Button, Card, Input, Select, Tag, Typography } from 'antd'
@@ -37,6 +44,7 @@ const productTypeColorMap: Record<OrderProductType, string> = {
 
 const paymentMethodLabelMap: Record<OrderPaymentMethod, string> = {
   [OrderPaymentMethod.SEPAY]: 'SePay',
+  [OrderPaymentMethod.FREE]: 'Miễn phí',
 }
 
 interface ListParams {
@@ -129,11 +137,42 @@ export const OrderTable = () => {
       ),
     },
     {
+      title: 'Payment domain',
+      key: 'paymentDomain',
+      width: 170,
+      render: (_, record) =>
+        record.paymentStatus ? (
+          <div className="flex flex-col gap-1">
+            <Tag
+              color={
+                record.paymentStatus === OrderPaymentProjection.PAID ? 'success' : 'processing'
+              }
+            >
+              {record.paymentStatus}
+            </Tag>
+            {record.fulfillmentStatus && (
+              <Tag
+                color={
+                  record.fulfillmentStatus === FulfillmentProjection.FULFILLED
+                    ? 'success'
+                    : 'processing'
+                }
+              >
+                {record.fulfillmentStatus}
+              </Tag>
+            )}
+          </div>
+        ) : (
+          <Typography.Text type="secondary">Legacy</Typography.Text>
+        ),
+    },
+    {
       title: 'Tổng tiền',
       key: 'totalAmount',
       width: 160,
       align: 'right',
-      render: (_, record) => `${record.totalAmount.toLocaleString('vi-VN')} ${record.currency}`,
+      render: (_, record) =>
+        `${formatOrderAmount(record.totalMinor, record.totalAmount)} ${record.currency}`,
     },
     {
       title: 'Thanh toán lúc',

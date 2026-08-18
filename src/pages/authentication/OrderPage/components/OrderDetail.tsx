@@ -1,8 +1,16 @@
 import { useDetail, useRequest } from '@/hooks'
-import { OrderPaymentMethod, OrderProductType, OrderStatus } from '@/models/Order'
+import {
+  CommercialOrderStatus,
+  FulfillmentProjection,
+  OrderPaymentMethod,
+  OrderPaymentProjection,
+  OrderProductType,
+  OrderStatus,
+} from '@/models/Order'
 import type { Order } from '@/models/Order'
 import { getOrderDetail, refundOrder } from '@/services/Order'
 import { isApiResponseError } from '@/utils/apiResponse'
+import { formatOrderAmount } from '@/utils/formatOrderAmount'
 import { formatTimestamp } from '@/utils/time'
 import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin, Tag, Typography } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
@@ -33,6 +41,31 @@ const productTypeLabelMap: Record<OrderProductType, string> = {
 
 const paymentMethodLabelMap: Record<OrderPaymentMethod, string> = {
   [OrderPaymentMethod.SEPAY]: 'SePay',
+  [OrderPaymentMethod.FREE]: 'Miễn phí',
+}
+
+const canonicalStatusLabel: Record<CommercialOrderStatus, string> = {
+  [CommercialOrderStatus.OPEN]: 'Đang mở',
+  [CommercialOrderStatus.CONFIRMED]: 'Đã xác nhận',
+  [CommercialOrderStatus.CANCELLED]: 'Đã hủy',
+  [CommercialOrderStatus.EXPIRED]: 'Hết hạn',
+}
+
+const paymentStatusLabel: Record<OrderPaymentProjection, string> = {
+  [OrderPaymentProjection.NOT_REQUIRED]: 'Không cần thanh toán',
+  [OrderPaymentProjection.UNPAID]: 'Chưa thanh toán',
+  [OrderPaymentProjection.PAID]: 'Đã thanh toán',
+  [OrderPaymentProjection.PARTIALLY_REFUNDED]: 'Hoàn một phần',
+  [OrderPaymentProjection.REFUNDED]: 'Đã hoàn tiền',
+  [OrderPaymentProjection.REVIEW_REQUIRED]: 'Cần kiểm tra',
+}
+
+const fulfillmentStatusLabel: Record<FulfillmentProjection, string> = {
+  [FulfillmentProjection.NOT_STARTED]: 'Chưa bắt đầu',
+  [FulfillmentProjection.PENDING]: 'Đang cấp quyền',
+  [FulfillmentProjection.FULFILLED]: 'Đã cấp quyền',
+  [FulfillmentProjection.FAILED]: 'Cấp quyền lỗi',
+  [FulfillmentProjection.REVOKED]: 'Đã thu hồi',
 }
 
 export const OrderDetail = ({ id }: Props) => {
@@ -124,11 +157,40 @@ export const OrderDetail = ({ id }: Props) => {
               <Descriptions.Item label="Trạng thái">
                 <Tag color={statusColorMap[order.status]}>{statusLabelMap[order.status]}</Tag>
               </Descriptions.Item>
+              {order.commercialStatus && (
+                <Descriptions.Item label="Trạng thái thương mại">
+                  <Tag>{canonicalStatusLabel[order.commercialStatus]}</Tag>
+                </Descriptions.Item>
+              )}
+              {order.paymentStatus && (
+                <Descriptions.Item label="Trạng thái thanh toán canonical">
+                  <Tag
+                    color={
+                      order.paymentStatus === OrderPaymentProjection.PAID ? 'success' : 'processing'
+                    }
+                  >
+                    {paymentStatusLabel[order.paymentStatus]}
+                  </Tag>
+                </Descriptions.Item>
+              )}
+              {order.fulfillmentStatus && (
+                <Descriptions.Item label="Trạng thái cấp quyền">
+                  <Tag
+                    color={
+                      order.fulfillmentStatus === FulfillmentProjection.FULFILLED
+                        ? 'success'
+                        : 'processing'
+                    }
+                  >
+                    {fulfillmentStatusLabel[order.fulfillmentStatus]}
+                  </Tag>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Phương thức thanh toán">
                 {paymentMethodLabelMap[order.paymentMethod]}
               </Descriptions.Item>
               <Descriptions.Item label="Tổng tiền">
-                {order.totalAmount.toLocaleString('vi-VN')} {order.currency}
+                {formatOrderAmount(order.totalMinor, order.totalAmount)} {order.currency}
               </Descriptions.Item>
               <Descriptions.Item label="Thanh toán lúc">
                 {order.paidAt ? (
