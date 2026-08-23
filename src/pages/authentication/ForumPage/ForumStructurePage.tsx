@@ -29,7 +29,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { App, Button, Card, Form, Input, Modal, Space, Switch, Table, Typography } from 'antd'
+import { App, Button, Card, Form, Input, Modal, Space, Table, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { LexoRank } from 'lexorank'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -294,9 +294,8 @@ export const ForumStructurePage = () => {
         ? {
             name: subCat.name,
             description: subCat.description ?? undefined,
-            requiresModeration: subCat.requiresModeration,
           }
-        : { name: '', description: undefined, requiresModeration: false },
+        : { name: '', description: undefined },
     )
     setSubCatModal(true)
   }
@@ -309,7 +308,6 @@ export const ForumStructurePage = () => {
         await updateSubCategory(editingSubCat.id, {
           name: values.name,
           description: values.description,
-          requiresModeration: values.requiresModeration,
         })
         void message.success('Cập nhật danh mục thành công')
       } else {
@@ -323,7 +321,6 @@ export const ForumStructurePage = () => {
           description: values.description,
           groupId: addingToGroupId!,
           displayOrder: groupSubs.length,
-          requiresModeration: values.requiresModeration,
           rank: newRank,
         })
         void message.success('Tạo danh mục thành công')
@@ -393,26 +390,6 @@ export const ForumStructurePage = () => {
       key: 'messageCount',
       width: 90,
       align: 'right',
-    },
-    {
-      title: 'Duyệt bài',
-      key: 'requiresModeration',
-      width: 90,
-      align: 'center',
-      render: (_: unknown, record: ForumSubCategory) => (
-        <Switch
-          size="small"
-          checked={record.requiresModeration}
-          onChange={async checked => {
-            try {
-              await updateSubCategory(record.id, { requiresModeration: checked })
-              void load()
-            } catch {
-              void message.error('Không thể cập nhật')
-            }
-          }}
-        />
-      ),
     },
     {
       title: '',
@@ -570,14 +547,6 @@ export const ForumStructurePage = () => {
           </Form.Item>
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={2} placeholder="Mô tả ngắn về danh mục" />
-          </Form.Item>
-          <Form.Item
-            name="requiresModeration"
-            label="Yêu cầu duyệt bài"
-            valuePropName="checked"
-            extra="Bật: bài viết mới vào trạng thái chờ duyệt. Tắt: đăng ngay lập tức."
-          >
-            <Switch />
           </Form.Item>
         </Form>
       </Modal>

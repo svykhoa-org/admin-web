@@ -16,6 +16,17 @@ export async function listAdminThreads(params?: {
   return { items: data.items ?? [], total: data.pagination.totalItems ?? 0 }
 }
 
+export async function createAdminThread(data: {
+  subCategoryId: string
+  title: string
+  content: string
+  prefixTagId?: string
+  isPinned?: boolean
+}): Promise<ForumThread> {
+  const res = await axiosInstance.post<ApiDetailResponse<ForumThread>>(BASE, data)
+  return unwrapDetail(res.data)
+}
+
 export async function setThreadStatus(id: string, status: ThreadStatus): Promise<void> {
   await axiosInstance.patch(`${BASE}/${id}/status`, { status })
 }

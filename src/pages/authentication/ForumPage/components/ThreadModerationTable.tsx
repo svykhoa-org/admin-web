@@ -14,6 +14,7 @@ import { isApiResponseError } from '@/utils/apiResponse'
 import { RoutePath } from '@/router/RoutePath'
 import {
   DeleteOutlined,
+  EditOutlined,
   EyeOutlined,
   LockOutlined,
   PushpinOutlined,
@@ -23,6 +24,7 @@ import { App, Button, Card, Select, Space, Switch, Tooltip, Typography } from 'a
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CreateThreadModal } from './CreateThreadModal'
 
 const STATUS_OPTIONS = [
   { label: 'Tất cả', value: '' },
@@ -41,6 +43,7 @@ export const ThreadModerationTable = () => {
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
   const PAGE_SIZE = 20
 
   useEffect(() => {
@@ -89,7 +92,7 @@ export const ThreadModerationTable = () => {
       title: 'Tiêu đề',
       key: 'title',
       render: (_, r) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Link
             strong
             style={{ fontSize: 13 }}
@@ -192,32 +195,37 @@ export const ThreadModerationTable = () => {
   return (
     <>
       <Card>
-        <Space className="mb-4">
-          <Select
-            placeholder="Lọc theo danh mục"
-            allowClear
-            style={{ width: 200 }}
-            value={filterSubCat || undefined}
-            options={subCats.map(s => ({ label: s.name, value: s.id }))}
-            onChange={val => {
-              setFilterSubCat(val ?? '')
-              setPage(1)
-            }}
-          />
-          <Select
-            placeholder="Lọc theo trạng thái"
-            allowClear
-            style={{ width: 160 }}
-            value={filterStatus || undefined}
-            options={STATUS_OPTIONS.filter(o => o.value !== '')}
-            onChange={val => {
-              setFilterStatus(val ?? '')
-              setPage(1)
-            }}
-          />
-        </Space>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <Space wrap>
+            <Select
+              placeholder="Lọc theo danh mục"
+              allowClear
+              style={{ width: 200 }}
+              value={filterSubCat || undefined}
+              options={subCats.map(s => ({ label: s.name, value: s.id }))}
+              onChange={val => {
+                setFilterSubCat(val ?? '')
+                setPage(1)
+              }}
+            />
+            <Select
+              placeholder="Lọc theo trạng thái"
+              allowClear
+              style={{ width: 160 }}
+              value={filterStatus || undefined}
+              options={STATUS_OPTIONS.filter(o => o.value !== '')}
+              onChange={val => {
+                setFilterStatus(val ?? '')
+                setPage(1)
+              }}
+            />
+          </Space>
+          <Button type="primary" icon={<EditOutlined />} onClick={() => setCreateModalOpen(true)}>
+            Viết bài
+          </Button>
+        </div>
         <DataTable<ForumThread>
-          title="Kiểm duyệt bài viết diễn đàn"
+          title="Quản lý bài viết diễn đàn"
           columns={columns}
           dataSource={items}
           loading={isLoading}
@@ -245,6 +253,17 @@ export const ThreadModerationTable = () => {
           }
         }}
         onCancel={closeDeleteModal}
+      />
+
+      <CreateThreadModal
+        open={createModalOpen}
+        subCategories={subCats}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={() => {
+          setCreateModalOpen(false)
+          setPage(1)
+          void load()
+        }}
       />
     </>
   )
