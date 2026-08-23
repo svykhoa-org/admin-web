@@ -2,7 +2,6 @@ import { ThreadStatus, type ForumComment, type ForumThread } from '@/models/Foru
 import { RoutePath } from '@/router/RoutePath'
 import {
   createComment,
-  deleteThread,
   getThread,
   listThreadComments,
   setThreadLock,
@@ -14,7 +13,6 @@ import { useAuthStore } from '@/store/authStore'
 import { isApiResponseError } from '@/utils/apiResponse'
 import {
   ArrowLeftOutlined,
-  DeleteOutlined,
   DownOutlined,
   EyeOutlined,
   LikeFilled,
@@ -49,16 +47,12 @@ const { Text, Title } = Typography
 const SOFT_SHADOW = '0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.05)'
 const MAX_INDENT_DEPTH = 4
 
-const STATUS_ORDER: ThreadStatus[] = [
-  ThreadStatus.Published,
-  ThreadStatus.Pending,
-  ThreadStatus.Hidden,
-]
+const STATUS_ORDER: ThreadStatus[] = [ThreadStatus.Published, ThreadStatus.Pending]
 
 const STATUS_LABEL: Record<ThreadStatus, string> = {
-  [ThreadStatus.Published]: 'Xuất bản',
-  [ThreadStatus.Pending]: 'Chờ duyệt',
-  [ThreadStatus.Hidden]: 'Đã ẩn',
+  [ThreadStatus.Published]: 'Đã đăng',
+  [ThreadStatus.Pending]: 'Chờ đăng',
+  [ThreadStatus.Hidden]: 'Đã ẩn (cũ)',
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -203,13 +197,10 @@ const StatusSwitcher = ({
 const ModerationBar = ({
   thread,
   onModerate,
-  onDelete,
 }: {
   thread: ForumThread
   onModerate: (fn: () => Promise<void>, successMsg: string) => void
-  onDelete: () => void
 }) => {
-  const { token } = theme.useToken()
   return (
     <Space size={6} wrap align="center">
       <StatusSwitcher
@@ -243,12 +234,6 @@ const ModerationBar = ({
             )
           }
         />
-      </Tooltip>
-      <span
-        style={{ width: 1, height: 18, background: token.colorBorderSecondary, margin: '0 2px' }}
-      />
-      <Tooltip title="Xóa bài viết">
-        <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={onDelete} />
       </Tooltip>
     </Space>
   )
@@ -464,11 +449,11 @@ const CommentNode = ({
 
 const Composer = ({
   threadId,
-  disabled,
+  disabledReason,
   onPosted,
 }: {
   threadId: string
-  disabled: boolean
+  disabledReason?: string
   onPosted: () => void
 }) => {
   const { message: toast } = App.useApp()
@@ -494,7 +479,7 @@ const Composer = ({
     }
   }
 
-  if (disabled) {
+  if (disabledReason) {
     return (
       <div
         style={{
@@ -509,7 +494,7 @@ const Composer = ({
         }}
       >
         <LockOutlined />
-        Chủ đề đã bị khóa — không thể thêm bình luận.
+        {disabledReason}
       </div>
     )
   }
@@ -570,18 +555,18 @@ const Composer = ({
 
 // ─── comments section ───────────────────────────────────────────────────────────
 
-const countComments = (nodes: ForumComment[]): number =>
-  nodes.reduce((sum, n) => sum + 1 + countComments(n.replies ?? []), 0)
-
 const CommentsSection = ({ thread }: { thread: ForumThread }) => {
   const { token } = theme.useToken()
   const { message: toast } = App.useApp()
   const [comments, setComments] = useState<ForumComment[]>([])
+  const [totalComments, setTotalComments] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     try {
-      setComments(await listThreadComments(thread.id))
+      const response = await listThreadComments(thread.id)
+      setComments(response.items)
+      setTotalComments(response.totalComments)
     } catch {
       void toast.error('Không thể tải bình luận')
     } finally {
@@ -598,12 +583,22 @@ const CommentsSection = ({ thread }: { thread: ForumThread }) => {
       <Title level={4} style={{ margin: '0 0 16px', fontSize: 16 }}>
         Bình luận{' '}
         <Text type="secondary" style={{ fontWeight: 400, fontVariantNumeric: 'tabular-nums' }}>
-          {countComments(comments)}
+          {totalComments}
         </Text>
       </Title>
 
       {/* Composer first — participate without leaving the reading flow */}
-      <Composer threadId={thread.id} disabled={thread.isLocked} onPosted={load} />
+      <Composer
+        threadId={thread.id}
+        disabledReason={
+          thread.isLocked
+            ? 'Bài viết đã bị khóa — không thể thêm bình luận.'
+            : thread.status !== ThreadStatus.Published
+              ? 'Bài viết đang chờ đăng — không thể thêm bình luận.'
+              : undefined
+        }
+        onPosted={load}
+      />
 
       {loading ? (
         <div style={{ marginTop: 12 }}>
@@ -702,7 +697,7 @@ const ThreadArticle = ({ thread }: { thread: ForumThread }) => {
 export const ThreadDetailView = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { message: toast, modal } = App.useApp()
+  const { message: toast } = App.useApp()
   const { token } = theme.useToken()
 
   const [thread, setThread] = useState<ForumThread | null>(null)
@@ -739,26 +734,6 @@ export const ThreadDetailView = () => {
     [toast, loadThread],
   )
 
-  const handleDelete = useCallback(() => {
-    if (!thread) return
-    modal.confirm({
-      title: 'Xóa bài viết',
-      content: 'Bài viết và toàn bộ bình luận sẽ bị xóa. Bạn có chắc chắn?',
-      okText: 'Xóa',
-      okButtonProps: { danger: true },
-      cancelText: 'Hủy',
-      onOk: async () => {
-        try {
-          await deleteThread(thread.id)
-          void toast.success('Đã xóa bài viết')
-          navigate(RoutePath.ForumThreadModerationPage.path)
-        } catch (err) {
-          void toast.error(isApiResponseError(err) ? err.message : 'Không thể xóa')
-        }
-      },
-    })
-  }, [thread, modal, toast, navigate])
-
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '4px 4px 48px' }}>
       {/* Top bar: back on the left, moderation on the right */}
@@ -777,7 +752,7 @@ export const ThreadDetailView = () => {
             onClick={() => navigate(RoutePath.ForumThreadModerationPage.path)}
             style={{ color: token.colorTextSecondary }}
           >
-            <ArrowLeftOutlined /> Kiểm duyệt bài viết
+            <ArrowLeftOutlined /> Bài viết
           </Typography.Link>
           {thread?.subCategory?.name && (
             <>
@@ -796,9 +771,7 @@ export const ThreadDetailView = () => {
           )}
         </Space>
 
-        {thread && (
-          <ModerationBar thread={thread} onModerate={handleModerate} onDelete={handleDelete} />
-        )}
+        {thread && <ModerationBar thread={thread} onModerate={handleModerate} />}
       </div>
 
       {loading ? (

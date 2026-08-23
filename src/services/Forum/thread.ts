@@ -1,13 +1,22 @@
 import axiosInstance from '@/lib/axios'
-import type { ForumComment, ForumThread, ThreadStatus } from '@/models/Forum'
-import type { ApiDetailResponse, ApiListResponse } from '@/types/api'
+import type {
+  AdminThreadSort,
+  AdminThreadState,
+  ForumComment,
+  ForumThread,
+  ThreadStatus,
+} from '@/models/Forum'
+import type { ApiDetailResponse, ApiListResponse, PaginationMeta } from '@/types/api'
 import { unwrapDetail, unwrapList } from '@/utils/apiResponse'
 
 const BASE = '/forum/admin/threads'
 
 export async function listAdminThreads(params?: {
   subCategoryId?: string
-  status?: ThreadStatus
+  state?: AdminThreadState
+  sort?: AdminThreadSort
+  q?: string
+  pinnedFirst?: boolean
   page?: number
   limit?: number
 }): Promise<{ items: ForumThread[]; total: number }> {
@@ -39,22 +48,23 @@ export async function setThreadLock(id: string, isLocked: boolean): Promise<void
   await axiosInstance.patch(`${BASE}/${id}/lock`, { isLocked })
 }
 
-export async function deleteThread(id: string): Promise<void> {
-  await axiosInstance.delete(`${BASE}/${id}`)
-}
-
-// Detail + messages share the standard forum endpoints (same as client).
 export async function getThread(id: string): Promise<ForumThread> {
-  const res = await axiosInstance.get<ApiDetailResponse<ForumThread>>(`/forum/threads/${id}`)
+  const res = await axiosInstance.get<ApiDetailResponse<ForumThread>>(`${BASE}/${id}`)
   return unwrapDetail(res.data)
 }
 
-// Comments are returned as a flat array (not paginated) by the backend.
-export async function listThreadComments(threadId: string): Promise<ForumComment[]> {
-  const res = await axiosInstance.get<ApiDetailResponse<ForumComment[]>>(
-    `/forum/threads/${threadId}/comments`,
+export type ThreadCommentsResponse = {
+  items: ForumComment[]
+  pagination: PaginationMeta
+  totalComments: number
+}
+
+export async function listThreadComments(threadId: string): Promise<ThreadCommentsResponse> {
+  const res = await axiosInstance.get<ApiDetailResponse<ThreadCommentsResponse>>(
+    `${BASE}/${threadId}/comments`,
+    { params: { page: 1, limit: 100 } },
   )
-  return unwrapDetail(res.data) ?? []
+  return unwrapDetail(res.data)
 }
 
 export async function createComment(

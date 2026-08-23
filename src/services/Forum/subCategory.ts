@@ -36,8 +36,13 @@ export async function updateSubCategory(
   return unwrapDetail(res.data)
 }
 
-export async function deleteSubCategory(id: string): Promise<void> {
-  await axiosInstance.delete(`${BASE}/${id}`)
+export async function deleteSubCategory(
+  id: string,
+  replacementSubCategoryId?: string,
+): Promise<void> {
+  await axiosInstance.delete(`${BASE}/${id}`, {
+    params: { replacementSubCategoryId },
+  })
 }
 
 export async function reorderSubCategory(id: string, direction: 'up' | 'down'): Promise<void> {

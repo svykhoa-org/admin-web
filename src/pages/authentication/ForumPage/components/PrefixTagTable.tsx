@@ -5,7 +5,8 @@ import type { ForumPrefixTag } from '@/models/Forum'
 import { createPrefixTag, deletePrefixTag, listPrefixTags, updatePrefixTag } from '@/services/Forum'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
-import { App, Button, Card, Dropdown, Form, Input, Modal, Tag } from 'antd'
+import { App, Button, Card, ColorPicker, Dropdown, Form, Input, Modal, Tag, theme } from 'antd'
+import type { Color } from 'antd/es/color-picker'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -13,6 +14,7 @@ type FormValues = { name: string; colorHex: string }
 
 export const PrefixTagTable = () => {
   const { message } = App.useApp()
+  const { token } = theme.useToken()
   const [items, setItems] = useState<ForumPrefixTag[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -48,7 +50,9 @@ export const PrefixTagTable = () => {
   const openModal = (item?: ForumPrefixTag) => {
     setEditingItem(item ?? null)
     form.setFieldsValue(
-      item ? { name: item.name, colorHex: item.colorHex } : { name: '', colorHex: '#3B82F6' },
+      item
+        ? { name: item.name, colorHex: item.colorHex }
+        : { name: '', colorHex: token.colorPrimary },
     )
     setModalOpen(true)
   }
@@ -85,14 +89,10 @@ export const PrefixTagTable = () => {
 
   const columns: ColumnsType<ForumPrefixTag> = [
     {
-      title: 'Tag',
+      title: 'Tên tag',
       key: 'tag',
-      render: (_, r) => (
-        <Tag style={{ backgroundColor: r.colorHex, color: '#fff', border: 'none' }}>{r.name}</Tag>
-      ),
+      render: (_, r) => <Tag color={r.colorHex}>{r.name}</Tag>,
     },
-    { title: 'Tên', dataIndex: 'name', key: 'name' },
-    { title: 'Màu (HEX)', dataIndex: 'colorHex', key: 'colorHex' },
     {
       title: '',
       key: 'actions',
@@ -156,14 +156,14 @@ export const PrefixTagTable = () => {
           </Form.Item>
           <Form.Item
             name="colorHex"
-            label="Màu HEX"
+            label="Màu tag"
             rules={[
               { required: true },
               { pattern: /^#[0-9A-Fa-f]{6}$/, message: 'Định dạng phải là #RRGGBB' },
             ]}
-            extra="Ví dụ: #3B82F6"
+            getValueFromEvent={(color: Color) => color.toHexString().toUpperCase()}
           >
-            <Input placeholder="#3B82F6" maxLength={7} />
+            <ColorPicker format="hex" disabledAlpha showText />
           </Form.Item>
         </Form>
       </Modal>

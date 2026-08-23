@@ -1,9 +1,13 @@
-import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModal'
 import { DataTable } from '@/components/DataTable/DataTable'
-import { useDelete } from '@/hooks'
-import { ThreadStatus, type ForumSubCategory, type ForumThread } from '@/models/Forum'
 import {
-  deleteThread,
+  AdminThreadSort,
+  AdminThreadState,
+  ThreadStatus,
+  type ForumSubCategory,
+  type ForumThread,
+} from '@/models/Forum'
+import { RoutePath } from '@/router/RoutePath'
+import {
   listAdminThreads,
   listSubCategories,
   setThreadLock,
@@ -11,27 +15,80 @@ import {
   setThreadStatus,
 } from '@/services/Forum'
 import { isApiResponseError } from '@/utils/apiResponse'
-import { RoutePath } from '@/router/RoutePath'
+import { formatTimestamp } from '@/utils/time'
 import {
-  DeleteOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
   EditOutlined,
+  EllipsisOutlined,
   EyeOutlined,
+  LikeOutlined,
   LockOutlined,
-  PushpinOutlined,
+  MessageOutlined,
   UnlockOutlined,
 } from '@ant-design/icons'
-import { App, Button, Card, Select, Space, Switch, Tooltip, Typography } from 'antd'
+import {
+  App,
+  Avatar,
+  Button,
+  Card,
+  Checkbox,
+  Dropdown,
+  Input,
+  Select,
+  Space,
+  Switch,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CreateThreadModal } from './CreateThreadModal'
 
-const STATUS_OPTIONS = [
-  { label: 'Tất cả', value: '' },
-  { label: 'Đã xuất bản', value: ThreadStatus.Published },
-  { label: 'Chờ duyệt', value: ThreadStatus.Pending },
-  { label: 'Đã ẩn', value: ThreadStatus.Hidden },
+const STATE_OPTIONS = [
+  { label: 'Đã đăng', value: AdminThreadState.Published },
+  { label: 'Chờ đăng', value: AdminThreadState.Pending },
+  { label: 'Đã khóa', value: AdminThreadState.Locked },
 ]
+
+const SORT_OPTIONS = [
+  { label: 'Mới cập nhật', value: AdminThreadSort.Newest },
+  { label: 'Nhiều bình luận', value: AdminThreadSort.MostComments },
+  { label: 'Nhiều lượt thích', value: AdminThreadSort.MostLikes },
+  { label: 'Nhiều lượt xem', value: AdminThreadSort.MostViews },
+]
+
+const plainText = (content: string) =>
+  content
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+const ThreadStateTag = ({ thread }: { thread: ForumThread }) => {
+  if (thread.isLocked) {
+    return (
+      <Tag icon={<LockOutlined />} color="error">
+        Đã khóa
+      </Tag>
+    )
+  }
+  if (thread.status === ThreadStatus.Pending) {
+    return (
+      <Tag icon={<ClockCircleOutlined />} color="warning">
+        Chờ đăng
+      </Tag>
+    )
+  }
+  return (
+    <Tag icon={<CheckCircleOutlined />} color="success">
+      Đã đăng
+    </Tag>
+  )
+}
 
 export const ThreadModerationTable = () => {
   const { message } = App.useApp()
@@ -40,7 +97,11 @@ export const ThreadModerationTable = () => {
   const [subCats, setSubCats] = useState<ForumSubCategory[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [filterSubCat, setFilterSubCat] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [filterState, setFilterState] = useState<AdminThreadState | undefined>()
+  const [sort, setSort] = useState(AdminThreadSort.Newest)
+  const [pinnedFirst, setPinnedFirst] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -57,7 +118,10 @@ export const ThreadModerationTable = () => {
     try {
       const result = await listAdminThreads({
         subCategoryId: filterSubCat || undefined,
-        status: (filterStatus as ThreadStatus) || undefined,
+        state: filterState,
+        sort,
+        q: searchQuery || undefined,
+        pinnedFirst,
         page,
         limit: PAGE_SIZE,
       })
@@ -68,14 +132,11 @@ export const ThreadModerationTable = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [message, filterSubCat, filterStatus, page])
+  }, [filterState, filterSubCat, message, page, pinnedFirst, searchQuery, sort])
 
   useEffect(() => {
     void load()
   }, [load])
-
-  const { deleteModal, openDeleteModal, closeDeleteModal, confirmDelete, isDeleting } =
-    useDelete<string>(deleteThread)
 
   const handleAction = async (fn: () => Promise<void>, successMsg: string) => {
     try {
@@ -89,143 +150,231 @@ export const ThreadModerationTable = () => {
 
   const columns: ColumnsType<ForumThread> = [
     {
-      title: 'Tiêu đề',
-      key: 'title',
-      render: (_, r) => (
-        <Space orientation="vertical" size={0}>
+      title: 'Bài viết',
+      key: 'thread',
+      width: 330,
+      render: (_, thread) => (
+        <div className="max-w-[330px]">
           <Typography.Link
             strong
-            style={{ fontSize: 13 }}
-            onClick={() => navigate(RoutePath.ForumThreadDetailPage.getPath(r.id))}
+            onClick={() => navigate(RoutePath.ForumThreadDetailPage.getPath(thread.id))}
           >
-            {r.title}
+            {thread.title}
           </Typography.Link>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            {r.author?.fullName ?? r.authorId} · {r.subCategory?.name ?? r.subCategoryId}
-          </Typography.Text>
+          <Typography.Paragraph
+            type="secondary"
+            ellipsis={{ rows: 2 }}
+            className="!mb-0 !mt-1 text-xs"
+          >
+            {plainText(thread.content)}
+          </Typography.Paragraph>
+        </div>
+      ),
+    },
+    {
+      title: 'Người đăng',
+      key: 'author',
+      width: 150,
+      render: (_, thread) => (
+        <Space size={8}>
+          <Avatar src={thread.author?.avatar} size={30}>
+            {thread.author?.fullName?.trim().charAt(0).toUpperCase()}
+          </Avatar>
+          <Typography.Text>{thread.author?.fullName ?? 'Ẩn danh'}</Typography.Text>
         </Space>
       ),
     },
     {
       title: 'Trạng thái',
-      key: 'status',
-      width: 160,
-      render: (_, r) => (
-        <Select
-          size="small"
-          value={r.status}
-          style={{ width: 140 }}
-          options={STATUS_OPTIONS.filter(o => o.value !== '').map(o => ({
-            label: o.label,
-            value: o.value,
-          }))}
-          onChange={val =>
-            handleAction(() => setThreadStatus(r.id, val as ThreadStatus), 'Đã cập nhật trạng thái')
-          }
-        />
+      key: 'state',
+      width: 105,
+      render: (_, thread) => <ThreadStateTag thread={thread} />,
+    },
+    {
+      title: 'Cập nhật',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      width: 132,
+      render: value => <span className="tabular-nums">{formatTimestamp(value)}</span>,
+    },
+    {
+      title: 'Tương tác',
+      key: 'engagement',
+      width: 140,
+      render: (_, thread) => (
+        <Space size={14} className="tabular-nums text-xs">
+          <Tooltip title="Lượt thích">
+            <span>
+              <LikeOutlined /> {thread.reactionCount ?? 0}
+            </span>
+          </Tooltip>
+          <Tooltip title="Bình luận">
+            <span>
+              <MessageOutlined /> {thread.commentCount ?? 0}
+            </span>
+          </Tooltip>
+          <Tooltip title="Lượt xem">
+            <span>
+              <EyeOutlined /> {thread.viewCount}
+            </span>
+          </Tooltip>
+        </Space>
       ),
     },
     {
       title: 'Ghim',
       key: 'isPinned',
-      width: 70,
-      render: (_, r) => (
-        <Tooltip title={r.isPinned ? 'Bỏ ghim' : 'Ghim bài'}>
+      width: 60,
+      align: 'center',
+      render: (_, thread) => (
+        <Tooltip title={thread.isPinned ? 'Bỏ ghim' : 'Ghim bài'}>
           <Switch
             size="small"
-            checked={r.isPinned}
-            checkedChildren={<PushpinOutlined />}
-            onChange={val =>
-              handleAction(() => setThreadPin(r.id, val), val ? 'Đã ghim' : 'Đã bỏ ghim')
+            checked={thread.isPinned}
+            onChange={checked =>
+              handleAction(
+                () => setThreadPin(thread.id, checked),
+                checked ? 'Đã ghim bài viết' : 'Đã bỏ ghim',
+              )
             }
           />
         </Tooltip>
       ),
-    },
-    {
-      title: 'Khóa',
-      key: 'isLocked',
-      width: 70,
-      render: (_, r) => (
-        <Tooltip title={r.isLocked ? 'Mở khóa' : 'Khóa bài'}>
-          <Switch
-            size="small"
-            checked={r.isLocked}
-            checkedChildren={<LockOutlined />}
-            unCheckedChildren={<UnlockOutlined />}
-            onChange={val =>
-              handleAction(() => setThreadLock(r.id, val), val ? 'Đã khóa' : 'Đã mở khóa')
-            }
-          />
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Lượt xem',
-      dataIndex: 'viewCount',
-      key: 'viewCount',
-      width: 100,
     },
     {
       title: '',
       key: 'actions',
-      width: 88,
-      render: (_, record) => (
-        <Space size={4}>
-          <Tooltip title="Xem chi tiết">
-            <Button
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => navigate(RoutePath.ForumThreadDetailPage.getPath(record.id))}
-            />
-          </Tooltip>
-          <Tooltip title="Xóa bài viết">
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => openDeleteModal([record.id])}
-            />
-          </Tooltip>
-        </Space>
+      width: 48,
+      fixed: 'right',
+      render: (_, thread) => (
+        <Dropdown
+          trigger={['click']}
+          menu={{
+            items: [
+              { key: 'detail', label: 'Xem chi tiết', icon: <EyeOutlined /> },
+              {
+                key: 'status',
+                label:
+                  thread.status === ThreadStatus.Published
+                    ? 'Chuyển về chờ đăng'
+                    : 'Đăng công khai',
+                icon:
+                  thread.status === ThreadStatus.Published ? (
+                    <ClockCircleOutlined />
+                  ) : (
+                    <CheckCircleOutlined />
+                  ),
+              },
+              {
+                key: 'lock',
+                label: thread.isLocked ? 'Mở khóa bài viết' : 'Khóa bài viết',
+                icon: thread.isLocked ? <UnlockOutlined /> : <LockOutlined />,
+              },
+            ],
+            onClick: ({ key }) => {
+              if (key === 'detail') {
+                navigate(RoutePath.ForumThreadDetailPage.getPath(thread.id))
+              }
+              if (key === 'status') {
+                const nextStatus =
+                  thread.status === ThreadStatus.Published
+                    ? ThreadStatus.Pending
+                    : ThreadStatus.Published
+                void handleAction(
+                  () => setThreadStatus(thread.id, nextStatus),
+                  nextStatus === ThreadStatus.Published
+                    ? 'Đã đăng công khai'
+                    : 'Đã chuyển về chờ đăng',
+                )
+              }
+              if (key === 'lock') {
+                void handleAction(
+                  () => setThreadLock(thread.id, !thread.isLocked),
+                  thread.isLocked ? 'Đã mở khóa bài viết' : 'Đã khóa bài viết',
+                )
+              }
+            },
+          }}
+        >
+          <Button size="small" icon={<EllipsisOutlined />} />
+        </Dropdown>
       ),
     },
   ]
+
+  const applySearch = (value: string) => {
+    setSearchQuery(value.trim())
+    setPage(1)
+  }
 
   return (
     <>
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Space wrap>
-            <Select
-              placeholder="Lọc theo danh mục"
+          <Space wrap size={8}>
+            <Input.Search
               allowClear
-              style={{ width: 200 }}
-              value={filterSubCat || undefined}
-              options={subCats.map(s => ({ label: s.name, value: s.id }))}
-              onChange={val => {
-                setFilterSubCat(val ?? '')
-                setPage(1)
+              placeholder="Tìm theo tiêu đề hoặc nội dung"
+              value={searchValue}
+              onChange={event => {
+                const value = event.target.value
+                setSearchValue(value)
+                if (!value) applySearch('')
               }}
+              onSearch={applySearch}
+              style={{ width: 220 }}
             />
             <Select
-              placeholder="Lọc theo trạng thái"
+              placeholder="Tất cả danh mục"
               allowClear
               style={{ width: 160 }}
-              value={filterStatus || undefined}
-              options={STATUS_OPTIONS.filter(o => o.value !== '')}
-              onChange={val => {
-                setFilterStatus(val ?? '')
+              value={filterSubCat || undefined}
+              options={subCats.map(subCategory => ({
+                label: subCategory.name,
+                value: subCategory.id,
+              }))}
+              onChange={value => {
+                setFilterSubCat(value ?? '')
                 setPage(1)
               }}
             />
+            <Select
+              placeholder="Tất cả trạng thái"
+              allowClear
+              style={{ width: 130 }}
+              value={filterState}
+              options={STATE_OPTIONS}
+              onChange={value => {
+                setFilterState(value)
+                setPage(1)
+              }}
+            />
+            <Select
+              value={sort}
+              style={{ width: 150 }}
+              options={SORT_OPTIONS}
+              onChange={value => {
+                setSort(value)
+                setPage(1)
+              }}
+            />
+            <Checkbox
+              checked={pinnedFirst}
+              onChange={event => {
+                setPinnedFirst(event.target.checked)
+                setPage(1)
+              }}
+            >
+              Ưu tiên bài ghim
+            </Checkbox>
           </Space>
           <Button type="primary" icon={<EditOutlined />} onClick={() => setCreateModalOpen(true)}>
             Viết bài
           </Button>
         </div>
+
         <DataTable<ForumThread>
-          title="Quản lý bài viết diễn đàn"
+          title="Bài viết diễn đàn"
           columns={columns}
           dataSource={items}
           loading={isLoading}
@@ -234,26 +383,10 @@ export const ThreadModerationTable = () => {
             currentPage: page,
             pageSize: PAGE_SIZE,
             totalRecords: total,
-            onPageChange: p => setPage(p),
+            onPageChange: nextPage => setPage(nextPage),
           }}
         />
       </Card>
-
-      <ConfirmDeleteModal
-        open={deleteModal.open}
-        count={deleteModal.ids.length}
-        isLoading={isDeleting}
-        onConfirm={async () => {
-          try {
-            await confirmDelete()
-            void message.success('Đã xóa bài viết')
-            void load()
-          } catch {
-            void message.error('Không thể xóa')
-          }
-        }}
-        onCancel={closeDeleteModal}
-      />
 
       <CreateThreadModal
         open={createModalOpen}

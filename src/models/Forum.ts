@@ -14,6 +14,7 @@ export type ForumSubCategory = AbstractModel & {
   displayOrder: number
   rank: string
   threadCount: number
+  totalThreadCount?: number
   messageCount: number
   requiresModeration: boolean
 }
@@ -27,6 +28,19 @@ export enum ThreadStatus {
   Pending = 'pending',
   Published = 'published',
   Hidden = 'hidden',
+}
+
+export enum AdminThreadState {
+  Published = 'published',
+  Pending = 'pending',
+  Locked = 'locked',
+}
+
+export enum AdminThreadSort {
+  Newest = 'newest',
+  MostComments = 'most_comments',
+  MostLikes = 'most_likes',
+  MostViews = 'most_views',
 }
 
 export type ForumThread = AbstractModel & {
@@ -44,6 +58,7 @@ export type ForumThread = AbstractModel & {
   status: ThreadStatus
   lastReplyAt: string | null
   reactionCount?: number
+  commentCount?: number
   hasReacted?: boolean
 }
 

@@ -1,4 +1,3 @@
-import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModal'
 import type { ForumCategoryGroup, ForumSubCategory } from '@/models/Forum'
 import {
   createCategoryGroup,
@@ -29,10 +28,22 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { App, Button, Card, Form, Input, Modal, Space, Table, Typography } from 'antd'
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Typography,
+} from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { LexoRank } from 'lexorank'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 const { Title } = Typography
 
@@ -43,28 +54,61 @@ type SubCatFormValues = {
   requiresModeration: boolean
 }
 
+type SortableRowContextValue = Pick<
+  ReturnType<typeof useSortable>,
+  'attributes' | 'listeners' | 'setActivatorNodeRef'
+>
+
+const SortableRowContext = createContext<SortableRowContextValue | null>(null)
+
+/* eslint-disable react-hooks/refs -- dnd-kit exposes stable callback refs and listeners through context. */
+const SortableDragHandle = () => {
+  const context = useContext(SortableRowContext)
+  if (!context) return null
+  return (
+    <span
+      ref={context.setActivatorNodeRef}
+      {...context.attributes}
+      {...context.listeners}
+      className="inline-flex cursor-grab touch-none text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+    >
+      <HolderOutlined />
+    </span>
+  )
+}
+/* eslint-enable react-hooks/refs */
+
 // Sortable row for Ant Design Table
 const SortableTableRow = (
   props: React.HTMLAttributes<HTMLTableRowElement> & { 'data-row-key'?: string },
 ) => {
   const id = props['data-row-key'] ?? ''
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id })
+  const contextValue = useMemo(
+    () => ({ attributes, listeners, setActivatorNodeRef }),
+    [attributes, listeners, setActivatorNodeRef],
+  )
   return (
-    <tr
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      {...props}
-      style={{
-        ...props.style,
-        transform: CSS.Translate.toString(transform),
-        transition: isDragging ? undefined : transition,
-        opacity: isDragging ? 0.4 : 1,
-        cursor: 'grab',
-      }}
-    />
+    <SortableRowContext.Provider value={contextValue}>
+      <tr
+        ref={setNodeRef}
+        {...props}
+        style={{
+          ...props.style,
+          transform: CSS.Translate.toString(transform),
+          transition: isDragging ? undefined : transition,
+          opacity: isDragging ? 0.4 : 1,
+        }}
+      />
+    </SortableRowContext.Provider>
   )
 }
 
@@ -159,6 +203,7 @@ export const ForumStructurePage = () => {
     type: 'group' | 'subcat'
     id: string
   } | null>(null)
+  const [replacementId, setReplacementId] = useState<string>()
   const [deleting, setDeleting] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -200,6 +245,38 @@ export const ForumStructurePage = () => {
 
   const groupSubCats = (groupId: string) =>
     subCats.filter(s => s.groupId === groupId).sort((a, b) => a.rank.localeCompare(b.rank))
+
+  const deletingGroup =
+    deleteState?.type === 'group' ? groups.find(group => group.id === deleteState.id) : undefined
+  const deletingSubCategory =
+    deleteState?.type === 'subcat'
+      ? subCats.find(subCategory => subCategory.id === deleteState.id)
+      : undefined
+  const affectedItemCount = deletingGroup
+    ? groupSubCats(deletingGroup.id).length
+    : (deletingSubCategory?.totalThreadCount ?? deletingSubCategory?.threadCount ?? 0)
+  const needsReplacement = affectedItemCount > 0
+  const replacementOptions =
+    deleteState?.type === 'group'
+      ? groups
+          .filter(group => group.id !== deleteState.id)
+          .map(group => ({ label: group.name, value: group.id }))
+      : subCats
+          .filter(subCategory => subCategory.id !== deleteState?.id)
+          .map(subCategory => ({
+            label: `${groups.find(group => group.id === subCategory.groupId)?.name ?? 'Nhóm khác'} — ${subCategory.name}`,
+            value: subCategory.id,
+          }))
+
+  const openDeleteDialog = (type: 'group' | 'subcat', id: string) => {
+    setReplacementId(undefined)
+    setDeleteState({ open: true, type, id })
+  }
+
+  const closeDeleteDialog = () => {
+    setReplacementId(undefined)
+    setDeleteState(null)
+  }
 
   // Group D&D
   const handleGroupDragEnd = async (event: DragEndEvent) => {
@@ -336,16 +413,24 @@ export const ForumStructurePage = () => {
 
   const handleConfirmDelete = async () => {
     if (!deleteState) return
+    if (needsReplacement && !replacementId) {
+      void message.warning(
+        deleteState.type === 'group'
+          ? 'Vui lòng chọn nhóm nhận các danh mục'
+          : 'Vui lòng chọn danh mục nhận các bài viết',
+      )
+      return
+    }
     setDeleting(true)
     try {
       if (deleteState.type === 'group') {
-        await deleteCategoryGroup(deleteState.id)
+        await deleteCategoryGroup(deleteState.id, replacementId)
         void message.success('Đã xóa nhóm danh mục')
       } else {
-        await deleteSubCategory(deleteState.id)
+        await deleteSubCategory(deleteState.id, replacementId)
         void message.success('Đã xóa danh mục')
       }
-      setDeleteState(null)
+      closeDeleteDialog()
       void load()
     } catch (error) {
       void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa')
@@ -358,9 +443,7 @@ export const ForumStructurePage = () => {
     {
       key: 'drag',
       width: 32,
-      render: () => (
-        <HolderOutlined className="cursor-grab text-gray-300 hover:text-gray-500 active:cursor-grabbing" />
-      ),
+      render: () => <SortableDragHandle />,
     },
     {
       title: '#',
@@ -406,7 +489,7 @@ export const ForumStructurePage = () => {
             size="small"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => setDeleteState({ open: true, type: 'subcat', id: record.id })}
+            onClick={() => openDeleteDialog('subcat', record.id)}
           />
         </Space>
       ),
@@ -457,7 +540,7 @@ export const ForumStructurePage = () => {
                         size="small"
                         danger
                         icon={<DeleteOutlined />}
-                        onClick={() => setDeleteState({ open: true, type: 'group', id: group.id })}
+                        onClick={() => openDeleteDialog('group', group.id)}
                       />
                       <Button
                         size="small"
@@ -551,17 +634,64 @@ export const ForumStructurePage = () => {
         </Form>
       </Modal>
 
-      <ConfirmDeleteModal
+      <Modal
+        title={deleteState?.type === 'group' ? 'Xóa nhóm danh mục' : 'Xóa danh mục'}
+        width={520}
         open={deleteState?.open ?? false}
-        count={
-          deleteState?.type === 'group'
-            ? 1 + subCats.filter(s => s.groupId === deleteState.id).length
-            : 1
-        }
-        isLoading={deleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteState(null)}
-      />
+        confirmLoading={deleting}
+        okText={needsReplacement ? 'Chuyển và xóa' : 'Xóa'}
+        cancelText="Hủy"
+        okButtonProps={{
+          danger: true,
+          disabled: needsReplacement && (!replacementId || replacementOptions.length === 0),
+        }}
+        onOk={handleConfirmDelete}
+        onCancel={closeDeleteDialog}
+        destroyOnHidden
+      >
+        <div className="flex flex-col gap-4 pt-2">
+          <Alert
+            showIcon
+            type={needsReplacement ? 'warning' : 'info'}
+            title={
+              deleteState?.type === 'group'
+                ? `Nhóm “${deletingGroup?.name ?? ''}”${needsReplacement ? ` đang chứa ${affectedItemCount} danh mục` : ' không có danh mục'}.`
+                : `Danh mục “${deletingSubCategory?.name ?? ''}”${needsReplacement ? ` đang chứa ${affectedItemCount} bài viết` : ' không có bài viết'}.`
+            }
+            description={
+              needsReplacement
+                ? deleteState?.type === 'group'
+                  ? 'Chọn một nhóm khác để chuyển toàn bộ danh mục trước khi xóa. Thao tác chuyển và xóa được thực hiện cùng lúc.'
+                  : 'Chọn một danh mục khác để chuyển toàn bộ bài viết trước khi xóa. Số liệu bài viết và bình luận sẽ được cộng sang danh mục nhận.'
+                : 'Bạn có thể xóa trực tiếp vì không có dữ liệu phụ thuộc.'
+            }
+          />
+
+          {needsReplacement && (
+            <div>
+              <Typography.Text strong>
+                {deleteState?.type === 'group' ? 'Chuyển sang nhóm' : 'Chuyển sang danh mục'}
+              </Typography.Text>
+              <Select
+                className="mt-2 w-full"
+                showSearch
+                optionFilterProp="label"
+                value={replacementId}
+                options={replacementOptions}
+                placeholder={
+                  replacementOptions.length > 0
+                    ? 'Chọn nơi nhận dữ liệu'
+                    : deleteState?.type === 'group'
+                      ? 'Cần tạo thêm một nhóm trước khi xóa'
+                      : 'Cần tạo thêm một danh mục trước khi xóa'
+                }
+                disabled={replacementOptions.length === 0}
+                onChange={setReplacementId}
+              />
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }

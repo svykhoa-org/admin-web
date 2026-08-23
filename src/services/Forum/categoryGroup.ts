@@ -30,8 +30,10 @@ export async function updateCategoryGroup(
   return unwrapDetail(res.data)
 }
 
-export async function deleteCategoryGroup(id: string): Promise<void> {
-  await axiosInstance.delete(`${BASE}/${id}`)
+export async function deleteCategoryGroup(id: string, replacementGroupId?: string): Promise<void> {
+  await axiosInstance.delete(`${BASE}/${id}`, {
+    params: { replacementGroupId },
+  })
 }
 
 export async function reorderCategoryGroup(id: string, direction: 'up' | 'down'): Promise<void> {
