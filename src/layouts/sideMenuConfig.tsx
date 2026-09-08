@@ -16,6 +16,7 @@ import {
   FileSearchOutlined,
   IdcardOutlined,
   ReadOutlined,
+  NotificationOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
@@ -131,6 +132,25 @@ export const sideMenuConfig: SideMenuEntry[] = [
         key: '/article-categories',
         icon: <TagsOutlined />,
         label: 'Chuyên mục bài viết',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_BULLETIN',
+    label: 'Quản lý thông báo',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/bulletins',
+        icon: <NotificationOutlined />,
+        label: 'Thông báo',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/bulletin-categories',
+        icon: <TagsOutlined />,
+        label: 'Chuyên mục thông báo',
       },
     ],
   },

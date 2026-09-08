@@ -63,6 +63,25 @@ export const RoutePath = {
     path: '/article-categories',
   },
 
+  // Bulletin (Thông báo)
+  BulletinPage: {
+    route: 'bulletins',
+    path: '/bulletins',
+  },
+  BulletinCreatePage: {
+    route: 'create',
+    path: '/bulletins/create',
+  },
+  BulletinUpdatePage: {
+    route: ':id/edit',
+    path: '/bulletins/:id/edit',
+    getPath: (id: string) => `/bulletins/${id}/edit`,
+  },
+  BulletinCategoryPage: {
+    route: 'bulletin-categories',
+    path: '/bulletin-categories',
+  },
+
   // Document License
   DocumentLicensePage: {
     route: 'document-licenses',

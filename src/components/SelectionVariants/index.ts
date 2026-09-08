@@ -1,5 +1,6 @@
 export * from './SearchableSelection'
 export * from './ArticleCategorySelect'
+export * from './BulletinCategorySelect'
 export * from './DocumentClassifySelect'
 export * from './RoleStatusSelect'
 export * from './UserStatusSelect'

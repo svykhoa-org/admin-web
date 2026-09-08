@@ -24,6 +24,10 @@ import { ArticleListPage } from '@/pages/authentication/ArticlePage/ArticleListP
 import { ArticleCreatePage } from '@/pages/authentication/ArticlePage/ArticleCreatePage'
 import { ArticleUpdatePage } from '@/pages/authentication/ArticlePage/ArticleUpdatePage'
 import { ArticleCategoryPage } from '@/pages/authentication/ArticlePage/ArticleCategoryPage'
+import { BulletinListPage } from '@/pages/authentication/BulletinPage/BulletinListPage'
+import { BulletinCreatePage } from '@/pages/authentication/BulletinPage/BulletinCreatePage'
+import { BulletinUpdatePage } from '@/pages/authentication/BulletinPage/BulletinUpdatePage'
+import { BulletinCategoryPage } from '@/pages/authentication/BulletinPage/BulletinCategoryPage'
 import { EnrollmentListPage } from '@/pages/authentication/EnrollmentPage/EnrollmentListPage'
 import { VerificationListPage } from '@/pages/authentication/VerificationPage/VerificationListPage'
 import { VerificationDetailPage } from '@/pages/authentication/VerificationPage/VerificationDetailPage'
@@ -134,6 +138,27 @@ const router = createBrowserRouter([
           {
             path: RoutePath.ArticleCategoryPage.route,
             element: <ArticleCategoryPage />,
+          },
+          {
+            path: RoutePath.BulletinPage.route,
+            children: [
+              {
+                index: true,
+                element: <BulletinListPage />,
+              },
+              {
+                path: RoutePath.BulletinCreatePage.route,
+                element: <BulletinCreatePage />,
+              },
+              {
+                path: RoutePath.BulletinUpdatePage.route,
+                element: <BulletinUpdatePage />,
+              },
+            ],
+          },
+          {
+            path: RoutePath.BulletinCategoryPage.route,
+            element: <BulletinCategoryPage />,
           },
           {
             path: RoutePath.DocumentLicensePage.route,
