@@ -15,6 +15,7 @@ import {
   MessageOutlined,
   FileSearchOutlined,
   IdcardOutlined,
+  ReadOutlined,
 } from '@ant-design/icons'
 
 export enum ItemType {
@@ -111,6 +112,25 @@ export const sideMenuConfig: SideMenuEntry[] = [
         key: '/videos',
         icon: <VideoCameraOutlined />,
         label: 'Kho Video',
+      },
+    ],
+  },
+  {
+    type: ItemType.GROUP,
+    key: 'GROUP_ARTICLE',
+    label: 'Quản lý bài viết',
+    children: [
+      {
+        type: ItemType.LINK,
+        key: '/articles',
+        icon: <ReadOutlined />,
+        label: 'Bài viết',
+      },
+      {
+        type: ItemType.LINK,
+        key: '/article-categories',
+        icon: <TagsOutlined />,
+        label: 'Chuyên mục bài viết',
       },
     ],
   },

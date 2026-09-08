@@ -44,6 +44,25 @@ export const RoutePath = {
     getPath: (id: string) => `/documents/${id}/edit`,
   },
 
+  // Article
+  ArticlePage: {
+    route: 'articles',
+    path: '/articles',
+  },
+  ArticleCreatePage: {
+    route: 'create',
+    path: '/articles/create',
+  },
+  ArticleUpdatePage: {
+    route: ':id/edit',
+    path: '/articles/:id/edit',
+    getPath: (id: string) => `/articles/${id}/edit`,
+  },
+  ArticleCategoryPage: {
+    route: 'article-categories',
+    path: '/article-categories',
+  },
+
   // Document License
   DocumentLicensePage: {
     route: 'document-licenses',

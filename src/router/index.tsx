@@ -20,6 +20,10 @@ import { DocumentTracePage } from '@/pages/authentication/DocumentLicensePage/Do
 import { DocumentCreatePage } from '@/pages/authentication/DocumentPage/DocumentCreatePage'
 import { DocumentListPage } from '@/pages/authentication/DocumentPage/DocumentListPage'
 import { DocumentUpdatePage } from '@/pages/authentication/DocumentPage/DocumentUpdatePage'
+import { ArticleListPage } from '@/pages/authentication/ArticlePage/ArticleListPage'
+import { ArticleCreatePage } from '@/pages/authentication/ArticlePage/ArticleCreatePage'
+import { ArticleUpdatePage } from '@/pages/authentication/ArticlePage/ArticleUpdatePage'
+import { ArticleCategoryPage } from '@/pages/authentication/ArticlePage/ArticleCategoryPage'
 import { EnrollmentListPage } from '@/pages/authentication/EnrollmentPage/EnrollmentListPage'
 import { VerificationListPage } from '@/pages/authentication/VerificationPage/VerificationListPage'
 import { VerificationDetailPage } from '@/pages/authentication/VerificationPage/VerificationDetailPage'
@@ -109,6 +113,27 @@ const router = createBrowserRouter([
                 element: <DocumentUpdatePage />,
               },
             ],
+          },
+          {
+            path: RoutePath.ArticlePage.route,
+            children: [
+              {
+                index: true,
+                element: <ArticleListPage />,
+              },
+              {
+                path: RoutePath.ArticleCreatePage.route,
+                element: <ArticleCreatePage />,
+              },
+              {
+                path: RoutePath.ArticleUpdatePage.route,
+                element: <ArticleUpdatePage />,
+              },
+            ],
+          },
+          {
+            path: RoutePath.ArticleCategoryPage.route,
+            element: <ArticleCategoryPage />,
           },
           {
             path: RoutePath.DocumentLicensePage.route,
