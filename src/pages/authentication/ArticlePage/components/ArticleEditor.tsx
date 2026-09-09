@@ -57,6 +57,13 @@ export const ArticleEditor = ({ value, onChange }: ArticleEditorProps) => {
   )
 
   return (
-    <ReactQuill ref={quillRef} theme="snow" value={value} onChange={onChange} modules={modules} />
+    <ReactQuill
+      ref={quillRef}
+      className="content-editor"
+      theme="snow"
+      value={value}
+      onChange={onChange}
+      modules={modules}
+    />
   )
 }

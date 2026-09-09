@@ -54,6 +54,13 @@ export const BulletinEditor = ({ value, onChange }: BulletinEditorProps) => {
   )
 
   return (
-    <ReactQuill ref={quillRef} theme="snow" value={value} onChange={onChange} modules={modules} />
+    <ReactQuill
+      ref={quillRef}
+      className="content-editor"
+      theme="snow"
+      value={value}
+      onChange={onChange}
+      modules={modules}
+    />
   )
 }

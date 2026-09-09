@@ -113,3 +113,10 @@ body * {
 .comment-row + .comment-row {
   border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
+
+/* Content editor (article/bulletin forms): taller default writing area so the
+   composer isn't cramped. Scoped to .content-editor to avoid touching other
+   react-quill instances (e.g. the forum composer). */
+.content-editor .ql-editor {
+  min-height: 360px;
+}
