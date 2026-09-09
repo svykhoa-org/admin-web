@@ -3,6 +3,7 @@ import { App, Button, Card, Descriptions, Tag, Typography, Upload } from 'antd'
 import type { UploadFile } from 'antd'
 import { FileSearchOutlined, InboxOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import { BRAND_NAME } from '@/constants/brand'
 import { traceDocument, type TraceDocumentOutput } from '@/services/DocumentLicense'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time/formatTimestamp'
@@ -88,7 +89,7 @@ export const DocumentTracePage = () => {
       {result && !result.matched && (
         <Card className="shadow-sm">
           <Typography.Title level={5} type="warning" style={{ marginTop: 0 }}>
-            Không tìm thấy dấu vết SVYKHOA trong tài liệu này
+            Không tìm thấy dấu vết {BRAND_NAME} trong tài liệu này
           </Typography.Title>
         </Card>
       )}
