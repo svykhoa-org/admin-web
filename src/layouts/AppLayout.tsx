@@ -16,6 +16,7 @@ import classNames from 'classnames'
 import { useSiteSettingsStore } from '@/store/siteSettingsStore'
 import { resolveUploadUrl } from '@/components/Upload/assetResource'
 import { RoutePath } from '@/router/RoutePath'
+import { APP_VERSION } from '@/constants/version'
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -151,6 +152,12 @@ export default function AppLayout() {
             onClick={() => navigate(RoutePath.SettingsPage.path)}
             style={{ border: 'none' }}
           />
+          <div
+            className="flex items-center justify-center py-2"
+            style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
+          >
+            <Text style={{ fontSize: 11, color: token.colorTextTertiary }}>v{APP_VERSION}</Text>
+          </div>
         </div>
       </Sider>
 
