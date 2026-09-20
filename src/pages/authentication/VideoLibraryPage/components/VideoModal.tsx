@@ -3,7 +3,7 @@ import { createVideo, updateVideo, type CreateVideoInput, type VideoDto } from '
 import { listUser } from '@/services/User'
 import type { User } from '@/models/User'
 import { isApiResponseError } from '@/utils/apiResponse'
-import { App, Form, Input, Modal, Select } from 'antd'
+import { App, Form, Input, InputNumber, Modal, Select } from 'antd'
 import { useEffect, useState } from 'react'
 
 interface Props {
@@ -141,7 +141,7 @@ export const VideoModal = ({ open, video, onClose, onSuccess }: Props) => {
         </Form.Item>
 
         <Form.Item name="durationMinutes" label="Thời lượng (phút)">
-          <Input type="number" min={0} placeholder="Số phút" />
+          <InputNumber min={0} style={{ width: '100%' }} placeholder="Số phút" />
         </Form.Item>
       </Form>
     </Modal>
