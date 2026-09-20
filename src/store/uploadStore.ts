@@ -15,7 +15,7 @@ import { create } from 'zustand'
 
 // ─── Dev ──────────────────────────────────────────────────────────────────────
 /** Artificial delay (ms) injected after each part upload. Set to 0 for production. */
-const DEV_PART_UPLOAD_DELAY_MS = 3000
+const DEV_PART_UPLOAD_DELAY_MS = 0
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const UPLOAD_SESSION_PREFIX = 'mpu_bg_'
@@ -212,7 +212,10 @@ export const useUploadStore = create<UploadStoreState & UploadStoreActions>((set
 
       rt.completedBytes += end - start
       rt.perPartLoaded.delete(partNumber)
-      updateProgress(taskId, rt, rt.completedBytes, file.size)
+      // why: include still-in-flight parts' bytes so concurrent uploads don't
+      // regress the bar when one part finishes (mirrors the onUploadProgress calc above)
+      const inFlight = [...rt.perPartLoaded.values()].reduce((a, b) => a + b, 0)
+      updateProgress(taskId, rt, rt.completedBytes + inFlight, file.size)
       return true
     } catch (err) {
       if (rt.isCancelled || axios.isCancel(err)) return false
