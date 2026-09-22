@@ -133,9 +133,13 @@ export const CourseTagForm = ({ id }: Props) => {
               render={({ field }) => (
                 <ColorPicker
                   value={field.value ?? undefined}
-                  onChange={(_color, hex) => field.onChange(hex)}
+                  // antd v6: 2nd onChange arg is toCssString() → rgb(), which fails the
+                  // server @IsHexColor() on POST /course-tags. Use the color's hex string,
+                  // and disable alpha so it stays #rrggbb (6 chars) for the varchar(7) column.
+                  onChange={color => field.onChange(color.toHexString())}
                   showText
                   format="hex"
+                  disabledAlpha
                 />
               )}
             />
