@@ -132,7 +132,7 @@ export const BulletinCategoryPage = () => {
     <Card>
       <div className="mb-4 flex items-center justify-between">
         <Typography.Title level={4} style={{ margin: 0 }}>
-          Chuyên mục thông báo
+          Chuyên mục văn bản
         </Typography.Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           Thêm chuyên mục

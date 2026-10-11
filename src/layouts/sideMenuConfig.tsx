@@ -138,19 +138,19 @@ export const sideMenuConfig: SideMenuEntry[] = [
   {
     type: ItemType.GROUP,
     key: 'GROUP_BULLETIN',
-    label: 'Quản lý thông báo',
+    label: 'Quản lý văn bản pháp luật',
     children: [
       {
         type: ItemType.LINK,
         key: '/bulletins',
         icon: <NotificationOutlined />,
-        label: 'Thông báo',
+        label: 'Văn bản pháp luật',
       },
       {
         type: ItemType.LINK,
         key: '/bulletin-categories',
         icon: <TagsOutlined />,
-        label: 'Chuyên mục thông báo',
+        label: 'Chuyên mục văn bản',
       },
     ],
   },

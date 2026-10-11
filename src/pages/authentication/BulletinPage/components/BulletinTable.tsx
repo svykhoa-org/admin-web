@@ -200,7 +200,7 @@ export const BulletinTable = () => {
     <>
       <Card>
         <DataTable<Bulletin>
-          title="Danh sách thông báo"
+          title="Danh sách văn bản pháp luật"
           columns={columns}
           dataSource={items}
           loading={isLoading}
