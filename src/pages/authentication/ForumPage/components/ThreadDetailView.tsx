@@ -11,6 +11,7 @@ import {
 } from '@/services/Forum'
 import { useAuthStore } from '@/store/authStore'
 import { isApiResponseError } from '@/utils/apiResponse'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 import {
   ArrowLeftOutlined,
   DownOutlined,
@@ -394,7 +395,7 @@ const CommentNode = ({
 
           <div
             className="forum-content forum-content--compact"
-            dangerouslySetInnerHTML={{ __html: comment.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.content) }}
           />
 
           <Button
@@ -683,7 +684,10 @@ const ThreadArticle = ({ thread }: { thread: ForumThread }) => {
 
       <div style={{ height: 1, background: token.colorBorderSecondary, margin: '24px 0' }} />
 
-      <div className="forum-content" dangerouslySetInnerHTML={{ __html: thread.content }} />
+      <div
+        className="forum-content"
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(thread.content) }}
+      />
 
       <div style={{ marginTop: 28 }}>
         <ReactionButton thread={thread} />

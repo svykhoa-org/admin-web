@@ -24,6 +24,16 @@ body * {
   font-weight: 500;
 }
 
+/* `body *` above flattens every weight to 500, which also strips author
+   formatting from rendered rich text (bold, headings) in the article/bulletin
+   previews and forum thread view. Restore semantic weights inside those. */
+:is(.article-content, .bulletin-content, .forum-content) :is(strong, b) {
+  font-weight: 700;
+}
+:is(.article-content, .bulletin-content) :is(h1, h2, h3, h4) {
+  font-weight: 700;
+}
+
 #root {
   min-height: 100vh;
 }
