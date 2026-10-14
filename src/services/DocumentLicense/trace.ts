@@ -19,7 +19,7 @@ export interface TraceDocumentLicense {
 
 export interface TraceDocumentOutput {
   matched: boolean
-  via: 'metadata' | 'microtext' | null
+  via: 'metadata' | 'microtext' | 'code' | null
   license: TraceDocumentLicense | null
 }
 

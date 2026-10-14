@@ -2,7 +2,7 @@ import { DataTable } from '@/components/DataTable/DataTable'
 import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModal'
 import { DocumentClassifySelect } from '@/components/SelectionVariants'
 import { useDelete, useList } from '@/hooks'
-import { DocumentStatus, type Document } from '@/models/Document'
+import { DocumentKind, DocumentStatus, type Document } from '@/models/Document'
 import { RoutePath } from '@/router/RoutePath'
 import {
   listDocument,
@@ -144,6 +144,19 @@ export const DocumentTable = () => {
       dataIndex: 'slug',
       key: 'slug',
       render: (value: string) => <Tag>{value}</Tag>,
+    },
+    {
+      title: 'Loại',
+      dataIndex: 'kind',
+      key: 'kind',
+      render: (value: DocumentKind | undefined, record) =>
+        value === DocumentKind.VIDEO ? (
+          <Tag color="blue">
+            Video{record.durationMinutes ? ` · ${record.durationMinutes} phút` : ''}
+          </Tag>
+        ) : (
+          <Tag>PDF</Tag>
+        ),
     },
     {
       title: 'Giá',

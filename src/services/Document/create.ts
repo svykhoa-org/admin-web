@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios'
-import type { Document } from '@/models/Document'
+import type { Document, DocumentKind } from '@/models/Document'
 import type { ApiDetailResponse } from '@/types/api'
 import { unwrapDetail } from '@/utils/apiResponse'
 
@@ -10,7 +10,10 @@ export interface CreateDocumentInput {
   description?: string
   price: number
   categoryId?: string
-  fileId: string
+  kind?: DocumentKind
+  // PDF: fileId + previewId. VIDEO: videoId + thumbnailId (server enforces).
+  fileId?: string
+  videoId?: string
   thumbnailId?: string
   previewId?: string
 }

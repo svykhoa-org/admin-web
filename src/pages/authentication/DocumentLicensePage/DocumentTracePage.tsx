@@ -1,17 +1,18 @@
 import { useState } from 'react'
-import { App, Button, Card, Descriptions, Tag, Typography, Upload } from 'antd'
+import { App, Button, Card, Descriptions, Input, Tag, Typography, Upload } from 'antd'
 import type { UploadFile } from 'antd'
 import { FileSearchOutlined, InboxOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { BRAND_NAME } from '@/constants/brand'
-import { traceDocument, type TraceDocumentOutput } from '@/services/DocumentLicense'
+import { traceByCode, traceDocument, type TraceDocumentOutput } from '@/services/DocumentLicense'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time/formatTimestamp'
 import { RoutePath } from '@/router/RoutePath'
 
-const viaLabelMap: Record<'metadata' | 'microtext', string> = {
+const viaLabelMap: Record<'metadata' | 'microtext' | 'code', string> = {
   metadata: 'Metadata PDF',
   microtext: 'Lớp chìm micro-text',
+  code: 'Mã trên overlay video',
 }
 
 export const DocumentTracePage = () => {
@@ -21,6 +22,30 @@ export const DocumentTracePage = () => {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<TraceDocumentOutput | null>(null)
+
+  const handleTraceByCode = async (code: string) => {
+    if (!code.trim()) return
+
+    setLoading(true)
+    setResult(null)
+    try {
+      setResult(await traceByCode({ code }))
+    } catch (error) {
+      // 404 = no license owns this code: show the same "not found" card.
+      const status = isApiResponseError(error)
+        ? error.statusCode
+        : (error as { response?: { status?: number } }).response?.status
+      if (status === 404) {
+        setResult({ matched: false, via: null, license: null })
+      } else {
+        void message.error(
+          isApiResponseError(error) ? error.message : 'Truy vết thất bại, vui lòng thử lại',
+        )
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleTrace = async () => {
     if (!file) return
@@ -84,6 +109,21 @@ export const DocumentTracePage = () => {
         >
           Truy vết
         </Button>
+      </Card>
+
+      <Card>
+        <Typography.Title level={5} style={{ marginTop: 0 }}>
+          Truy vết video
+        </Typography.Title>
+        <Typography.Paragraph type="secondary">
+          Nhập mã hiển thị trên watermark của video bị quay màn hình để xác định người mua.
+        </Typography.Paragraph>
+        <Input.Search
+          placeholder="Ví dụ: ABCDEFGH23"
+          enterButton="Tra mã"
+          loading={loading}
+          onSearch={value => void handleTraceByCode(value)}
+        />
       </Card>
 
       {result && !result.matched && (

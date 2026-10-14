@@ -7,7 +7,17 @@ export enum DocumentStatus {
   PUBLISHED = 'PUBLISHED',
 }
 
+export enum DocumentKind {
+  PDF = 'PDF',
+  VIDEO = 'VIDEO',
+}
+
 export interface Document extends AbstractModel {
+  kind: DocumentKind
+  videoId?: string | null
+  // Admin detail only: minimal summary of the linked library video.
+  video?: { id: string; title: string } | null
+  durationMinutes?: number | null
   title: string
   description?: string | null
   slug: string

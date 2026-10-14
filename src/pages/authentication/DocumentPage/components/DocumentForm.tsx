@@ -1,9 +1,9 @@
 import { ImagePreviewModal } from '@/components/ModalVariants/ImagePreviewModal'
 import { PdfPreviewModal } from '@/components/ModalVariants/PdfPreviewModal'
-import { DocumentClassifySelect } from '@/components/SelectionVariants'
+import { DocumentClassifySelect, VideoSelect } from '@/components/SelectionVariants'
 import { UploadSingleDocument, UploadSingleImage } from '@/components/Upload'
 import { useCreate, useDetail, useUpdate } from '@/hooks'
-import { DocumentStatus, type Document } from '@/models/Document'
+import { DocumentKind, DocumentStatus, type Document } from '@/models/Document'
 import {
   createDocument,
   getDocumentDetail,
@@ -16,10 +16,22 @@ import { isApiResponseError } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AxiosError } from 'axios'
 import { ArrowLeftOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons'
-import { App, Button, Card, Form, Input, Popconfirm, Space, Spin, Tag, Typography } from 'antd'
+import {
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  Popconfirm,
+  Radio,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+} from 'antd'
 import { PriceInput } from '@/components/InputVariants/PriceInput'
 import { useCallback, useEffect, useState } from 'react'
-import { Controller, useForm, type SubmitErrorHandler } from 'react-hook-form'
+import { Controller, useForm, useWatch, type SubmitErrorHandler } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import {
   DOCUMENT_FORM_DEFAULT_VALUES,
@@ -35,6 +47,11 @@ interface Props {
 const statusColorMap: Record<DocumentStatus, string> = {
   [DocumentStatus.DRAFT]: 'default',
   [DocumentStatus.PUBLISHED]: 'success',
+}
+
+const kindLabelMap: Record<DocumentKind, string> = {
+  [DocumentKind.PDF]: 'Tài liệu PDF',
+  [DocumentKind.VIDEO]: 'Video',
 }
 
 const statusLabelMap: Record<DocumentStatus, string> = {
@@ -73,6 +90,8 @@ export const DocumentForm = ({ id }: Props) => {
     resolver: zodResolver(documentFormSchema),
     defaultValues: DOCUMENT_FORM_DEFAULT_VALUES,
   })
+  const kind = useWatch({ control, name: 'kind' })
+  const isVideo = kind === DocumentKind.VIDEO
 
   const detailRequest = useDetail(fetchDocumentDetail)
   const createRequest = useCreate(createDocument)
@@ -98,6 +117,8 @@ export const DocumentForm = ({ id }: Props) => {
   useEffect(() => {
     if (!detailData) return
     reset({
+      kind: detailData.kind ?? DocumentKind.PDF,
+      videoId: detailData.videoId ?? null,
       title: detailData.title,
       description: detailData.description || undefined,
       price: detailData.price,
@@ -141,15 +162,19 @@ export const DocumentForm = ({ id }: Props) => {
   }
 
   const onSubmit = async (values: DocumentFormSubmitValues) => {
-    const payload: CreateDocumentInput = {
+    const common = {
+      kind: values.kind,
       title: values.title,
       description: values.description?.trim() || undefined,
       price: values.price,
       categoryId: values.categoryId?.trim() || undefined,
       thumbnailId: values.thumbnailId!,
-      fileId: values.fileResource.id,
-      previewId: values.previewId!,
     }
+    // Server rejects the wrong file-pointer for the kind, so send only its own.
+    const payload: CreateDocumentInput =
+      values.kind === DocumentKind.VIDEO
+        ? { ...common, videoId: values.videoId! }
+        : { ...common, fileId: values.fileResource!.id, previewId: values.previewId! }
 
     try {
       if (isEditMode && id) {
@@ -188,6 +213,27 @@ export const DocumentForm = ({ id }: Props) => {
   const formContent = (
     <Form layout="vertical" onFinish={handleSubmit(onSubmit, onInvalidSubmit)}>
       <div className="grid grid-cols-3 gap-4">
+        {/* ── Kind (immutable after creation) ── */}
+        <div className="col-span-full">
+          <Form.Item label="Loại nội dung" required>
+            <Controller
+              name="kind"
+              control={control}
+              render={({ field }) => (
+                <Radio.Group
+                  {...field}
+                  disabled={isEditMode}
+                  optionType="button"
+                  options={Object.values(DocumentKind).map(value => ({
+                    value,
+                    label: kindLabelMap[value],
+                  }))}
+                />
+              )}
+            />
+          </Form.Item>
+        </div>
+
         {/* ── Thumbnail ── */}
         <div className="col-span-full">
           <Form.Item
@@ -296,82 +342,115 @@ export const DocumentForm = ({ id }: Props) => {
           </Form.Item>
         </div>
 
-        {/* ── File upload ── */}
-        <div className="col-span-full">
-          <Form.Item
-            label="Tệp tài liệu"
-            validateStatus={errors.fileResource ? 'error' : ''}
-            help={fileResourceErrorMessage}
-            required
-          >
-            <Controller
-              name="fileResource"
-              control={control}
-              render={({ field }) => (
-                <UploadSingleDocument
-                  onSuccess={resource => field.onChange(resource)}
-                  onRemove={() => field.onChange(null)}
-                  onRemoveExisting={() => field.onChange(null)}
-                  hideUploadOnFilled
-                  maxSizeMB={100}
-                  existingFile={
-                    documentDisplay?.file
-                      ? {
-                          url: documentDisplay.file.url || undefined,
-                          name:
-                            documentDisplay.file.originalName ??
-                            documentDisplay.file.fileName ??
-                            'Tài liệu',
-                          type: 'document',
-                          onView: () => setFilePdfUrl(documentDisplay?.file?.url || undefined),
-                        }
-                      : undefined
-                  }
-                  onPreview={url => setFilePdfUrl(url)}
-                />
-              )}
-            />
-          </Form.Item>
-        </div>
+        {/* ── Video picker (VIDEO kind) ── */}
+        {isVideo && (
+          <div className="col-span-full">
+            <Form.Item
+              label="Video"
+              validateStatus={errors.videoId ? 'error' : ''}
+              help={errors.videoId?.message}
+              required
+            >
+              <Controller
+                name="videoId"
+                control={control}
+                render={({ field }) => (
+                  <VideoSelect
+                    value={field.value}
+                    onChange={value => field.onChange(value ?? null)}
+                    onBlur={field.onBlur}
+                    selected={documentDisplay?.video}
+                  />
+                )}
+              />
+            </Form.Item>
+            <Typography.Text type="secondary">
+              Chọn từ kho video dùng chung. Người mua chỉ xem online, không tải về; video được gắn
+              watermark theo từng người mua.
+            </Typography.Text>
+          </div>
+        )}
 
-        {/* ── Preview PDF (after file) ── */}
-        <div className="col-span-full">
-          <Form.Item
-            label="Preview PDF"
-            validateStatus={errors.previewId ? 'error' : ''}
-            help={errors.previewId?.message}
-            required
-          >
-            <Controller
-              name="previewId"
-              control={control}
-              render={({ field }) => (
-                <UploadSingleDocument
-                  onSuccess={resource => field.onChange(resource.id)}
-                  onRemove={() => field.onChange(detailData?.preview?.id || null)}
-                  onRemoveExisting={() => field.onChange(null)}
-                  maxSizeMB={50}
-                  hideUploadOnFilled
-                  existingFile={
-                    documentDisplay?.preview
-                      ? {
-                          url: documentDisplay.preview.url || undefined,
-                          name:
-                            documentDisplay.preview.originalName ??
-                            documentDisplay.preview.fileName ??
-                            'Preview PDF',
-                          type: 'document',
-                          onView: () =>
-                            setPreviewPdfUrl(documentDisplay?.preview?.url || undefined),
-                        }
-                      : undefined
-                  }
-                  onPreview={url => setPreviewPdfUrl(url)}
-                />
-              )}
-            />
-          </Form.Item>
-        </div>
+        {/* ── File upload (PDF kind) ── */}
+        {!isVideo && (
+          <div className="col-span-full">
+            <Form.Item
+              label="Tệp tài liệu"
+              validateStatus={errors.fileResource ? 'error' : ''}
+              help={fileResourceErrorMessage}
+              required
+            >
+              <Controller
+                name="fileResource"
+                control={control}
+                render={({ field }) => (
+                  <UploadSingleDocument
+                    onSuccess={resource => field.onChange(resource)}
+                    onRemove={() => field.onChange(null)}
+                    onRemoveExisting={() => field.onChange(null)}
+                    hideUploadOnFilled
+                    maxSizeMB={100}
+                    existingFile={
+                      documentDisplay?.file
+                        ? {
+                            url: documentDisplay.file.url || undefined,
+                            name:
+                              documentDisplay.file.originalName ??
+                              documentDisplay.file.fileName ??
+                              'Tài liệu',
+                            type: 'document',
+                            onView: () => setFilePdfUrl(documentDisplay?.file?.url || undefined),
+                          }
+                        : undefined
+                    }
+                    onPreview={url => setFilePdfUrl(url)}
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        )}
+
+        {/* ── Preview PDF (PDF kind) ── */}
+        {!isVideo && (
+          <div className="col-span-full">
+            <Form.Item
+              label="Preview PDF"
+              validateStatus={errors.previewId ? 'error' : ''}
+              help={errors.previewId?.message}
+              required
+            >
+              <Controller
+                name="previewId"
+                control={control}
+                render={({ field }) => (
+                  <UploadSingleDocument
+                    onSuccess={resource => field.onChange(resource.id)}
+                    onRemove={() => field.onChange(detailData?.preview?.id || null)}
+                    onRemoveExisting={() => field.onChange(null)}
+                    maxSizeMB={50}
+                    hideUploadOnFilled
+                    existingFile={
+                      documentDisplay?.preview
+                        ? {
+                            url: documentDisplay.preview.url || undefined,
+                            name:
+                              documentDisplay.preview.originalName ??
+                              documentDisplay.preview.fileName ??
+                              'Preview PDF',
+                            type: 'document',
+                            onView: () =>
+                              setPreviewPdfUrl(documentDisplay?.preview?.url || undefined),
+                          }
+                        : undefined
+                    }
+                    onPreview={url => setPreviewPdfUrl(url)}
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        )}
       </div>
 
       <Space className="mt-4">
