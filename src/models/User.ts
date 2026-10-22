@@ -30,8 +30,21 @@ export interface User extends AbstractModel {
   facebookId: string | null
   isTwoFactorEnabled?: boolean
   verificationStatus?: UserVerificationStatus
+  headline?: string | null
+  bio?: string | null
   // Present on GET /auth/profile for admins only (module permissions).
   permissions?: string[]
+}
+
+export const USER_VERIFICATION_STATUS: Record<
+  UserVerificationStatus,
+  { label: string; color: string }
+> = {
+  [UserVerificationStatus.None]: { label: 'Chưa nộp', color: 'default' },
+  [UserVerificationStatus.Pending]: { label: 'Chờ duyệt', color: 'processing' },
+  [UserVerificationStatus.Verified]: { label: 'Đã xác minh', color: 'success' },
+  [UserVerificationStatus.Rejected]: { label: 'Từ chối', color: 'error' },
+  [UserVerificationStatus.Expired]: { label: 'Hết hạn', color: 'warning' },
 }
 
 export const USER_ROLE_LABEL: Record<UserRole, string> = {

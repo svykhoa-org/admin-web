@@ -4,8 +4,10 @@ import { useList, useRequest } from '@/hooks'
 import {
   USER_ROLE_COLOR,
   USER_ROLE_LABEL,
+  USER_VERIFICATION_STATUS,
   UserRole,
   UserStatus,
+  UserVerificationStatus,
   isStaffRole,
   type User,
 } from '@/models/User'
@@ -20,7 +22,20 @@ import {
   PlusOutlined,
   StopOutlined,
 } from '@ant-design/icons'
-import { App, Button, Card, Dropdown, Input, Space, Table, Tabs, Tag, Typography } from 'antd'
+import {
+  App,
+  Button,
+  Card,
+  Dropdown,
+  Input,
+  Select,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -33,6 +48,7 @@ interface ListParams {
   search?: string
   tab: AccountTab
   status?: UserStatus
+  verification?: UserVerificationStatus
 }
 
 const ACCOUNT_TABS: { key: AccountTab; label: string }[] = [
@@ -85,6 +101,15 @@ export const UserTable = () => {
               }
             : {}),
           ...TAB_ROLE_FILTER[currentParams.tab],
+          // Verification does not apply to staff, so the filter is ignored there.
+          ...(currentParams.verification && currentParams.tab !== 'admin'
+            ? {
+                verificationStatus: {
+                  operator: 'eq' as const,
+                  value: currentParams.verification,
+                },
+              }
+            : {}),
           ...(currentParams.status
             ? {
                 status: { operator: 'eq' as const, value: currentParams.status },
@@ -104,6 +129,7 @@ export const UserTable = () => {
         search: '',
         tab: parseTab(searchParams.get('tab')),
         status: undefined,
+        verification: undefined,
       },
     },
   )
@@ -177,6 +203,23 @@ export const UserTable = () => {
       render: (value: UserRole) => (
         <Tag color={USER_ROLE_COLOR[value]}>{USER_ROLE_LABEL[value]}</Tag>
       ),
+    },
+    {
+      title: 'Xác minh',
+      dataIndex: 'verificationStatus',
+      key: 'verificationStatus',
+      width: 130,
+      render: (value: UserVerificationStatus | undefined, record) => {
+        if (isStaffRole(record.role)) {
+          return (
+            <Tooltip title="Không áp dụng cho tài khoản quản trị">
+              <Typography.Text type="secondary">—</Typography.Text>
+            </Tooltip>
+          )
+        }
+        const status = USER_VERIFICATION_STATUS[value ?? UserVerificationStatus.None]
+        return <Tag color={status.color}>{status.label}</Tag>
+      },
     },
     {
       title: 'Trạng thái',
@@ -289,6 +332,21 @@ export const UserTable = () => {
                 onSearch={handleSearch}
                 style={{ maxWidth: 420 }}
               />
+              {params.tab !== 'admin' && (
+                <Select
+                  allowClear
+                  placeholder="Lọc theo xác minh"
+                  value={params.verification}
+                  options={Object.values(UserVerificationStatus).map(value => ({
+                    value,
+                    label: USER_VERIFICATION_STATUS[value].label,
+                  }))}
+                  onChange={(value?: UserVerificationStatus) =>
+                    setParams(current => ({ ...current, verification: value, page: 1 }))
+                  }
+                  style={{ minWidth: 170 }}
+                />
+              )}
               <UserStatusSelect
                 value={params.status}
                 onChange={value =>

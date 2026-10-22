@@ -11,3 +11,13 @@ export async function getVerificationDetail(input: {
   )
   return unwrapDetail(response.data)
 }
+
+// Same payload keyed by user; `null` when the user never submitted.
+export async function getVerificationByUser(input: {
+  userId: string
+}): Promise<DoctorVerificationDetail | null> {
+  const response = await axiosInstance.get<ApiDetailResponse<DoctorVerificationDetail | null>>(
+    `/verification/admin/by-user/${input.userId}`,
+  )
+  return unwrapDetail(response.data)
+}

@@ -6,7 +6,13 @@ import { buildQuery, type QueryInput } from '@/utils/buildQuery'
 
 const USER_ENDPOINT = '/users'
 
-type UserSearchFields = 'email' | 'fullName' | 'role' | 'status' | 'createdAt'
+type UserSearchFields =
+  | 'email'
+  | 'fullName'
+  | 'role'
+  | 'status'
+  | 'verificationStatus'
+  | 'createdAt'
 type UserSortFields = 'fullName' | 'email' | 'createdAt' | 'updatedAt'
 
 export type ListUserInput = QueryInput<UserSearchFields, UserSortFields>

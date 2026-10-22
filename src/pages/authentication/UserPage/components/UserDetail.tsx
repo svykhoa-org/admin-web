@@ -1,11 +1,12 @@
 import { UserAvatar } from '@/components/UserAvatar'
-import { useDetail, useRequest } from '@/hooks'
+import { useCan, useDetail, useRequest } from '@/hooks'
+import { Permission } from '@/models/Permission'
 import {
   USER_ROLE_COLOR,
   USER_ROLE_LABEL,
   UserRole,
   UserStatus,
-  UserVerificationStatus,
+  USER_VERIFICATION_STATUS,
   isStaffRole,
 } from '@/models/User'
 import { activeUser, blockUser, getUserDetail } from '@/services/User'
@@ -18,6 +19,7 @@ import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserPermissionCard } from './UserPermissionCard'
 import { UserRoleCard } from './UserRoleCard'
+import { UserVerificationCard } from './UserVerificationCard'
 
 interface Props {
   id?: string
@@ -31,14 +33,6 @@ const statusLabelMap: Record<UserStatus, string> = {
 const statusColorMap: Record<UserStatus, string> = {
   [UserStatus.Active]: 'success',
   [UserStatus.Blocked]: 'error',
-}
-
-const verificationLabelMap: Record<UserVerificationStatus, { label: string; color: string }> = {
-  [UserVerificationStatus.None]: { label: 'Chưa nộp hồ sơ', color: 'default' },
-  [UserVerificationStatus.Pending]: { label: 'Chờ duyệt', color: 'processing' },
-  [UserVerificationStatus.Verified]: { label: 'Đã xác minh', color: 'success' },
-  [UserVerificationStatus.Rejected]: { label: 'Bị từ chối', color: 'error' },
-  [UserVerificationStatus.Expired]: { label: 'Hết hạn', color: 'warning' },
 }
 
 const resolvePlatform = (googleId: string | null, facebookId: string | null) => {
@@ -71,6 +65,7 @@ export const UserDetail = ({ id }: Props) => {
   }, [detailRequest.error, message])
 
   const isViewerSuperAdmin = viewer?.role === UserRole.SuperAdmin
+  const canReviewVerification = useCan(Permission.Verification)
   const isSelf = !!detailData && detailData.id === viewer?.id
   // Mirrors the server rules: nobody changes themselves; staff accounts are
   // managed by super admins only.
@@ -118,7 +113,7 @@ export const UserDetail = ({ id }: Props) => {
   }
 
   const verification = detailData?.verificationStatus
-    ? verificationLabelMap[detailData.verificationStatus]
+    ? USER_VERIFICATION_STATUS[detailData.verificationStatus]
     : undefined
 
   return (
@@ -182,7 +177,13 @@ export const UserDetail = ({ id }: Props) => {
                   {resolvePlatform(detailData.googleId, detailData.facebookId)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Xác minh bác sĩ">
-                  {verification ? <Tag color={verification.color}>{verification.label}</Tag> : '—'}
+                  {isStaffRole(detailData.role) ? (
+                    <Typography.Text type="secondary">Không áp dụng</Typography.Text>
+                  ) : verification ? (
+                    <Tag color={verification.color}>{verification.label}</Tag>
+                  ) : (
+                    '—'
+                  )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Xác thực 2 lớp">
                   {detailData.isTwoFactorEnabled ? 'Đã bật' : 'Chưa bật'}
@@ -195,6 +196,32 @@ export const UserDetail = ({ id }: Props) => {
                 </Descriptions.Item>
               </Descriptions>
             </Card>
+
+            <Card title="Giới thiệu">
+              <Descriptions column={1} size="middle">
+                <Descriptions.Item label="Chức danh">
+                  {detailData.headline || (
+                    <Typography.Text type="secondary">Chưa cập nhật</Typography.Text>
+                  )}
+                </Descriptions.Item>
+                <Descriptions.Item label="Giới thiệu">
+                  {detailData.bio ? (
+                    <Typography.Paragraph style={{ whiteSpace: 'pre-line', marginBottom: 0 }}>
+                      {detailData.bio}
+                    </Typography.Paragraph>
+                  ) : (
+                    <Typography.Text type="secondary">Chưa cập nhật</Typography.Text>
+                  )}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+
+            {canReviewVerification && !isStaffRole(detailData.role) && (
+              <UserVerificationCard
+                userId={detailData.id}
+                onChanged={() => id && void executeDetail(id)}
+              />
+            )}
 
             {isViewerSuperAdmin && detailData.role === UserRole.Admin && (
               <UserPermissionCard user={detailData} />
