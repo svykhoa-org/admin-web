@@ -31,7 +31,7 @@ up in the `production/` runner and is loaded from its `CLAUDE.md`. Dev server ru
 
 - **Axios directly, NO TanStack Query.** Unlike `svykhoa-client`, admin does not use a query cache — services in `src/services/<Domain>/` are called directly; manage loading/error yourself and keep state in `src/store/` (zustand). Don't introduce TanStack Query to match client.
 - **antd v6** (client is on v5). Component APIs can differ between the two majors — verify against v6 when you copy a pattern from client.
-- **`ProtectedRoute` only checks logged-in, NOT role.** It is not a security boundary — real authorization is enforced server-side. Never rely on FE route guards for access control.
+- **FE role/permission checks are UI only.** `ProtectedRoute` admits staff (super_admin/admin) and the layout hides menus and shows a 403 page per module permission (`src/router/routePermissions.ts`), but real authorization is enforced server-side — never rely on FE guards for access control. A new admin route must be added to `routePermissions.ts`.
 - **Cross-project awareness.** When the API contract changes on `svykhoa-server`, update the matching service + model/type here to stay in sync (workspace runner's doctrine §0.9).
 - **Verify** by exercising the path in the running app (`:5174`), not just typecheck.
 
