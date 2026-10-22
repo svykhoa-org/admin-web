@@ -2,8 +2,9 @@ import { useCreate } from '@/hooks'
 import { createAdmin, type CreateAdminInput } from '@/services/User'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { App, Button, Card, Form, Input, Space, Typography } from 'antd'
-import { Controller, useForm } from 'react-hook-form'
+import { MODULE_PERMISSIONS } from '@/models/Permission'
+import { App, Button, Card, Checkbox, Form, Input, Space, Switch, Typography } from 'antd'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import {
   USER_FORM_DEFAULT_VALUES,
@@ -24,6 +25,7 @@ export const UserForm = () => {
     resolver: zodResolver(userFormSchema),
     defaultValues: USER_FORM_DEFAULT_VALUES,
   })
+  const fullAccess = useWatch({ control, name: 'fullAccess' })
 
   const createRequest = useCreate(createAdmin)
 
@@ -32,6 +34,7 @@ export const UserForm = () => {
       fullName: values.fullName,
       email: values.email,
       password: values.password,
+      ...(values.fullAccess ? {} : { permissions: values.permissions }),
     }
 
     try {
@@ -102,6 +105,35 @@ export const UserForm = () => {
                 />
               )}
             />
+          </Form.Item>
+
+          <Form.Item label="Quyền quản trị">
+            <Space orientation="vertical" size={12} className="w-full">
+              <Controller
+                name="fullAccess"
+                control={control}
+                render={({ field }) => (
+                  <Space>
+                    <Switch checked={field.value} onChange={field.onChange} />
+                    <Typography.Text>Toàn quyền</Typography.Text>
+                  </Space>
+                )}
+              />
+              {!fullAccess && (
+                <Controller
+                  name="permissions"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox.Group
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"
+                      options={MODULE_PERMISSIONS}
+                    />
+                  )}
+                />
+              )}
+            </Space>
           </Form.Item>
 
           <Space>

@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, Button, Typography, theme, type MenuProps } from 'antd'
+import { Layout, Menu, Dropdown, Button, Result, Typography, theme, type MenuProps } from 'antd'
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  UserOutlined,
   SettingOutlined,
 } from '@ant-design/icons'
 import { UploadTray } from '@/components/UploadTray'
 import { useAuthStore } from '@/store/authStore'
+import { UserAvatar } from '@/components/UserAvatar'
+import { hasPermission } from '@/models/Permission'
+import { UserRole } from '@/models/User'
+import { getRoutePermission } from '@/router/routePermissions'
 import fallbackLogo from '@/assets/logo.png'
 import { ItemType, sideMenuConfig, type SideMenuEntry } from './sideMenuConfig'
 import classNames from 'classnames'
@@ -27,12 +30,22 @@ export default function AppLayout() {
   const location = useLocation()
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
+  const refreshProfile = useAuthStore(s => s.refreshProfile)
   const { token } = theme.useToken()
   const { settings, fetchSettings } = useSiteSettingsStore()
 
   useEffect(() => {
     void fetchSettings()
+    void refreshProfile().catch(() => undefined)
   }, [])
+
+  // Menu and pages follow the admin's module permissions (UI only — the server
+  // enforces them). Creating staff accounts is super-admin only.
+  const canAccessPath = (path: string) => {
+    if (path === RoutePath.UserCreatePage.path) return user?.role === UserRole.SuperAdmin
+    const permission = getRoutePermission(path)
+    return !permission || hasPermission(user, permission)
+  }
 
   useEffect(() => {
     const name = settings?.siteName ?? 'Admin'
@@ -68,9 +81,19 @@ export default function AppLayout() {
       return { key: entry.key, icon: entry.icon, label: entry.label }
     })
 
-  const sideMenuItems = buildMenuItems(sideMenuConfig)
+  const visibleMenuConfig = sideMenuConfig
+    .map(entry =>
+      entry.type === ItemType.GROUP
+        ? { ...entry, children: entry.children.filter(child => canAccessPath(child.key)) }
+        : entry,
+    )
+    .filter(entry =>
+      entry.type === ItemType.GROUP ? entry.children.length > 0 : canAccessPath(entry.key),
+    )
 
-  const menuRouteKeys = sideMenuConfig.flatMap(entry =>
+  const sideMenuItems = buildMenuItems(visibleMenuConfig)
+
+  const menuRouteKeys = visibleMenuConfig.flatMap(entry =>
     entry.type === ItemType.GROUP ? entry.children.map(c => c.key) : [entry.key],
   )
 
@@ -134,24 +157,26 @@ export default function AppLayout() {
         </div>
 
         <div style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}>
-          <Menu
-            theme="light"
-            mode="inline"
-            selectedKeys={
-              location.pathname.startsWith(RoutePath.SettingsPage.path)
-                ? [RoutePath.SettingsPage.path]
-                : []
-            }
-            items={[
-              {
-                key: RoutePath.SettingsPage.path,
-                icon: <SettingOutlined />,
-                label: 'Cài đặt',
-              },
-            ]}
-            onClick={() => navigate(RoutePath.SettingsPage.path)}
-            style={{ border: 'none' }}
-          />
+          {canAccessPath(RoutePath.SettingsPage.path) && (
+            <Menu
+              theme="light"
+              mode="inline"
+              selectedKeys={
+                location.pathname.startsWith(RoutePath.SettingsPage.path)
+                  ? [RoutePath.SettingsPage.path]
+                  : []
+              }
+              items={[
+                {
+                  key: RoutePath.SettingsPage.path,
+                  icon: <SettingOutlined />,
+                  label: 'Cài đặt',
+                },
+              ]}
+              onClick={() => navigate(RoutePath.SettingsPage.path)}
+              style={{ border: 'none' }}
+            />
+          )}
           <div
             className="flex items-center justify-center py-2"
             style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
@@ -180,11 +205,7 @@ export default function AppLayout() {
             placement="bottomRight"
           >
             <div className="flex cursor-pointer items-center gap-2">
-              {user?.avatar ? (
-                <Avatar src={user.avatar} />
-              ) : (
-                <Avatar icon={<UserOutlined />} style={{ backgroundColor: token.colorPrimary }} />
-              )}
+              <UserAvatar fullName={user?.fullName} avatar={user?.avatar} />
               <Text>{user?.fullName}</Text>
             </div>
           </Dropdown>
@@ -196,7 +217,15 @@ export default function AppLayout() {
             scrollbarWidth: 'none',
           }}
         >
-          <Outlet />
+          {canAccessPath(location.pathname) ? (
+            <Outlet />
+          ) : (
+            <Result
+              status="403"
+              title="Không có quyền truy cập"
+              subTitle="Tài khoản của bạn chưa được cấp quyền cho chức năng này."
+            />
+          )}
         </Content>
         <UploadTray />
       </Layout>

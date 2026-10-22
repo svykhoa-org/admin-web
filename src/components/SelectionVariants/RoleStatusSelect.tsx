@@ -1,4 +1,4 @@
-import { UserRole } from '@/models/User'
+import { USER_ROLE_LABEL, UserRole } from '@/models/User'
 import type { FocusEventHandler } from 'react'
 import { SearchableSelection } from './SearchableSelection'
 
@@ -10,10 +10,10 @@ interface RoleStatusSelectProps {
   disabled?: boolean
 }
 
-const roleOptions = [
-  { label: 'Admin', value: UserRole.Admin },
-  { label: 'User', value: UserRole.User },
-]
+const roleOptions = Object.values(UserRole).map(value => ({
+  label: USER_ROLE_LABEL[value],
+  value,
+}))
 
 export const RoleStatusSelect = ({
   value,

@@ -21,7 +21,7 @@ import {
 import { listCourseCategory } from '@/services/CourseCategory'
 import { listCourseTag } from '@/services/CourseTag'
 import { listUser } from '@/services/User'
-import type { User } from '@/models/User'
+import { UserRole, type User } from '@/models/User'
 import { UploadSingleImage } from '@/components/Upload'
 import { arrayToTextarea, parseTextareaToArray } from '../schemas/courseFormSchema'
 import { isApiResponseError } from '@/utils/apiResponse'
@@ -76,7 +76,7 @@ export const CourseForm = ({ id }: Props) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null | undefined>(null)
   const [selectedTagIds, setSelectedTagIds] = useState<string[] | null>(null)
 
-  // TODO: filter by instructor role when UserRole.Instructor is added to backend
+  // Instructor picker: users with the instructor role only.
   const [users, setUsers] = useState<User[]>([])
   const [selectedInstructorIds, setSelectedInstructorIds] = useState<string[] | null>(null)
 
@@ -84,13 +84,23 @@ export const CourseForm = ({ id }: Props) => {
   const [newThumbnailUrl, setNewThumbnailUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([listCourseCategory(), listCourseTag(), listUser()])
-      .then(([cats, tags, usersData]) => {
+    Promise.all([listCourseCategory(), listCourseTag()])
+      .then(([cats, tags]) => {
         setCategories(cats)
         setCourseTags(tags)
-        setUsers(usersData.items)
       })
       .catch(() => void message.error('Không thể tải danh mục/tag'))
+
+    // Separate call: GET /users needs the `users` permission, which an admin
+    // scoped to courses may lack — that must not break categories/tags.
+    listUser({
+      page: 1,
+      pageSize: 50,
+      searcher: { role: { operator: 'eq', value: UserRole.Instructor } },
+      sorter: { field: 'fullName', direction: 'asc' },
+    })
+      .then(usersData => setUsers(usersData.items))
+      .catch(() => void message.warning('Không tải được danh sách giảng viên'))
   }, [message])
 
   const fetchDetail = useCallback((detailId: string) => getCourseDetail({ id: detailId }), [])

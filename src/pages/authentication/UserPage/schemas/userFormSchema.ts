@@ -1,3 +1,4 @@
+import { Permission } from '@/models/Permission'
 import { z } from 'zod'
 
 const USER_FULL_NAME_MIN_LENGTH = 2
@@ -17,6 +18,9 @@ export const userFormSchema = z.object({
     .trim()
     .min(USER_PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${USER_PASSWORD_MIN_LENGTH} ký tự`)
     .max(USER_PASSWORD_MAX_LENGTH, `Mật khẩu tối đa ${USER_PASSWORD_MAX_LENGTH} ký tự`),
+  // Full access sends no list (server defaults to `*`); otherwise the chosen modules.
+  fullAccess: z.boolean(),
+  permissions: z.array(z.enum(Permission)),
 })
 
 export type UserFormValues = z.input<typeof userFormSchema>
@@ -26,4 +30,6 @@ export const USER_FORM_DEFAULT_VALUES: UserFormValues = {
   fullName: '',
   email: '',
   password: '',
+  fullAccess: true,
+  permissions: [],
 }

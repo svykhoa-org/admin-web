@@ -1,11 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User } from '@/models/User'
+import { isStaffRole, type User } from '@/models/User'
 import axiosInstance, { setTokens, clearTokens, getAccessToken, getRefreshToken } from '@/lib/axios'
 import { logout as apiLogout } from '@/services/Auth/logout'
 import { refresh as apiRefresh } from '@/services/Auth/refresh'
+import { getProfile } from '@/services/Auth/profile'
 import type { ApiDetailResponse } from '@/types/api'
-import { unwrapDetail } from '@/utils/apiResponse'
+import { ApiResponseError, unwrapDetail } from '@/utils/apiResponse'
 
 interface AuthState {
   user: User | null
@@ -19,6 +20,7 @@ interface AuthActions {
   login: (payload: { email: string; password: string }) => Promise<void>
   logout: () => Promise<void>
   refresh: () => Promise<void>
+  refreshProfile: () => Promise<void>
   clearAuth: () => void
 }
 
@@ -37,8 +39,16 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           const res = await axiosInstance.post<
             ApiDetailResponse<{ user: User; accessToken: string; refreshToken: string }>
           >('/auth/login', payload)
-          const { user, accessToken, refreshToken } = unwrapDetail(res.data)
+          const { user: loginUser, accessToken, refreshToken } = unwrapDetail(res.data)
           setTokens(accessToken, refreshToken)
+          // Only staff may use the admin panel. UI gate only — the server
+          // rejects every admin endpoint for other roles anyway.
+          if (!isStaffRole(loginUser.role)) {
+            await apiLogout().catch(() => undefined)
+            clearTokens()
+            throw new ApiResponseError(403, 'Tài khoản không có quyền truy cập trang quản trị')
+          }
+          const user = await getProfile()
           set({
             user,
             accessToken,
@@ -75,6 +85,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         })
         setTokens(accessToken, refreshToken)
         set({ accessToken, refreshToken })
+      },
+
+      // Re-read role/permissions so changes by a super admin show up on reload.
+      refreshProfile: async () => {
+        if (!get().isAuthenticated) return
+        const user = await getProfile()
+        set({ user })
       },
 
       clearAuth: () => {

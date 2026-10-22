@@ -1,6 +1,15 @@
-import { RoleStatusSelect, UserStatusSelect } from '@/components/SelectionVariants'
+import { UserStatusSelect } from '@/components/SelectionVariants'
+import { UserAvatar } from '@/components/UserAvatar'
 import { useList, useRequest } from '@/hooks'
-import { UserRole, UserStatus, type User } from '@/models/User'
+import {
+  USER_ROLE_COLOR,
+  USER_ROLE_LABEL,
+  UserRole,
+  UserStatus,
+  isStaffRole,
+  type User,
+} from '@/models/User'
+import { useAuthStore } from '@/store/authStore'
 import { activeUser, blockUser, listUser } from '@/services/User'
 import { isApiResponseError } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
@@ -11,23 +20,38 @@ import {
   PlusOutlined,
   StopOutlined,
 } from '@ant-design/icons'
-import { App, Button, Card, Dropdown, Input, Space, Table, Tag, Typography } from 'antd'
+import { App, Button, Card, Dropdown, Input, Space, Table, Tabs, Tag, Typography } from 'antd'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+
+type AccountTab = 'all' | 'admin' | 'instructor' | 'user'
 
 interface ListParams {
   page: number
   pageSize: number
   search?: string
-  role?: UserRole
+  tab: AccountTab
   status?: UserStatus
 }
 
-const roleLabelMap: Record<UserRole, string> = {
-  [UserRole.Admin]: 'Admin',
-  [UserRole.User]: 'User',
+const ACCOUNT_TABS: { key: AccountTab; label: string }[] = [
+  { key: 'all', label: 'Tất cả' },
+  { key: 'admin', label: 'Quản trị' },
+  { key: 'instructor', label: 'Giảng viên' },
+  { key: 'user', label: 'Người dùng' },
+]
+
+// "Quản trị" covers both staff roles.
+const TAB_ROLE_FILTER: Record<AccountTab, object> = {
+  all: {},
+  admin: { role: { operator: 'in' as const, value: [UserRole.SuperAdmin, UserRole.Admin] } },
+  instructor: { role: { operator: 'eq' as const, value: UserRole.Instructor } },
+  user: { role: { operator: 'eq' as const, value: UserRole.User } },
 }
+
+const parseTab = (value: string | null): AccountTab =>
+  ACCOUNT_TABS.some(tab => tab.key === value) ? (value as AccountTab) : 'all'
 
 const resolvePlatform = (user: User) => {
   if (user.googleId) return 'GG'
@@ -40,6 +64,8 @@ export const UserTable = () => {
   const { message, modal } = App.useApp()
 
   const [searchValue, setSearchValue] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isSuperAdmin = useAuthStore(s => s.user?.role === UserRole.SuperAdmin)
 
   const {
     items,
@@ -58,11 +84,7 @@ export const UserTable = () => {
                 fullName: { operator: 'ilike' as const, value: currentParams.search },
               }
             : {}),
-          ...(currentParams.role
-            ? {
-                role: { operator: 'eq' as const, value: currentParams.role },
-              }
-            : {}),
+          ...TAB_ROLE_FILTER[currentParams.tab],
           ...(currentParams.status
             ? {
                 status: { operator: 'eq' as const, value: currentParams.status },
@@ -76,7 +98,13 @@ export const UserTable = () => {
       })
     },
     {
-      initialParams: { page: 1, pageSize: 10, search: '', role: undefined, status: undefined },
+      initialParams: {
+        page: 1,
+        pageSize: 10,
+        search: '',
+        tab: parseTab(searchParams.get('tab')),
+        status: undefined,
+      },
     },
   )
 
@@ -128,9 +156,12 @@ export const UserTable = () => {
       key: 'fullName',
       fixed: 'left',
       render: (value: string, record) => (
-        <Typography.Link strong onClick={() => navigate(`/users/${record.id}`)}>
-          {value}
-        </Typography.Link>
+        <Space size={8}>
+          <UserAvatar fullName={value || record.email} avatar={record.avatar} size={24} />
+          <Typography.Link strong onClick={() => navigate(`/users/${record.id}`)}>
+            {value}
+          </Typography.Link>
+        </Space>
       ),
     },
     {
@@ -142,8 +173,10 @@ export const UserTable = () => {
       title: 'Vai trò',
       dataIndex: 'role',
       key: 'role',
-      width: 120,
-      render: (value: UserRole) => <Tag>{roleLabelMap[value]}</Tag>,
+      width: 130,
+      render: (value: UserRole) => (
+        <Tag color={USER_ROLE_COLOR[value]}>{USER_ROLE_LABEL[value]}</Tag>
+      ),
     },
     {
       title: 'Trạng thái',
@@ -184,18 +217,21 @@ export const UserTable = () => {
                 label: 'Xem chi tiết',
                 icon: <EyeOutlined />,
               },
-              record.status === UserStatus.Active
-                ? {
-                    key: 'block',
-                    label: 'Khóa',
-                    icon: <StopOutlined />,
-                    danger: true,
-                  }
-                : {
-                    key: 'unblock',
-                    label: 'Mở khóa',
-                    icon: <CheckCircleOutlined />,
-                  },
+              // Only a super admin may block/unblock staff accounts (server-enforced).
+              isStaffRole(record.role) && !isSuperAdmin
+                ? null
+                : record.status === UserStatus.Active
+                  ? {
+                      key: 'block',
+                      label: 'Khóa',
+                      icon: <StopOutlined />,
+                      danger: true,
+                    }
+                  : {
+                      key: 'unblock',
+                      label: 'Mở khóa',
+                      icon: <CheckCircleOutlined />,
+                    },
             ],
             onClick: ({ key }) => {
               if (key === 'detail') navigate(`/users/${record.id}`)
@@ -217,6 +253,12 @@ export const UserTable = () => {
       search: normalized || undefined,
       page: 1,
     }))
+  }
+
+  const handleTabChange = (key: string) => {
+    const tab = parseTab(key)
+    setSearchParams(tab === 'all' ? {} : { tab }, { replace: true })
+    setParams(current => ({ ...current, tab, page: 1 }))
   }
 
   const handlePaginationChange = (pagination: TablePaginationConfig) => {
@@ -247,16 +289,6 @@ export const UserTable = () => {
                 onSearch={handleSearch}
                 style={{ maxWidth: 420 }}
               />
-              <RoleStatusSelect
-                value={params.role}
-                onChange={value =>
-                  setParams(current => ({
-                    ...current,
-                    role: value,
-                    page: 1,
-                  }))
-                }
-              />
               <UserStatusSelect
                 value={params.status}
                 onChange={value =>
@@ -267,13 +299,17 @@ export const UserTable = () => {
                   }))
                 }
               />
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate('/users/create')}
-              />
+              {isSuperAdmin && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate('/users/create')}
+                />
+              )}
             </Space>
           </Space>
+
+          <Tabs activeKey={params.tab} items={ACCOUNT_TABS} onChange={handleTabChange} />
 
           <Table<User>
             rowKey="id"
