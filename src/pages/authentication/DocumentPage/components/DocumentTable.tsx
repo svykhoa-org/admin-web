@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios'
 import { DataTable } from '@/components/DataTable/DataTable'
 import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModal'
 import { DocumentClassifySelect } from '@/components/SelectionVariants'
@@ -98,10 +99,19 @@ export const DocumentTable = () => {
       )
       refresh()
     } catch (error) {
+      // Non-2xx responses reach here as AxiosError (not ApiResponseError), so read the
+      // server's reason (e.g. 409 "đang dùng trong bài học" / "đã có người mua") from
+      // the body — same approach as DocumentForm.
+      const axiosError = error as AxiosError<{ message?: string | string[] }>
+      const backendMessage = Array.isArray(axiosError.response?.data?.message)
+        ? axiosError.response?.data?.message.join(', ')
+        : axiosError.response?.data?.message
       const errorMessage = isApiResponseError(error)
         ? error.message
-        : 'Không thể xóa. Vui lòng thử lại.'
+        : backendMessage || 'Không thể xóa. Vui lòng thử lại.'
       void message.error(errorMessage)
+      // Bulk delete runs requests in parallel; others may have succeeded before one failed.
+      refresh()
     }
   }
 

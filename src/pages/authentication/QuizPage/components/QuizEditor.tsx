@@ -293,17 +293,19 @@ export const QuizEditor = ({ quizId }: Props) => {
       questions: (quiz.questions ?? []).map(q => {
         const isSingle = q.type === 'single_choice' || q.type === 'true_false'
         return {
+          id: q.id,
           content: q.content,
           type: q.type,
           order: q.order,
           points: q.points,
           correctOptionIndex: isSingle ? (q.options?.findIndex(o => o.isCorrect) ?? 0) : undefined,
           options: q.options?.map(o => ({
+            id: o.id,
             content: o.content,
             isCorrect: o.isCorrect,
             order: o.order,
           })),
-          acceptedAnswers: q.acceptedAnswers?.map(a => ({ value: a.value })),
+          acceptedAnswers: q.acceptedAnswers?.map(a => ({ id: a.id, value: a.value })),
         }
       }),
     })
@@ -328,7 +330,10 @@ export const QuizEditor = ({ quizId }: Props) => {
 
   const handleSaveQuestions = async () => {
     try {
-      const values = await questionsForm.validateFields()
+      await questionsForm.validateFields()
+      // getFieldsValue(true) also returns the unrendered `id`s, which tell the
+      // server which questions/options to keep rather than replace.
+      const values = questionsForm.getFieldsValue(true) as { questions?: unknown[] }
       const rawQuestions = (values.questions ?? []) as (QuestionInput & {
         correctOptionIndex?: number
       })[]
@@ -340,6 +345,7 @@ export const QuizEditor = ({ quizId }: Props) => {
           ...rest,
           order: q.order ?? qIdx + 1,
           options: q.options?.map((opt, oIdx) => ({
+            id: opt.id,
             content: opt.content,
             order: oIdx + 1,
             isCorrect: isSingle ? oIdx === correctOptionIndex : opt.isCorrect,
