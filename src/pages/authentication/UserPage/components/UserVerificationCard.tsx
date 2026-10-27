@@ -1,6 +1,6 @@
 import type { DoctorVerificationDetail } from '@/models/DoctorVerification'
 import { getVerificationByUser } from '@/services/Verification'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Button, Card, Empty, Spin } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -24,7 +24,7 @@ export const UserVerificationCard = ({ userId, onChanged }: Props) => {
     try {
       setData(await getVerificationByUser({ userId }))
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể tải hồ sơ xác minh')
+      void message.error(getApiErrorMessage(error, 'Không thể tải hồ sơ xác minh'))
     } finally {
       setLoading(false)
     }

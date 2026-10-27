@@ -9,7 +9,7 @@ import {
 } from '@/services/Asset'
 import type { InitMultipartUploadOutput, MultipartPartInfo } from '@/services/Asset'
 import { resolveUploadUrl } from '@/components/Upload/assetResource'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import axios from 'axios'
 import { create } from 'zustand'
 
@@ -401,7 +401,7 @@ export const useUploadStore = create<UploadStoreState & UploadStoreActions>((set
     } catch (err) {
       if (rt.isCancelled || axios.isCancel(err)) return
 
-      const msg = isApiResponseError(err) ? err.message : 'Upload thất bại. Vui lòng thử lại.'
+      const msg = getApiErrorMessage(err, 'Upload thất bại. Vui lòng thử lại.')
       patch(taskId, { status: 'error', errorMsg: msg })
 
       // Abort session if nothing was uploaded yet
@@ -524,7 +524,7 @@ export const useUploadStore = create<UploadStoreState & UploadStoreActions>((set
         if (rt.isCancelled) return
         patch(taskId, {
           status: 'error',
-          errorMsg: isApiResponseError(err) ? err.message : 'Retry thất bại.',
+          errorMsg: getApiErrorMessage(err, 'Retry thất bại.'),
         })
       }
     },

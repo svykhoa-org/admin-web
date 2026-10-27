@@ -12,9 +12,8 @@ import {
   updateDocument,
   type CreateDocumentInput,
 } from '@/services/Document'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { AxiosError } from 'axios'
 import { ArrowLeftOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons'
 import {
   App,
@@ -141,7 +140,7 @@ export const DocumentForm = ({ id }: Props) => {
       setLocalDocument(updated)
       void message.success('Xuất bản tài liệu thành công')
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setIsStatusLoading(false)
     }
@@ -155,7 +154,7 @@ export const DocumentForm = ({ id }: Props) => {
       setLocalDocument(updated)
       void message.success('Thu hồi xuất bản thành công')
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setIsStatusLoading(false)
     }
@@ -186,13 +185,10 @@ export const DocumentForm = ({ id }: Props) => {
       }
       navigate('/documents', { replace: true })
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string | string[] }>
-      const backendMessage = Array.isArray(axiosError.response?.data?.message)
-        ? axiosError.response?.data?.message.join(', ')
-        : axiosError.response?.data?.message
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : backendMessage || 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(
+        error,
+        'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.',
+      )
       void message.error(errorMessage)
     }
   }

@@ -2,7 +2,7 @@ import { useDetail, useUpdate } from '@/hooks'
 import { QuestionType } from '@/models/Quiz'
 import { getQuizDetail, updateQuiz, type UpdateQuizInput } from '@/services/Quiz'
 import type { QuestionInput } from '@/services/Quiz/create'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { ArrowLeftOutlined, CheckOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   App,
@@ -324,7 +324,7 @@ export const QuizEditor = ({ quizId }: Props) => {
       void executeDetail(quizId)
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      void message.error(isApiResponseError(err) ? err.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(err, 'Có lỗi xảy ra'))
     }
   }
 
@@ -357,7 +357,7 @@ export const QuizEditor = ({ quizId }: Props) => {
       void executeDetail(quizId)
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      void message.error(isApiResponseError(err) ? err.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(err, 'Có lỗi xảy ra'))
     }
   }
 

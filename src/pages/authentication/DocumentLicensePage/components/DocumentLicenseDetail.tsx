@@ -5,7 +5,7 @@ import {
   revokeDocumentLicense,
   unrevokeDocumentLicense,
 } from '@/services/DocumentLicense'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { App, Button, Card, Descriptions, Input, Space, Spin, Tag, Typography } from 'antd'
 import { useCallback, useEffect } from 'react'
@@ -61,9 +61,7 @@ export const DocumentLicenseDetail = ({ id }: Props) => {
       void message.success('Thu hồi license thành công')
       await executeDetail(id)
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể thu hồi license. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(error, 'Không thể thu hồi license. Vui lòng thử lại.')
       void message.error(errorMessage)
     }
   }
@@ -110,9 +108,10 @@ export const DocumentLicenseDetail = ({ id }: Props) => {
       void message.success('Hủy thu hồi license thành công')
       await executeDetail(id)
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể hủy thu hồi license. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(
+        error,
+        'Không thể hủy thu hồi license. Vui lòng thử lại.',
+      )
       void message.error(errorMessage)
     }
   }

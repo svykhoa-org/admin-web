@@ -1,6 +1,6 @@
 import type { ForumPrefixTag, ForumSubCategory } from '@/models/Forum'
 import { createAdminThread, listPrefixTags } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Checkbox, Form, Input, Modal, Select } from 'antd'
 import { useEffect, useState } from 'react'
 import ReactQuill from 'react-quill-new'
@@ -68,7 +68,7 @@ export const CreateThreadModal = ({
       form.resetFields()
       onCreated()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể đăng bài viết')
+      void message.error(getApiErrorMessage(error, 'Không thể đăng bài viết'))
     } finally {
       setSubmitting(false)
     }

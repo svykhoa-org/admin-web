@@ -5,7 +5,7 @@ import {
   removeBulletinCategory,
   updateBulletinCategory,
 } from '@/services/Bulletin'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   App,
@@ -76,7 +76,7 @@ export const BulletinCategoryPage = () => {
       setModalOpen(false)
       load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setSaving(false)
     }
@@ -88,7 +88,7 @@ export const BulletinCategoryPage = () => {
       void message.success('Xóa chuyên mục thành công')
       load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa chuyên mục')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa chuyên mục'))
     }
   }
 

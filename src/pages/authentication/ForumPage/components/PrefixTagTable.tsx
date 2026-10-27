@@ -3,7 +3,7 @@ import { DataTable } from '@/components/DataTable/DataTable'
 import { useDelete } from '@/hooks'
 import type { ForumPrefixTag } from '@/models/Forum'
 import { createPrefixTag, deletePrefixTag, listPrefixTags, updatePrefixTag } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { App, Button, Card, ColorPicker, Dropdown, Form, Input, Modal, Tag, theme } from 'antd'
 import type { Color } from 'antd/es/color-picker'
@@ -71,7 +71,7 @@ export const PrefixTagTable = () => {
       setModalOpen(false)
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setSaving(false)
     }
@@ -83,7 +83,7 @@ export const PrefixTagTable = () => {
       void message.success('Xóa tag thành công')
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa'))
     }
   }
 

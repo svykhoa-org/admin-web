@@ -2,7 +2,7 @@ import { UploadSingleVideo } from '@/components/Upload/UploadSingleVideo'
 import { createVideo, updateVideo, type CreateVideoInput, type VideoDto } from '@/services/Video'
 import { listUser } from '@/services/User'
 import type { User } from '@/models/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Form, Input, InputNumber, Modal, Select } from 'antd'
 import { useEffect, useState } from 'react'
 
@@ -83,9 +83,7 @@ export const VideoModal = ({ open, video, onClose, onSuccess }: Props) => {
       onSuccess()
       onClose()
     } catch (error) {
-      void message.error(
-        isApiResponseError(error) ? error.message : 'Có lỗi xảy ra. Vui lòng thử lại.',
-      )
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra. Vui lòng thử lại.'))
     } finally {
       setIsSubmitting(false)
     }

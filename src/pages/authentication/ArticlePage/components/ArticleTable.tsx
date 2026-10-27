@@ -11,7 +11,7 @@ import {
   unpublishArticle,
   type ListArticleInput,
 } from '@/services/Article'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import {
   CheckCircleOutlined,
@@ -92,9 +92,7 @@ export const ArticleTable = () => {
       )
       refresh()
     } catch (error) {
-      void message.error(
-        isApiResponseError(error) ? error.message : 'Không thể xóa. Vui lòng thử lại.',
-      )
+      void message.error(getApiErrorMessage(error, 'Không thể xóa. Vui lòng thử lại.'))
     }
   }
 
@@ -109,7 +107,7 @@ export const ArticleTable = () => {
       }
       refresh()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     }
   }
 

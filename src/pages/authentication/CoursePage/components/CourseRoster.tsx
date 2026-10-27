@@ -3,7 +3,7 @@ import {
   type CourseRoster as CourseRosterData,
   type RosterLearner,
 } from '@/services/Course'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { DownloadOutlined } from '@ant-design/icons'
 import { App, Button, Card, Descriptions, Empty, Space, Spin, Table, Tag, Typography } from 'antd'
@@ -80,9 +80,7 @@ export function CourseRoster({ courseId }: Props) {
     try {
       setRoster(await getCourseRoster(courseId))
     } catch (error) {
-      void message.error(
-        isApiResponseError(error) ? error.message : 'Không thể tải danh sách học viên',
-      )
+      void message.error(getApiErrorMessage(error, 'Không thể tải danh sách học viên'))
     } finally {
       setIsLoading(false)
     }

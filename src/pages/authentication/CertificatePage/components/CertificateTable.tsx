@@ -4,7 +4,7 @@ import { useList, useRequest } from '@/hooks'
 import type { Certificate } from '@/models/Certificate'
 import { PhysicalCertificateStatus } from '@/models/Certificate'
 import { deliverCertificate, listCertificate, shipCertificate } from '@/services/Certificate'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { App, Avatar, Button, Card, Popconfirm, Select, Space, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -69,7 +69,7 @@ export const CertificateTable = () => {
       void message.success('Đã đánh dấu đã gửi')
       refresh()
     } catch (err) {
-      void message.error(isApiResponseError(err) ? err.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(err, 'Có lỗi xảy ra'))
     }
   }
 
@@ -79,7 +79,7 @@ export const CertificateTable = () => {
       void message.success('Đã đánh dấu đã nhận')
       refresh()
     } catch (err) {
-      void message.error(isApiResponseError(err) ? err.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(err, 'Có lỗi xảy ra'))
     }
   }
 

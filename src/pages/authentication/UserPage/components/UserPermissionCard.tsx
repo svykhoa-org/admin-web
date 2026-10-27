@@ -2,7 +2,7 @@ import { useRequest } from '@/hooks'
 import { MODULE_PERMISSIONS, Permission } from '@/models/Permission'
 import type { User } from '@/models/User'
 import { getUserPermissions, updateUserPermissions } from '@/services/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Button, Card, Checkbox, Space, Spin, Switch, Typography } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -46,9 +46,7 @@ export const UserPermissionCard = ({ user }: Props) => {
       void message.success('Đã cập nhật quyền quản trị')
       applySaved(await loadPermissions(user.id))
     } catch (error) {
-      void message.error(
-        isApiResponseError(error) ? error.message : 'Không thể cập nhật quyền. Vui lòng thử lại.',
-      )
+      void message.error(getApiErrorMessage(error, 'Không thể cập nhật quyền. Vui lòng thử lại.'))
     }
   }
 

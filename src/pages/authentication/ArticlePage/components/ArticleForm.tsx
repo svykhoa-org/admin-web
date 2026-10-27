@@ -11,7 +11,7 @@ import {
   updateArticle,
   type ArticleWriteInput,
 } from '@/services/Article'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeftOutlined,
@@ -172,9 +172,7 @@ export const ArticleForm = ({ id }: Props) => {
         }
         navigate('/articles', { replace: true })
       } catch (error) {
-        void message.error(
-          isApiResponseError(error) ? error.message : 'Có lỗi xảy ra khi lưu bài viết',
-        )
+        void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra khi lưu bài viết'))
       }
     }, onInvalid)
 
@@ -194,7 +192,7 @@ export const ArticleForm = ({ id }: Props) => {
         updated.status === ArticleStatus.PUBLISHED ? 'Đã xuất bản' : 'Đã chuyển về nháp',
       )
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setIsStatusLoading(false)
     }

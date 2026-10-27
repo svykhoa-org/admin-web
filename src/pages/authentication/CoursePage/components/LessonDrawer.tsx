@@ -12,7 +12,7 @@ import { createVideo, getVideo, listVideos } from '@/services/Video'
 import type { VideoDto } from '@/services/Video'
 import { listUser } from '@/services/User'
 import type { User } from '@/models/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   App,
@@ -577,7 +577,7 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
       onSaved()
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) return
-      const msg = isApiResponseError(err) ? err.message : 'Có lỗi xảy ra. Vui lòng thử lại.'
+      const msg = getApiErrorMessage(err, 'Có lỗi xảy ra. Vui lòng thử lại.')
       void message.error(msg)
     } finally {
       setIsSaving(false)

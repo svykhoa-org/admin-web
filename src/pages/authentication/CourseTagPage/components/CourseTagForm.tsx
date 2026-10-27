@@ -11,7 +11,7 @@ import {
   updateCourseTag,
   type CreateCourseTagInput,
 } from '@/services/CourseTag'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import {
   COURSE_TAG_FORM_DEFAULT_VALUES,
   createCourseTagFormSchema,
@@ -86,7 +86,7 @@ export const CourseTagForm = ({ id }: Props) => {
         }
       }
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     }
   }
 

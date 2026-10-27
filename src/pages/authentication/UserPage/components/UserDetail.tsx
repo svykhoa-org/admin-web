@@ -11,7 +11,7 @@ import {
 } from '@/models/User'
 import { activeUser, blockUser, getUserDetail } from '@/services/User'
 import { useAuthStore } from '@/store/authStore'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { App, Button, Card, Descriptions, Space, Spin, Tag, Typography } from 'antd'
@@ -87,9 +87,7 @@ export const UserDetail = ({ id }: Props) => {
       await executeDetail(id)
     } catch (error) {
       void message.error(
-        isApiResponseError(error)
-          ? error.message
-          : 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.',
+        getApiErrorMessage(error, 'Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.'),
       )
     }
   }

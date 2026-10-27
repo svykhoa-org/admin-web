@@ -10,7 +10,7 @@ import {
   toggleThreadReaction,
 } from '@/services/Forum'
 import { useAuthStore } from '@/store/authStore'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
 import {
   ArrowLeftOutlined,
@@ -263,7 +263,7 @@ const ReactionButton = ({ thread }: { thread: ForumThread }) => {
       setReacted(res.reacted)
       setCount(res.count)
     } catch (err) {
-      void toast.error(isApiResponseError(err) ? err.message : 'Không thể cập nhật phản ứng')
+      void toast.error(getApiErrorMessage(err, 'Không thể cập nhật phản ứng'))
     } finally {
       setBusy(false)
     }
@@ -311,7 +311,7 @@ const ReplyBox = ({
       await createComment(threadId, content, parentId)
       onDone()
     } catch (err) {
-      void toast.error(isApiResponseError(err) ? err.message : 'Không thể gửi trả lời')
+      void toast.error(getApiErrorMessage(err, 'Không thể gửi trả lời'))
     } finally {
       setSubmitting(false)
     }
@@ -474,7 +474,7 @@ const Composer = ({
       onPosted()
       void toast.success('Đã gửi bình luận')
     } catch (error) {
-      void toast.error(isApiResponseError(error) ? error.message : 'Không thể gửi bình luận')
+      void toast.error(getApiErrorMessage(error, 'Không thể gửi bình luận'))
     } finally {
       setSubmitting(false)
     }
@@ -732,7 +732,7 @@ export const ThreadDetailView = () => {
         void toast.success(successMsg)
         await loadThread()
       } catch (err) {
-        void toast.error(isApiResponseError(err) ? err.message : 'Có lỗi xảy ra')
+        void toast.error(getApiErrorMessage(err, 'Có lỗi xảy ra'))
       }
     },
     [toast, loadThread],

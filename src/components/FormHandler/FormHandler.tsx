@@ -6,7 +6,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ZodObject, ZodOptional } from 'zod'
 import type { ZodType } from 'zod'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { FormField, type FormFieldConfig } from './FormField'
 import { FormHeader } from './FormHeader'
 import { useFormHandlerStore } from './formHandlerStore'
@@ -127,7 +127,7 @@ export const FormHandler = <TSchema extends ZodObject<any>>({
       if (resetOnSuccess) reset()
     } catch (error) {
       if (showNotification) {
-        const msg = isApiResponseError(error) ? error.message : t('CommonLocales:request_error')
+        const msg = getApiErrorMessage(error, t('CommonLocales:request_error'))
         void message.error(msg)
       }
       onError?.(error)

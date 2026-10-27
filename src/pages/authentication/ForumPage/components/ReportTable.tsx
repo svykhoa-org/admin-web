@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/DataTable/DataTable'
 import { ReportStatus, type ForumReport } from '@/models/Forum'
 import { listReports, updateReportStatus } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Card, Select, Space } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
@@ -44,7 +44,7 @@ export const ReportTable = () => {
       void message.success('Đã cập nhật trạng thái')
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     }
   }
 

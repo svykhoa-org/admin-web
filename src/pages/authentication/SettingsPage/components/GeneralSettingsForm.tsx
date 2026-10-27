@@ -1,6 +1,6 @@
 import type { FileResource } from '@/models/FileResource'
 import { useSiteSettingsStore } from '@/store/siteSettingsStore'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Button, Col, Form, Input, Row, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { UploadSingleImage } from '@/components/Upload/UploadSingleImage'
@@ -90,7 +90,7 @@ export function GeneralSettingsForm() {
       if (err && typeof err === 'object' && 'errorFields' in err) {
         return
       }
-      const msg = isApiResponseError(err) ? err.message : 'Lưu thất bại. Vui lòng thử lại.'
+      const msg = getApiErrorMessage(err, 'Lưu thất bại. Vui lòng thử lại.')
       void message.error(msg)
     }
   }

@@ -1,7 +1,7 @@
 import { useRequest } from '@/hooks'
 import { USER_ROLE_LABEL, UserRole, type User } from '@/models/User'
 import { updateUserRole } from '@/services/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Card, Select, Space, Typography } from 'antd'
 
 interface Props {
@@ -33,9 +33,7 @@ export const UserRoleCard = ({ user, onChanged }: Props) => {
           void message.success('Đã cập nhật vai trò')
           onChanged()
         } catch (error) {
-          void message.error(
-            isApiResponseError(error) ? error.message : 'Không thể đổi vai trò. Vui lòng thử lại.',
-          )
+          void message.error(getApiErrorMessage(error, 'Không thể đổi vai trò. Vui lòng thử lại.'))
         }
       },
     })

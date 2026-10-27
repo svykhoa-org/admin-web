@@ -3,7 +3,7 @@ import { useDelete } from '@/hooks'
 import { deleteVideo, listVideos, type VideoDto } from '@/services/Video'
 import { listUser } from '@/services/User'
 import type { User } from '@/models/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import type { AxiosError } from 'axios'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined, PlusOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Input, Select, Space, Table, Tag, Typography } from 'antd'
@@ -66,9 +66,7 @@ export const VideoTable = () => {
       if (axiosErr.response?.status === 409) {
         void message.error('Video đang được dùng trong bài học, không thể xoá')
       } else {
-        void message.error(
-          isApiResponseError(error) ? error.message : 'Không thể xoá. Vui lòng thử lại.',
-        )
+        void message.error(getApiErrorMessage(error, 'Không thể xoá. Vui lòng thử lại.'))
       }
     }
   }

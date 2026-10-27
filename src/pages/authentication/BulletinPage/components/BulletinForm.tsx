@@ -17,7 +17,7 @@ import {
   uploadBulletinFile,
   type BulletinWriteInput,
 } from '@/services/Bulletin'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeftOutlined,
@@ -176,9 +176,7 @@ export const BulletinForm = ({ id }: Props) => {
         }
         navigate('/bulletins', { replace: true })
       } catch (error) {
-        void message.error(
-          isApiResponseError(error) ? error.message : 'Có lỗi xảy ra khi lưu thông báo',
-        )
+        void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra khi lưu thông báo'))
       }
     }, onInvalid)
 
@@ -198,7 +196,7 @@ export const BulletinForm = ({ id }: Props) => {
         updated.status === BulletinStatus.PUBLISHED ? 'Đã đăng' : 'Đã chuyển về nháp',
       )
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setIsStatusLoading(false)
     }

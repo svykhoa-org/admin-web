@@ -1,3 +1,4 @@
+import axios from 'axios'
 import type { ApiDetailResponse, ApiListData, ApiListResponse } from '@/types/api'
 
 /**
@@ -16,6 +17,29 @@ export class ApiResponseError extends Error {
 
 export function isApiResponseError(error: unknown): error is ApiResponseError {
   return error instanceof ApiResponseError
+}
+
+/**
+ * User-facing message for a failed request.
+ * - `ApiResponseError` (2xx body with error statusCode) → its message.
+ * - HTTP 4xx → the server's `message` (the axios interceptor rejects non-2xx with the raw
+ *   `AxiosError`, so `ApiResponseError` is never created for these).
+ * - 5xx, network/timeout, non-JSON bodies (e.g. S3 XML) or anything else → `fallback`
+ *   (5xx bodies only carry a generic "Internal server error").
+ */
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (isApiResponseError(error)) return error.message || fallback
+
+  if (axios.isAxiosError<{ message?: unknown }>(error)) {
+    const status = error.response?.status
+    if (status === undefined || status < 400 || status >= 500) return fallback
+
+    const message = error.response?.data?.message
+    if (typeof message === 'string' && message.trim()) return message
+    if (Array.isArray(message) && message.length > 0) return message.join(', ')
+  }
+
+  return fallback
 }
 
 /**

@@ -13,7 +13,7 @@ import {
 } from '@/models/User'
 import { useAuthStore } from '@/store/authStore'
 import { activeUser, blockUser, listUser } from '@/services/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import {
   CheckCircleOutlined,
@@ -152,9 +152,10 @@ export const UserTable = () => {
       )
       setParams(current => ({ ...current }))
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể cập nhật trạng thái. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(
+        error,
+        'Không thể cập nhật trạng thái. Vui lòng thử lại.',
+      )
       void message.error(errorMessage)
     }
   }

@@ -9,7 +9,7 @@ import {
   listSubCategories,
   updateSubCategory,
 } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Form, Input, InputNumber, Modal, Select } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -88,7 +88,7 @@ export const SubCategoryTable = () => {
       setModalOpen(false)
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setSaving(false)
     }
@@ -100,7 +100,7 @@ export const SubCategoryTable = () => {
       void message.success('Xóa thành công')
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa'))
     }
   }
 

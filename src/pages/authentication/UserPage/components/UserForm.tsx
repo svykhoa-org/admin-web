@@ -1,6 +1,6 @@
 import { useCreate } from '@/hooks'
 import { createAdmin, type CreateAdminInput } from '@/services/User'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MODULE_PERMISSIONS } from '@/models/Permission'
 import { App, Button, Card, Checkbox, Form, Input, Space, Switch, Typography } from 'antd'
@@ -42,9 +42,7 @@ export const UserForm = () => {
       void message.success('Tạo Admin thành công')
       navigate(`/users/${createdUser.id}`, { replace: true })
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể tạo Admin. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(error, 'Không thể tạo Admin. Vui lòng thử lại.')
       void message.error(errorMessage)
     }
   }

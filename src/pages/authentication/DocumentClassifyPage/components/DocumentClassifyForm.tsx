@@ -5,7 +5,7 @@ import {
   getDocumentClassifyDetail,
   updateDocumentClassify,
 } from '@/services/DocumentClassify'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { App, Button, Card, Form, Input, Space, Typography } from 'antd'
 import { useCallback, useEffect } from 'react'
@@ -88,9 +88,10 @@ export const DocumentClassifyForm = ({ id }: Props) => {
 
       navigate('/document-classify', { replace: true })
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(
+        error,
+        'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.',
+      )
       void message.error(errorMessage)
     }
   }

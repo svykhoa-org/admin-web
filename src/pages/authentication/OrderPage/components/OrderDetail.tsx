@@ -9,7 +9,7 @@ import {
 } from '@/models/Order'
 import type { Order } from '@/models/Order'
 import { getOrderDetail, refundOrder } from '@/services/Order'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatOrderAmount } from '@/utils/formatOrderAmount'
 import { formatTimestamp } from '@/utils/time'
 import { Alert, App, Button, Card, Descriptions, Modal, Space, Spin, Tag, Typography } from 'antd'
@@ -119,11 +119,7 @@ export const OrderDetail = ({ id }: Props) => {
             void message.success('Hoàn tiền thành công.')
             void executeDetail(currentOrder.id)
           } catch (err) {
-            if (isApiResponseError(err)) {
-              void message.error(err.message)
-            } else {
-              void message.error('Hoàn tiền thất bại. Vui lòng thử lại.')
-            }
+            void message.error(getApiErrorMessage(err, 'Hoàn tiền thất bại. Vui lòng thử lại.'))
           }
         },
       })

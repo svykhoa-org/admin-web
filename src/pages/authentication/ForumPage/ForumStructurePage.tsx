@@ -11,7 +11,7 @@ import {
   updateCategoryGroup,
   updateSubCategory,
 } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import {
   DeleteOutlined,
   EditOutlined,
@@ -356,7 +356,7 @@ export const ForumStructurePage = () => {
       setGroupModal(false)
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setGroupSaving(false)
     }
@@ -405,7 +405,7 @@ export const ForumStructurePage = () => {
       setSubCatModal(false)
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setSubCatSaving(false)
     }
@@ -433,7 +433,7 @@ export const ForumStructurePage = () => {
       closeDeleteDialog()
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa'))
     } finally {
       setDeleting(false)
     }

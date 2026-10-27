@@ -8,7 +8,7 @@ import {
   listCategoryGroups,
   updateCategoryGroup,
 } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Form, Input, InputNumber, Modal } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -72,7 +72,7 @@ export const CategoryGroupTable = () => {
       setModalOpen(false)
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setSaving(false)
     }
@@ -84,7 +84,7 @@ export const CategoryGroupTable = () => {
       void message.success('Xóa thành công')
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa'))
     }
   }
 

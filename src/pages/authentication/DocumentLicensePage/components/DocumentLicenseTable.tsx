@@ -6,7 +6,7 @@ import {
   revokeDocumentLicense,
   unrevokeDocumentLicense,
 } from '@/services/DocumentLicense'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { CheckCircleOutlined, EllipsisOutlined, EyeOutlined, StopOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Input, Select, Space, Table, Tag, Typography } from 'antd'
@@ -107,9 +107,7 @@ export const DocumentLicenseTable = () => {
       void message.success('Thu hồi license thành công')
       setParams(current => ({ ...current }))
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể thu hồi license. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(error, 'Không thể thu hồi license. Vui lòng thử lại.')
       void message.error(errorMessage)
     }
   }
@@ -120,9 +118,10 @@ export const DocumentLicenseTable = () => {
       void message.success('Hủy thu hồi license thành công')
       setParams(current => ({ ...current }))
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể hủy thu hồi license. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(
+        error,
+        'Không thể hủy thu hồi license. Vui lòng thử lại.',
+      )
       void message.error(errorMessage)
     }
   }

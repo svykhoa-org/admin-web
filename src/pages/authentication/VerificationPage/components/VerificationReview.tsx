@@ -1,7 +1,7 @@
 import type { DoctorVerificationDetail } from '@/models/DoctorVerification'
 import { VerificationStatus } from '@/models/DoctorVerification'
 import { rejectDoctor, verifyDoctor } from '@/services/Verification'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import {
   CheckOutlined,
@@ -97,7 +97,7 @@ export const VerificationReview = ({ data, onChanged, showUser = true }: Props) 
           void message.success('Đã xác minh bác sĩ')
           await onChanged()
         } catch (error) {
-          void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+          void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
         } finally {
           setSubmitting(false)
         }
@@ -118,7 +118,7 @@ export const VerificationReview = ({ data, onChanged, showUser = true }: Props) 
       setReason('')
       await onChanged()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     } finally {
       setSubmitting(false)
     }

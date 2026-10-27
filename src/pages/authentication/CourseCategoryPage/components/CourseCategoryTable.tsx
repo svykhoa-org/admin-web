@@ -4,7 +4,7 @@ import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModa
 import { useDelete } from '@/hooks'
 import type { CourseCategory } from '@/models/CourseCategory'
 import { listCourseCategory, removeCourseCategory } from '@/services/CourseCategory'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Space, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -49,9 +49,7 @@ export const CourseCategoryTable = () => {
       void message.success('Xóa danh mục thành công')
       void load()
     } catch (error) {
-      void message.error(
-        isApiResponseError(error) ? error.message : 'Không thể xóa. Vui lòng thử lại.',
-      )
+      void message.error(getApiErrorMessage(error, 'Không thể xóa. Vui lòng thử lại.'))
     }
   }
 

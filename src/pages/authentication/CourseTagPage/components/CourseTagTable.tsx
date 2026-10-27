@@ -3,7 +3,7 @@ import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModa
 import { useDelete } from '@/hooks'
 import type { CourseTag } from '@/models/CourseTag'
 import { listCourseTag, removeCourseTag } from '@/services/CourseTag'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -47,7 +47,7 @@ export const CourseTagTable = () => {
       void message.success('Xóa tag thành công')
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa'))
     }
   }
 

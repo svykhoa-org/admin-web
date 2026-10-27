@@ -10,7 +10,7 @@ import {
 } from '@/models/Course'
 import { RoutePath } from '@/router/RoutePath'
 import { listCourse, removeCourse } from '@/services/Course'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Input, Select, Space, Tag, Typography } from 'antd'
@@ -72,9 +72,7 @@ export const CourseTable = () => {
       )
       refresh()
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể xóa. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(error, 'Không thể xóa. Vui lòng thử lại.')
       void message.error(errorMessage)
     }
   }

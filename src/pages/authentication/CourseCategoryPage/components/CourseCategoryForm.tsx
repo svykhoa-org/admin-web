@@ -8,7 +8,7 @@ import {
   updateCourseCategory,
   type CreateCourseCategoryInput,
 } from '@/services/CourseCategory'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { App, Button, Card, Form, Input, Select, Space, Spin, Typography } from 'antd'
@@ -105,9 +105,7 @@ export const CourseCategoryForm = ({ id }: Props) => {
       }
     } catch (error) {
       void message.error(
-        isApiResponseError(error)
-          ? error.message
-          : 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.',
+        getApiErrorMessage(error, 'Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.'),
       )
     }
   }

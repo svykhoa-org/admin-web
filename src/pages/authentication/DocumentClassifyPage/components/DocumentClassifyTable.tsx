@@ -2,7 +2,7 @@ import { ConfirmDeleteModal } from '@/components/ModalVariants/ConfirmDeleteModa
 import { useDelete, useList } from '@/hooks'
 import type { DocumentClassify } from '@/models/DocumentClassify'
 import { listDocumentClassify, removeDocumentClassify } from '@/services/DocumentClassify'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import { DeleteOutlined, EditOutlined, EllipsisOutlined, PlusOutlined } from '@ant-design/icons'
 import { App, Button, Card, Dropdown, Input, Space, Table, Tag, Typography } from 'antd'
@@ -70,9 +70,7 @@ export const DocumentClassifyTable = () => {
       )
       refresh()
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Không thể xóa. Vui lòng thử lại.'
+      const errorMessage = getApiErrorMessage(error, 'Không thể xóa. Vui lòng thử lại.')
       void message.error(errorMessage)
     }
   }

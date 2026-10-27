@@ -11,7 +11,7 @@ import {
   unpublishBulletin,
   type ListBulletinInput,
 } from '@/services/Bulletin'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import {
   CheckCircleOutlined,
@@ -91,7 +91,7 @@ export const BulletinTable = () => {
       )
       refresh()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể xóa.')
+      void message.error(getApiErrorMessage(error, 'Không thể xóa.'))
     }
   }
 
@@ -106,7 +106,7 @@ export const BulletinTable = () => {
       }
       refresh()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     }
   }
 

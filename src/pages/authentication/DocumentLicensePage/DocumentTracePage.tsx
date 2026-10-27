@@ -5,7 +5,7 @@ import { FileSearchOutlined, InboxOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { BRAND_NAME } from '@/constants/brand'
 import { traceByCode, traceDocument, type TraceDocumentOutput } from '@/services/DocumentLicense'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { isApiResponseError, getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time/formatTimestamp'
 import { RoutePath } from '@/router/RoutePath'
 
@@ -38,9 +38,7 @@ export const DocumentTracePage = () => {
       if (status === 404) {
         setResult({ matched: false, via: null, license: null })
       } else {
-        void message.error(
-          isApiResponseError(error) ? error.message : 'Truy vết thất bại, vui lòng thử lại',
-        )
+        void message.error(getApiErrorMessage(error, 'Truy vết thất bại, vui lòng thử lại'))
       }
     } finally {
       setLoading(false)
@@ -56,9 +54,7 @@ export const DocumentTracePage = () => {
       const output = await traceDocument({ file })
       setResult(output)
     } catch (error) {
-      const errorMessage = isApiResponseError(error)
-        ? error.message
-        : 'Truy vết thất bại, vui lòng thử lại'
+      const errorMessage = getApiErrorMessage(error, 'Truy vết thất bại, vui lòng thử lại')
       void message.error(errorMessage)
     } finally {
       setLoading(false)

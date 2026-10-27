@@ -14,7 +14,7 @@ import {
   setThreadPin,
   setThreadStatus,
 } from '@/services/Forum'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { formatTimestamp } from '@/utils/time'
 import {
   CheckCircleOutlined,
@@ -144,7 +144,7 @@ export const ThreadModerationTable = () => {
       void message.success(successMsg)
       void load()
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Có lỗi xảy ra')
+      void message.error(getApiErrorMessage(error, 'Có lỗi xảy ra'))
     }
   }
 

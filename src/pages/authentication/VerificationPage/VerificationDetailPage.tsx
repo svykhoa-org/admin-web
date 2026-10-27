@@ -1,6 +1,6 @@
 import type { DoctorVerificationDetail } from '@/models/DoctorVerification'
 import { getVerificationDetail } from '@/services/Verification'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { App, Button, Card, Space, Spin, Typography } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -20,7 +20,7 @@ export const VerificationDetailPage = () => {
     try {
       setData(await getVerificationDetail({ id }))
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể tải hồ sơ')
+      void message.error(getApiErrorMessage(error, 'Không thể tải hồ sơ'))
     } finally {
       setLoading(false)
     }

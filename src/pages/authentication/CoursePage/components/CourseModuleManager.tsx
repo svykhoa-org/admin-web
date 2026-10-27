@@ -8,7 +8,7 @@ import {
   updateCourseModule,
 } from '@/services/CourseModule'
 import { listLesson, removeLesson } from '@/services/Lesson'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import {
   BookOutlined,
   DeleteOutlined,
@@ -305,7 +305,7 @@ export const CourseModuleManager = ({ courseId }: Props) => {
       void loadModules()
     } catch (error) {
       if (error && typeof error === 'object' && 'errorFields' in error) return
-      const errorMessage = isApiResponseError(error) ? error.message : 'Có lỗi xảy ra'
+      const errorMessage = getApiErrorMessage(error, 'Có lỗi xảy ra')
       void message.error(errorMessage)
     } finally {
       setIsSavingModule(false)
@@ -338,7 +338,7 @@ export const CourseModuleManager = ({ courseId }: Props) => {
       }
       setDeleteState({ open: false, type: 'module', targetId: '' })
     } catch (error) {
-      const errorMessage = isApiResponseError(error) ? error.message : 'Không thể xóa'
+      const errorMessage = getApiErrorMessage(error, 'Không thể xóa')
       void message.error(errorMessage)
     } finally {
       setIsDeleting(false)

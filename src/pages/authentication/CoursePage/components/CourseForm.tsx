@@ -24,7 +24,7 @@ import { listUser } from '@/services/User'
 import { UserRole, type User } from '@/models/User'
 import { UploadSingleImage } from '@/components/Upload'
 import { arrayToTextarea, parseTextareaToArray } from '../schemas/courseFormSchema'
-import { isApiResponseError } from '@/utils/apiResponse'
+import { getApiErrorMessage } from '@/utils/apiResponse'
 import { ArrowLeftOutlined, CheckCircleOutlined, InboxOutlined } from '@ant-design/icons'
 import {
   App,
@@ -198,9 +198,10 @@ export const CourseForm = ({ id }: Props) => {
       void message.success('Khoá học đã được xuất bản')
     } catch (error) {
       void message.error(
-        isApiResponseError(error)
-          ? error.message
-          : 'Không thể xuất bản khoá học. Vui lòng kiểm tra điều kiện (module, bài học, video ready, finalLesson).',
+        getApiErrorMessage(
+          error,
+          'Không thể xuất bản khoá học. Vui lòng kiểm tra điều kiện (module, bài học, video ready, finalLesson).',
+        ),
       )
     }
   }
@@ -212,7 +213,7 @@ export const CourseForm = ({ id }: Props) => {
       setCourseDisplay(updated)
       void message.success('Khoá học đã được lưu trữ')
     } catch (error) {
-      void message.error(isApiResponseError(error) ? error.message : 'Không thể lưu trữ khoá học')
+      void message.error(getApiErrorMessage(error, 'Không thể lưu trữ khoá học'))
     }
   }
 
