@@ -5,7 +5,12 @@ import { CourseCategoryCreatePage } from '@/pages/authentication/CourseCategoryP
 import { CourseCategoryDetailPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryDetailPage'
 import { CourseCategoryListPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryListPage'
 import { CourseCreatePage } from '@/pages/authentication/CoursePage/CourseCreatePage'
-import { CourseDetailPage } from '@/pages/authentication/CoursePage/CourseDetailPage'
+import { CourseWorkspaceLayout } from '@/pages/authentication/CoursePage/CourseWorkspaceLayout'
+import {
+  CourseContentPage,
+  CourseLearnersPage,
+  CourseSettingsPage,
+} from '@/pages/authentication/CoursePage/CourseWorkspacePages'
 import { CourseListPage } from '@/pages/authentication/CoursePage/CourseListPage'
 import { CourseTagCreatePage } from '@/pages/authentication/CourseTagPage/CourseTagCreatePage'
 import { CourseTagDetailPage } from '@/pages/authentication/CourseTagPage/CourseTagDetailPage'
@@ -80,7 +85,16 @@ const router = createBrowserRouter([
               },
               {
                 path: RoutePath.CourseDetailPage.route,
-                element: <CourseDetailPage />,
+                element: <CourseWorkspaceLayout />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to={RoutePath.CourseContentPage.route} replace />,
+                  },
+                  { path: RoutePath.CourseContentPage.route, element: <CourseContentPage /> },
+                  { path: RoutePath.CourseLearnersPage.route, element: <CourseLearnersPage /> },
+                  { path: RoutePath.CourseSettingsPage.route, element: <CourseSettingsPage /> },
+                ],
               },
             ],
           },

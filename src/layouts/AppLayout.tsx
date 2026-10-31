@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation, useMatch } from 'react-router-dom'
 import { Layout, Menu, Dropdown, Button, Result, Typography, theme, type MenuProps } from 'antd'
 import {
   MenuFoldOutlined,
@@ -25,9 +25,17 @@ const { Sider, Header, Content } = Layout
 const { Text } = Typography
 
 export default function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  // The course workspace brings its own sidebar and needs the width, so the main
+  // one stays icon-only there unless opened, without touching the choice elsewhere.
+  const courseMatch = useMatch('/courses/:id/*')
+  const inCourseWorkspace = !!courseMatch && courseMatch.params.id !== 'create'
+  const [collapsedElsewhere, setCollapsedElsewhere] = useState(false)
+  const [openInCourseWorkspace, setOpenInCourseWorkspace] = useState(false)
+  const collapsed = inCourseWorkspace ? !openInCourseWorkspace : collapsedElsewhere
+  const toggleCollapsed = () =>
+    inCourseWorkspace ? setOpenInCourseWorkspace(o => !o) : setCollapsedElsewhere(c => !c)
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
   const refreshProfile = useAuthStore(s => s.refreshProfile)
@@ -197,7 +205,7 @@ export default function AppLayout() {
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(c => !c)}
+            onClick={toggleCollapsed}
           />
 
           <Dropdown

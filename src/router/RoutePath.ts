@@ -13,6 +13,18 @@ export const RoutePath = {
     path: '/courses/:id',
     getPath: (id: string) => `/courses/${id}`,
   },
+  CourseContentPage: {
+    route: 'content',
+    getPath: (id: string) => `/courses/${id}/content`,
+  },
+  CourseLearnersPage: {
+    route: 'learners',
+    getPath: (id: string) => `/courses/${id}/learners`,
+  },
+  CourseSettingsPage: {
+    route: 'settings',
+    getPath: (id: string) => `/courses/${id}/settings`,
+  },
 
   // Document Classify
   DocumentClassifyPage: {
