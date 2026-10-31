@@ -47,6 +47,7 @@ import {
   COURSE_FORM_DEFAULT_VALUES,
   createCourseFormSchema,
   type CourseFormSubmitValues,
+  type CourseFormValues,
 } from '../schemas/courseFormSchema'
 import { CourseModuleManager } from './CourseModuleManager'
 import { CourseRoster } from './CourseRoster'
@@ -56,6 +57,70 @@ import { ScheduleSection } from './ScheduleSection'
 interface Props {
   id?: string
 }
+
+// Config-backed fields of the course payload. The server translates each one it
+// receives into courses.config, and that mapping is lossy (selfPaced=false always
+// becomes `sequential`), so an edit must only send the ones the admin changed.
+const buildConfigFields = (values: CourseFormValues) => ({
+  accessDurationDays: values.accessDurationDays || undefined,
+  selfPaced: values.selfPaced,
+  cmeCredits: values.cmeCredits,
+  certifyingOrganization: values.certifyingOrganization?.trim() || undefined,
+  proctoringConfig: {
+    enabled: !!values.proctoringEnabled,
+    inactivityPause: {
+      enabled: !!values.proctoringInactivityEnabled,
+      thresholdMinutes: values.proctoringInactivityMinutes ?? 3,
+    },
+    presenceCheck: {
+      enabled: !!values.proctoringPresenceEnabled,
+      cameraRequired: !!values.proctoringCameraRequired,
+      mode: (values.proctoringRandomMode ? 'random' : 'fixed') as 'random' | 'fixed',
+      intervalMinutes: values.proctoringIntervalMinutes ?? 20,
+      randomMinMinutes: values.proctoringRandomMinMinutes ?? 15,
+      randomMaxMinutes: values.proctoringRandomMaxMinutes ?? 30,
+      maxChecksPerVideo: values.proctoringMaxChecksPerVideo ?? 3,
+    },
+  },
+})
+
+const pickChangedFields = <T extends object>(next: T, loaded: T): Partial<T> =>
+  Object.fromEntries(
+    Object.entries(next).filter(
+      ([key, value]) => JSON.stringify(value) !== JSON.stringify(loaded[key as keyof T]),
+    ),
+  ) as Partial<T>
+
+const toFormValues = (course: Course): CourseFormValues => ({
+  title: course.title,
+  subTitle: course.subTitle ?? undefined,
+  description: course.description ?? undefined,
+  price: course.price,
+  accessDurationDays: course.accessDurationDays ?? undefined,
+  maxEnrollments: course.maxEnrollments ?? undefined,
+  selfPaced: course.selfPaced ?? true,
+  requiresVerification: course.requiresVerification ?? false,
+  isScheduled: course.isScheduled ?? false,
+  registrationStart: course.registrationStart ?? undefined,
+  registrationEnd: course.registrationEnd ?? undefined,
+  startDate: course.startDate ?? undefined,
+  endDate: course.endDate ?? undefined,
+  objectives: arrayToTextarea(course.objectives),
+  requirements: arrayToTextarea(course.requirements),
+  suitableFor: arrayToTextarea(course.suitableFor),
+  cmeCredits: course.cmeCredits ?? undefined,
+  certifyingOrganization: course.certifyingOrganization ?? undefined,
+  proctoringEnabled: course.proctoringConfig?.enabled ?? false,
+  proctoringInactivityEnabled: course.proctoringConfig?.inactivityPause?.enabled ?? true,
+  proctoringInactivityMinutes: course.proctoringConfig?.inactivityPause?.thresholdMinutes ?? 3,
+  proctoringPresenceEnabled: course.proctoringConfig?.presenceCheck?.enabled ?? false,
+  proctoringCameraRequired: course.proctoringConfig?.presenceCheck?.cameraRequired ?? false,
+  proctoringRandomMode: course.proctoringConfig?.presenceCheck?.mode === 'random',
+  proctoringIntervalMinutes: course.proctoringConfig?.presenceCheck?.intervalMinutes ?? 20,
+  proctoringRandomMinMinutes: course.proctoringConfig?.presenceCheck?.randomMinMinutes ?? 15,
+  proctoringRandomMaxMinutes: course.proctoringConfig?.presenceCheck?.randomMaxMinutes ?? 30,
+  proctoringMaxChecksPerVideo: course.proctoringConfig?.presenceCheck?.maxChecksPerVideo ?? 3,
+})
 
 export const CourseForm = ({ id }: Props) => {
   const navigate = useNavigate()
@@ -140,6 +205,7 @@ export const CourseForm = ({ id }: Props) => {
   }, [executeDetail, id, isEditMode])
 
   const onSubmit = async (values: CourseFormSubmitValues) => {
+    const configFields = buildConfigFields(values)
     const payload: CreateCourseInput = {
       title: values.title,
       subTitle: values.subTitle?.trim() || undefined,
@@ -147,9 +213,7 @@ export const CourseForm = ({ id }: Props) => {
       price: values.price,
       categoryId: effectiveCategoryId || undefined,
       tags: effectiveTagIds.length > 0 ? effectiveTagIds.map(tagId => ({ id: tagId })) : undefined,
-      accessDurationDays: values.accessDurationDays || undefined,
       maxEnrollments: values.maxEnrollments || undefined,
-      selfPaced: values.selfPaced,
       requiresVerification: values.requiresVerification,
       isScheduled: values.isScheduled,
       registrationStart: values.registrationStart || undefined,
@@ -161,24 +225,9 @@ export const CourseForm = ({ id }: Props) => {
       objectives: parseTextareaToArray(values.objectives),
       requirements: parseTextareaToArray(values.requirements),
       suitableFor: parseTextareaToArray(values.suitableFor),
-      cmeCredits: values.cmeCredits,
-      certifyingOrganization: values.certifyingOrganization?.trim() || undefined,
-      proctoringConfig: {
-        enabled: !!values.proctoringEnabled,
-        inactivityPause: {
-          enabled: !!values.proctoringInactivityEnabled,
-          thresholdMinutes: values.proctoringInactivityMinutes ?? 3,
-        },
-        presenceCheck: {
-          enabled: !!values.proctoringPresenceEnabled,
-          cameraRequired: !!values.proctoringCameraRequired,
-          mode: values.proctoringRandomMode ? 'random' : 'fixed',
-          intervalMinutes: values.proctoringIntervalMinutes ?? 20,
-          randomMinMinutes: values.proctoringRandomMinMinutes ?? 15,
-          randomMaxMinutes: values.proctoringRandomMaxMinutes ?? 30,
-          maxChecksPerVideo: values.proctoringMaxChecksPerVideo ?? 3,
-        },
-      },
+      ...(isEditMode && detailData
+        ? pickChangedFields(configFields, buildConfigFields(toFormValues(detailData)))
+        : configFields),
     }
 
     if (isEditMode && id) {
@@ -229,46 +278,7 @@ export const CourseForm = ({ id }: Props) => {
       onCancel={() => navigate(RoutePath.CoursePage.path, { replace: true })}
       schema={courseFormSchema}
       defaultValues={
-        isEditMode && detailData
-          ? {
-              title: detailData.title,
-              subTitle: detailData.subTitle ?? undefined,
-              description: detailData.description ?? undefined,
-              price: detailData.price,
-              accessDurationDays: detailData.accessDurationDays ?? undefined,
-              maxEnrollments: detailData.maxEnrollments ?? undefined,
-              selfPaced: detailData.selfPaced ?? true,
-              requiresVerification: detailData.requiresVerification ?? false,
-              isScheduled: detailData.isScheduled ?? false,
-              registrationStart: detailData.registrationStart ?? undefined,
-              registrationEnd: detailData.registrationEnd ?? undefined,
-              startDate: detailData.startDate ?? undefined,
-              endDate: detailData.endDate ?? undefined,
-              objectives: arrayToTextarea(detailData.objectives),
-              requirements: arrayToTextarea(detailData.requirements),
-              suitableFor: arrayToTextarea(detailData.suitableFor),
-              cmeCredits: detailData.cmeCredits ?? undefined,
-              certifyingOrganization: detailData.certifyingOrganization ?? undefined,
-              proctoringEnabled: detailData.proctoringConfig?.enabled ?? false,
-              proctoringInactivityEnabled:
-                detailData.proctoringConfig?.inactivityPause?.enabled ?? true,
-              proctoringInactivityMinutes:
-                detailData.proctoringConfig?.inactivityPause?.thresholdMinutes ?? 3,
-              proctoringPresenceEnabled:
-                detailData.proctoringConfig?.presenceCheck?.enabled ?? false,
-              proctoringCameraRequired:
-                detailData.proctoringConfig?.presenceCheck?.cameraRequired ?? false,
-              proctoringRandomMode: detailData.proctoringConfig?.presenceCheck?.mode === 'random',
-              proctoringIntervalMinutes:
-                detailData.proctoringConfig?.presenceCheck?.intervalMinutes ?? 20,
-              proctoringRandomMinMinutes:
-                detailData.proctoringConfig?.presenceCheck?.randomMinMinutes ?? 15,
-              proctoringRandomMaxMinutes:
-                detailData.proctoringConfig?.presenceCheck?.randomMaxMinutes ?? 30,
-              proctoringMaxChecksPerVideo:
-                detailData.proctoringConfig?.presenceCheck?.maxChecksPerVideo ?? 3,
-            }
-          : COURSE_FORM_DEFAULT_VALUES
+        isEditMode && detailData ? toFormValues(detailData) : COURSE_FORM_DEFAULT_VALUES
       }
       onSubmit={onSubmit}
       onSuccess={response => {
