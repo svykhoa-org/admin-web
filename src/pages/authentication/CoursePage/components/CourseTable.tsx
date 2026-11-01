@@ -18,6 +18,7 @@ import type { ColumnsType } from 'antd/es/table'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { CourseCreateDialog } from './CourseCreateDialog'
 
 interface ListParams {
   page: number
@@ -33,6 +34,7 @@ export const CourseTable = () => {
   const CourseStatusMappingToLabels = useMemo(() => getCourseStatusMappingToLabels(t), [t])
   const { message } = App.useApp()
   const [searchValue, setSearchValue] = useState('')
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   const {
     items,
@@ -230,7 +232,7 @@ export const CourseTable = () => {
             },
           }}
           createAction={{
-            onCreate: () => navigate(RoutePath.CourseCreatePage.path),
+            onCreate: () => setIsCreateOpen(true),
           }}
           deleteAction={{
             onDelete: () => openDeleteModal(selectedRowKeys),
@@ -238,6 +240,8 @@ export const CourseTable = () => {
           }}
         />
       </Card>
+
+      <CourseCreateDialog open={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
 
       <ConfirmDeleteModal
         open={deleteModal.open}

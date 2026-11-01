@@ -5,26 +5,28 @@ import { unwrapDetail } from '@/utils/apiResponse'
 
 const COURSE_ENDPOINT = '/courses'
 
+// null clears a nullable field; undefined leaves it unchanged.
 export interface UpdateCourseInput {
   id: string
   title?: string
-  subTitle?: string
-  description?: string
-  thumbnail?: string
+  subTitle?: string | null
+  description?: string | null
+  thumbnail?: string | null
   price?: number
   shortCode?: string
-  categoryId?: string
+  categoryId?: string | null
   tags?: Pick<CourseTagRef, 'id'>[]
-  accessDurationDays?: number
-  maxEnrollments?: number
-  selfPaced?: boolean
+  maxEnrollments?: number | null
   requiresVerification?: boolean
+  isScheduled?: boolean
+  registrationStart?: string | null
+  registrationEnd?: string | null
+  startDate?: string | null
+  endDate?: string | null
   objectives?: string[]
   requirements?: string[]
   suitableFor?: string[]
   instructorIds?: string[]
-  cmeCredits?: number
-  certifyingOrganization?: string
   totalDurationMinutes?: number
 }
 

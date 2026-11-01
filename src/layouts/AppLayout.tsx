@@ -29,8 +29,7 @@ export default function AppLayout() {
   const location = useLocation()
   // The course workspace brings its own sidebar and needs the width, so the main
   // one stays icon-only there unless opened, without touching the choice elsewhere.
-  const courseMatch = useMatch('/courses/:id/*')
-  const inCourseWorkspace = !!courseMatch && courseMatch.params.id !== 'create'
+  const inCourseWorkspace = !!useMatch('/courses/:id/*')
   const [collapsedElsewhere, setCollapsedElsewhere] = useState(false)
   const [openInCourseWorkspace, setOpenInCourseWorkspace] = useState(false)
   const collapsed = inCourseWorkspace ? !openInCourseWorkspace : collapsedElsewhere

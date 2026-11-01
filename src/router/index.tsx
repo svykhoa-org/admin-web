@@ -4,7 +4,6 @@ import { CertificateListPage } from '@/pages/authentication/CertificatePage/Cert
 import { CourseCategoryCreatePage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryCreatePage'
 import { CourseCategoryDetailPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryDetailPage'
 import { CourseCategoryListPage } from '@/pages/authentication/CourseCategoryPage/CourseCategoryListPage'
-import { CourseCreatePage } from '@/pages/authentication/CoursePage/CourseCreatePage'
 import { CourseWorkspaceLayout } from '@/pages/authentication/CoursePage/CourseWorkspaceLayout'
 import {
   CourseContentPage,
@@ -78,10 +77,6 @@ const router = createBrowserRouter([
               {
                 index: true,
                 element: <CourseListPage />,
-              },
-              {
-                path: RoutePath.CourseCreatePage.route,
-                element: <CourseCreatePage />,
               },
               {
                 path: RoutePath.CourseDetailPage.route,

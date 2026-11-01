@@ -6,12 +6,11 @@ import {
   type Course,
 } from '@/models/Course'
 import { RoutePath } from '@/router/RoutePath'
-import { archiveCourse, getCourseDetail, publishCourse } from '@/services/Course'
+import { getCourseDetail, publishCourse } from '@/services/Course'
 import { getApiErrorMessage } from '@/utils/apiResponse'
 import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
-  InboxOutlined,
   ReadOutlined,
   SettingOutlined,
   TeamOutlined,
@@ -37,7 +36,6 @@ export const CourseWorkspaceLayout = () => {
   const fetchDetail = useCallback((detailId: string) => getCourseDetail({ id: detailId }), [])
   const { execute, data, error } = useDetail(fetchDetail)
   const publishRequest = useRequest((courseId: string) => publishCourse({ id: courseId }))
-  const archiveRequest = useRequest((courseId: string) => archiveCourse({ id: courseId }))
 
   const refreshCourse = useCallback(() => {
     if (id) execute(id).catch(() => undefined)
@@ -76,16 +74,6 @@ export const CourseWorkspaceLayout = () => {
           'Không thể xuất bản khoá học. Vui lòng kiểm tra điều kiện (module, bài học, video ready, finalLesson).',
         ),
       )
-    }
-  }
-
-  const handleArchive = async () => {
-    try {
-      await archiveRequest.execute(id)
-      refreshCourse()
-      void message.success('Khoá học đã được lưu trữ')
-    } catch (error) {
-      void message.error(getApiErrorMessage(error, 'Không thể lưu trữ khoá học'))
     }
   }
 
@@ -137,19 +125,6 @@ export const CourseWorkspaceLayout = () => {
                 </Button>
               </Popconfirm>
             )}
-            {course.status === CourseStatus.PUBLISHED && (
-              <Popconfirm
-                title="Lưu trữ khoá học?"
-                description="Khoá học sẽ bị ẩn khỏi danh sách công khai."
-                onConfirm={handleArchive}
-                okText="Lưu trữ"
-                cancelText="Hủy"
-              >
-                <Button icon={<InboxOutlined />} loading={archiveRequest.isLoading}>
-                  Lưu trữ
-                </Button>
-              </Popconfirm>
-            )}
           </Space>
         </Space>
       </Card>
@@ -172,9 +147,9 @@ export const CourseWorkspaceLayout = () => {
           </nav>
         </Card>
 
-        <Card className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0">
           <Outlet context={outletContext} />
-        </Card>
+        </div>
       </div>
     </Space>
   )

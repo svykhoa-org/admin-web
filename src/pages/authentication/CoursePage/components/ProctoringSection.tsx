@@ -4,10 +4,10 @@ import { useFormContext, useWatch } from 'react-hook-form'
 
 import type { FormFieldConfig } from '@/components/FormHandler/FormField'
 
-import type { CourseFormValues } from '../schemas/courseFormSchema'
+import type { ProctoringFormValues } from '../schemas/courseFormSchema'
 
 interface ProctoringSectionProps {
-  Field: FC<FormFieldConfig<CourseFormValues>>
+  Field: FC<FormFieldConfig<ProctoringFormValues>>
 }
 
 /**
@@ -17,7 +17,7 @@ interface ProctoringSectionProps {
  * Mỗi cơ chế có công tắc bật/tắt riêng; hiển thị có điều kiện theo trạng thái.
  */
 export function ProctoringSection({ Field }: ProctoringSectionProps) {
-  const { control } = useFormContext<CourseFormValues>()
+  const { control } = useFormContext<ProctoringFormValues>()
   const enabled = useWatch({ control, name: 'proctoringEnabled' })
   const inactivityEnabled = useWatch({ control, name: 'proctoringInactivityEnabled' })
   const presenceEnabled = useWatch({ control, name: 'proctoringPresenceEnabled' })
@@ -25,26 +25,19 @@ export function ProctoringSection({ Field }: ProctoringSectionProps) {
 
   return (
     <>
-      <Typography.Title level={5} style={{ margin: 0 }}>
-        Giám sát học tập
-      </Typography.Title>
-      <Typography.Text type="secondary" style={{ marginTop: -8 }}>
-        Áp dụng cho bài video chưa hoàn thành. Hai cơ chế dưới đây hoạt động độc lập.
-      </Typography.Text>
-
-      <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-0">
         <Field name="proctoringEnabled" label="Bật giám sát" type="checkbox" />
       </div>
 
       {enabled && (
-        <>
+        <div className="flex flex-col gap-y-2">
           {/* ── (1) Tạm dừng khi không thao tác ───────────────── */}
           <Typography.Text strong>1. Tạm dừng khi không thao tác</Typography.Text>
           <Typography.Text type="secondary" style={{ marginTop: -8, fontSize: 12 }}>
             Nếu không có thao tác nào trên màn hình trong khoảng thời gian cấu hình, video sẽ tự tạm
             dừng. Mục tiêu: giữ người dùng luôn tương tác — không chụp ảnh.
           </Typography.Text>
-          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-0">
             <Field
               name="proctoringInactivityEnabled"
               label="Bật tạm dừng khi idle"
@@ -67,13 +60,13 @@ export function ProctoringSection({ Field }: ProctoringSectionProps) {
             Định kỳ (nhịp riêng, thưa hơn mục 1) mở popup yêu cầu chụp ảnh xác nhận. Mục tiêu: chống
             nhờ người khác học hộ.
           </Typography.Text>
-          <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-0">
             <Field name="proctoringPresenceEnabled" label="Bật kiểm tra camera" type="checkbox" />
           </div>
 
           {presenceEnabled && (
             <>
-              <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-0">
                 <Field
                   name="proctoringCameraRequired"
                   label="Bắt buộc camera"
@@ -94,7 +87,7 @@ export function ProctoringSection({ Field }: ProctoringSectionProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-4 gap-x-6 gap-y-0">
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-0">
                 {randomMode ? (
                   <>
                     <Field
@@ -122,7 +115,7 @@ export function ProctoringSection({ Field }: ProctoringSectionProps) {
               </div>
             </>
           )}
-        </>
+        </div>
       )}
     </>
   )

@@ -30,10 +30,8 @@ export interface Course extends AbstractModel {
   shortCode: string
   categoryId?: string | null
   tags?: CourseTagRef[]
-  accessDurationDays?: number | null
   maxEnrollments?: number | null
   currentEnrollments?: number
-  selfPaced?: boolean
   requiresVerification?: boolean
   // Cohort (scheduled) course: date fields below gate registration/learning/certification.
   isScheduled?: boolean
@@ -45,10 +43,27 @@ export interface Course extends AbstractModel {
   requirements?: string[]
   suitableFor?: string[]
   instructorIds?: string[]
-  cmeCredits?: number | null
-  certifyingOrganization?: string | null
   totalDurationMinutes?: number
-  proctoringConfig?: ProctoringConfig | null
+  config?: CourseConfig
+}
+
+export type AccessMode = 'unlimited' | 'days_after_enroll' | 'until_course_end'
+export type ProgressionMode = 'free' | 'sequential' | 'module_sequential'
+
+export interface CourseConfig {
+  access: { mode: AccessMode; days: number | null }
+  progression: { mode: ProgressionMode }
+  completion: {
+    lessonThresholdPercent: number
+    requireAllRequiredLessons: boolean
+    requiredQuizLessonIds: string[]
+  }
+  proctoring: ProctoringConfig
+  certificate: {
+    enabled: boolean
+    cmeCredits: number | null
+    certifyingOrganization: string | null
+  }
 }
 
 export interface ProctoringConfig {

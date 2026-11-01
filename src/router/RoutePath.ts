@@ -4,10 +4,6 @@ export const RoutePath = {
     route: 'courses',
     path: '/courses',
   },
-  CourseCreatePage: {
-    route: 'create',
-    path: '/courses/create',
-  },
   CourseDetailPage: {
     route: ':id',
     path: '/courses/:id',
