@@ -9,6 +9,10 @@ export const RoutePath = {
     path: '/courses/:id',
     getPath: (id: string) => `/courses/${id}`,
   },
+  CourseOverviewPage: {
+    route: 'overview',
+    getPath: (id: string) => `/courses/${id}/overview`,
+  },
   CourseContentPage: {
     route: 'content',
     getPath: (id: string) => `/courses/${id}/content`,

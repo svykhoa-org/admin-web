@@ -45,6 +45,34 @@ export interface Course extends AbstractModel {
   instructorIds?: string[]
   totalDurationMinutes?: number
   config?: CourseConfig
+  data?: CourseData | null
+  policySummary?: PolicySummary
+}
+
+// Operational counters derived by the server; recomputedAt says how fresh they are.
+export interface CourseData {
+  lessonCount: number
+  requiredLessonCount: number
+  totalDurationSeconds: number
+  enrolledTotal: number
+  activeLearners: number
+  completedTotal: number
+  certificatesIssued: number
+  recomputedAt: string
+}
+
+export interface PolicySummary {
+  progressionMode: ProgressionMode
+  lessonThresholdPercent: number
+  access: CourseConfig['access']
+  requiresVerification: boolean
+  capacity: { max: number | null; remaining: number | null }
+  proctoring: { cameraRequired: boolean; inactivityPause: boolean }
+  certificate: {
+    enabled: boolean
+    cmeCredits: number | null
+    certifyingOrganization: string | null
+  }
 }
 
 export type AccessMode = 'unlimited' | 'days_after_enroll' | 'until_course_end'

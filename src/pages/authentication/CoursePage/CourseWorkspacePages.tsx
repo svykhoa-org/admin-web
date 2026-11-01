@@ -2,6 +2,7 @@ import { App, Card } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useBlocker, useOutletContext } from 'react-router-dom'
 import { CourseModuleManager } from './components/CourseModuleManager'
+import { CourseOverview } from './components/CourseOverview'
 import { CourseRoster } from './components/CourseRoster'
 import { CourseDangerCard } from './components/settings/CourseDangerCard'
 import { CourseInfoCard } from './components/settings/CourseInfoCard'
@@ -13,6 +14,11 @@ import {
   ProgressionCard,
 } from './components/settings/CoursePolicyCards'
 import type { CourseWorkspaceContext } from './CourseWorkspaceLayout'
+
+export const CourseOverviewPage = () => {
+  const { course } = useOutletContext<CourseWorkspaceContext>()
+  return <CourseOverview course={course} />
+}
 
 export const CourseContentPage = () => {
   const { course } = useOutletContext<CourseWorkspaceContext>()

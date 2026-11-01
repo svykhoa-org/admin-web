@@ -1,4 +1,4 @@
-import { useDetail, useRequest } from '@/hooks'
+import { useDetail } from '@/hooks'
 import {
   CourseStatus,
   CourseStatusMappingToColors,
@@ -6,19 +6,19 @@ import {
   type Course,
 } from '@/models/Course'
 import { RoutePath } from '@/router/RoutePath'
-import { getCourseDetail, publishCourse } from '@/services/Course'
-import { getApiErrorMessage } from '@/utils/apiResponse'
+import { getCourseDetail } from '@/services/Course'
 import {
   ArrowLeftOutlined,
-  CheckCircleOutlined,
+  DashboardOutlined,
   ReadOutlined,
   SettingOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import { App, Button, Card, Menu, Popconfirm, Space, Spin, Tag, Typography } from 'antd'
+import { Button, Card, Menu, Space, Spin, Tag, Typography } from 'antd'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { CoursePublishButton } from './components/CoursePublishButton'
 
 export interface CourseWorkspaceContext {
   course: Course
@@ -29,13 +29,11 @@ export const CourseWorkspaceLayout = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const { message } = App.useApp()
   const { t } = useTranslation(['CommonLocales', 'CourseLocales'])
   const statusLabels = useMemo(() => getCourseStatusMappingToLabels(t), [t])
 
   const fetchDetail = useCallback((detailId: string) => getCourseDetail({ id: detailId }), [])
   const { execute, data, error } = useDetail(fetchDetail)
-  const publishRequest = useRequest((courseId: string) => publishCourse({ id: courseId }))
 
   const refreshCourse = useCallback(() => {
     if (id) execute(id).catch(() => undefined)
@@ -62,21 +60,7 @@ export const CourseWorkspaceLayout = () => {
     )
   }
 
-  const handlePublish = async () => {
-    try {
-      await publishRequest.execute(id)
-      refreshCourse()
-      void message.success('Khoá học đã được xuất bản')
-    } catch (error) {
-      void message.error(
-        getApiErrorMessage(
-          error,
-          'Không thể xuất bản khoá học. Vui lòng kiểm tra điều kiện (module, bài học, video ready, finalLesson).',
-        ),
-      )
-    }
-  }
-
+  const overviewPath = RoutePath.CourseOverviewPage.getPath(id)
   const contentPath = RoutePath.CourseContentPage.getPath(id)
   const learnersPath = RoutePath.CourseLearnersPage.getPath(id)
   const settingsPath = RoutePath.CourseSettingsPage.getPath(id)
@@ -109,21 +93,7 @@ export const CourseWorkspaceLayout = () => {
 
           <Space>
             {course.status !== CourseStatus.PUBLISHED && (
-              <Popconfirm
-                title="Xuất bản khoá học?"
-                description="Khoá học phải có ít nhất 1 module, mỗi module có ít nhất 1 bài học, tất cả video ở trạng thái ready và đã có bài thi cuối khoá."
-                onConfirm={handlePublish}
-                okText="Xuất bản"
-                cancelText="Hủy"
-              >
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  loading={publishRequest.isLoading}
-                >
-                  Xuất bản
-                </Button>
-              </Popconfirm>
+              <CoursePublishButton courseId={id} onPublished={refreshCourse} />
             )}
           </Space>
         </Space>
@@ -138,6 +108,7 @@ export const CourseWorkspaceLayout = () => {
               onClick={({ key }) => navigate(key)}
               style={{ border: 'none' }}
               items={[
+                { key: overviewPath, icon: <DashboardOutlined />, label: 'Tổng quan' },
                 { key: contentPath, icon: <ReadOutlined />, label: 'Nội dung' },
                 { key: learnersPath, icon: <TeamOutlined />, label: 'Học viên' },
                 { type: 'divider' },

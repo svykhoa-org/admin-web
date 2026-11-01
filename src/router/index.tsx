@@ -8,6 +8,7 @@ import { CourseWorkspaceLayout } from '@/pages/authentication/CoursePage/CourseW
 import {
   CourseContentPage,
   CourseLearnersPage,
+  CourseOverviewPage,
   CourseSettingsPage,
 } from '@/pages/authentication/CoursePage/CourseWorkspacePages'
 import { CourseListPage } from '@/pages/authentication/CoursePage/CourseListPage'
@@ -84,8 +85,9 @@ const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to={RoutePath.CourseContentPage.route} replace />,
+                    element: <Navigate to={RoutePath.CourseOverviewPage.route} replace />,
                   },
+                  { path: RoutePath.CourseOverviewPage.route, element: <CourseOverviewPage /> },
                   { path: RoutePath.CourseContentPage.route, element: <CourseContentPage /> },
                   { path: RoutePath.CourseLearnersPage.route, element: <CourseLearnersPage /> },
                   { path: RoutePath.CourseSettingsPage.route, element: <CourseSettingsPage /> },
