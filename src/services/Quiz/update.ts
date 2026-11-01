@@ -10,8 +10,9 @@ export interface UpdateQuizInput {
   id: string
   title?: string
   passingScore?: number
-  maxAttempts?: number
-  timeLimit?: number
+  // null clears the limit; leaving the key out keeps the stored value.
+  maxAttempts?: number | null
+  timeLimit?: number | null
   questions?: QuestionInput[]
 }
 

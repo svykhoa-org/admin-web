@@ -1,10 +1,9 @@
 import axiosInstance from '@/lib/axios'
+import type { QuestionType } from '@/models/Quiz'
 import type { ApiDetailResponse } from '@/types/api'
 import { unwrapDetail } from '@/utils/apiResponse'
 
 const QUIZ_ENDPOINT = '/quizzes'
-
-export type QuestionType = 'single_choice' | 'multiple_choice' | 'short_answer'
 
 export interface AnswerOptionInput {
   id?: string
@@ -30,11 +29,8 @@ export interface QuestionInput {
 }
 
 export interface CreateQuizInput {
+  courseId: string
   title: string
-  passingScore: number
-  maxAttempts?: number
-  timeLimit?: number
-  questions: QuestionInput[]
 }
 
 export interface CreateQuizOutput {

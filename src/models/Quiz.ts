@@ -30,6 +30,7 @@ export interface Question extends AbstractModel {
 }
 
 export interface Quiz extends AbstractModel {
+  courseId: string
   title: string
   passingScore: number
   maxAttempts?: number | null

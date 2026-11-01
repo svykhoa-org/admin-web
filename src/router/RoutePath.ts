@@ -21,6 +21,14 @@ export const RoutePath = {
     route: 'learners',
     getPath: (id: string) => `/courses/${id}/learners`,
   },
+  CourseExamsPage: {
+    route: 'exams',
+    getPath: (id: string) => `/courses/${id}/exams`,
+  },
+  CourseExamEditPage: {
+    route: 'exams/:quizId',
+    getPath: (id: string, quizId: string) => `/courses/${id}/exams/${quizId}`,
+  },
   CourseSettingsPage: {
     route: 'settings',
     getPath: (id: string) => `/courses/${id}/settings`,

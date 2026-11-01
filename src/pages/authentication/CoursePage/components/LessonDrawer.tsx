@@ -6,19 +6,17 @@ import { LessonType, type Lesson } from '@/models/Course'
 import type { FileResource } from '@/models/FileResource'
 import { createDocument, getDocumentDetail, getDocumentDownloadUrl } from '@/services/Document'
 import { createLesson, updateLesson } from '@/services/Lesson'
-import { createQuiz, getQuizDetail, type QuestionInput } from '@/services/Quiz'
-import type { Quiz } from '@/models/Quiz'
+import { RoutePath } from '@/router/RoutePath'
+import { getCourseQuizSummary, type CourseQuizSummaryItem } from '@/services/Course'
 import { createVideo, getVideo, listVideos } from '@/services/Video'
 import type { VideoDto } from '@/services/Video'
 import { listUser } from '@/services/User'
 import type { User } from '@/models/User'
 import { getApiErrorMessage } from '@/utils/apiResponse'
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import {
+  Alert,
   App,
   Button,
-  Card,
-  Checkbox,
   Col,
   Divider,
   Form,
@@ -33,7 +31,6 @@ import {
   Tag,
   Typography,
 } from 'antd'
-import type { FormInstance } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -42,6 +39,7 @@ import { useNavigate } from 'react-router-dom'
 interface Props {
   open: boolean
   mode: 'create' | 'edit'
+  courseId: string
   moduleId: string
   initialData?: Lesson
   onClose: () => void
@@ -53,13 +51,7 @@ interface Props {
 const lessonTypeOptions = [
   { label: 'Video', value: LessonType.VIDEO },
   { label: 'Tài liệu', value: LessonType.DOCUMENT },
-  { label: 'Quiz', value: LessonType.QUIZ },
-]
-
-const questionTypeOptions = [
-  { label: 'Một đáp án đúng', value: 'single_choice' },
-  { label: 'Nhiều đáp án đúng', value: 'multiple_choice' },
-  { label: 'Tự luận', value: 'short_answer' },
+  { label: 'Bài kiểm tra', value: LessonType.QUIZ },
 ]
 
 const lessonTypeColorMap: Record<LessonType, string> = {
@@ -71,237 +63,20 @@ const lessonTypeColorMap: Record<LessonType, string> = {
 const lessonTypeLabelMap: Record<LessonType, string> = {
   [LessonType.VIDEO]: 'Video',
   [LessonType.DOCUMENT]: 'Tài liệu',
-  [LessonType.QUIZ]: 'Quiz',
-}
-
-// ─── Question Builder ─────────────────────────────────────────────────────────
-
-interface QuestionBuilderProps {
-  field: { name: number; key: number }
-  index: number
-  remove: (index: number) => void
-  form: FormInstance
-}
-
-const QuestionBuilder = ({ field, index, remove, form }: QuestionBuilderProps) => {
-  const qType = Form.useWatch(['quiz', 'questions', field.name, 'type'], form) as string | undefined
-  const correctOptionIndex = Form.useWatch(
-    ['quiz', 'questions', field.name, 'correctOptionIndex'],
-    form,
-  ) as number | undefined
-
-  return (
-    <Card
-      size="small"
-      title={
-        <Space>
-          <Typography.Text strong>Câu {index + 1}</Typography.Text>
-          {qType && (
-            <Tag color={qType === 'short_answer' ? 'orange' : 'blue'}>
-              {questionTypeOptions.find(o => o.value === qType)?.label ?? qType}
-            </Tag>
-          )}
-        </Space>
-      }
-      extra={
-        <Button
-          type="text"
-          danger
-          size="small"
-          icon={<DeleteOutlined />}
-          onClick={() => remove(field.name)}
-        >
-          Xóa câu
-        </Button>
-      }
-      style={{ marginBottom: 12 }}
-    >
-      <Row gutter={12}>
-        <Col span={14}>
-          <Form.Item
-            name={[field.name, 'content']}
-            label="Nội dung câu hỏi"
-            rules={[{ required: true, message: 'Nhập nội dung câu hỏi' }]}
-          >
-            <Input.TextArea rows={2} placeholder="Nhập nội dung câu hỏi..." />
-          </Form.Item>
-        </Col>
-        <Col span={6}>
-          <Form.Item
-            name={[field.name, 'type']}
-            label="Loại câu hỏi"
-            rules={[{ required: true, message: 'Chọn loại' }]}
-          >
-            <Select options={questionTypeOptions} />
-          </Form.Item>
-        </Col>
-        <Col span={4}>
-          <Form.Item
-            name={[field.name, 'points']}
-            label="Điểm"
-            rules={[{ required: true, message: 'Nhập điểm' }]}
-          >
-            <InputNumber min={1} style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Form.Item name={[field.name, 'correctOptionIndex']} hidden noStyle>
-        <InputNumber />
-      </Form.Item>
-
-      {/* Choice options */}
-      {(qType === 'single_choice' || qType === 'multiple_choice') && (
-        <Form.List name={[field.name, 'options']}>
-          {(optFields, { add: addOpt, remove: removeOpt }) => {
-            const isSingle = qType === 'single_choice'
-            return (
-              <Space direction="vertical" size={6} style={{ width: '100%' }}>
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {isSingle ? 'Chọn đúng 1 đáp án' : 'Đánh dấu tất cả đáp án đúng'}
-                </Typography.Text>
-
-                {isSingle ? (
-                  <Radio.Group
-                    value={correctOptionIndex}
-                    onChange={e =>
-                      form.setFieldValue(
-                        ['quiz', 'questions', field.name, 'correctOptionIndex'],
-                        e.target.value as number,
-                      )
-                    }
-                    style={{ width: '100%' }}
-                  >
-                    <Space direction="vertical" size={6} style={{ width: '100%' }}>
-                      {optFields.map((optField, optIdx) => (
-                        <Row key={optField.key} gutter={8} align="middle">
-                          <Col flex="auto">
-                            <Form.Item
-                              name={[optField.name, 'content']}
-                              style={{ margin: 0 }}
-                              rules={[{ required: true, message: 'Nhập đáp án' }]}
-                            >
-                              <Input placeholder={`Đáp án ${optIdx + 1}`} />
-                            </Form.Item>
-                          </Col>
-                          <Col>
-                            <Radio value={optIdx}>Đúng</Radio>
-                          </Col>
-                          <Col>
-                            <Button
-                              type="text"
-                              danger
-                              size="small"
-                              icon={<DeleteOutlined />}
-                              disabled={optFields.length <= 2}
-                              onClick={() => removeOpt(optField.name)}
-                            />
-                          </Col>
-                        </Row>
-                      ))}
-                    </Space>
-                  </Radio.Group>
-                ) : (
-                  optFields.map((optField, optIdx) => (
-                    <Row key={optField.key} gutter={8} align="middle">
-                      <Col flex="auto">
-                        <Form.Item
-                          name={[optField.name, 'content']}
-                          style={{ margin: 0 }}
-                          rules={[{ required: true, message: 'Nhập đáp án' }]}
-                        >
-                          <Input placeholder={`Đáp án ${optIdx + 1}`} />
-                        </Form.Item>
-                      </Col>
-                      <Col>
-                        <Form.Item
-                          name={[optField.name, 'isCorrect']}
-                          valuePropName="checked"
-                          style={{ margin: 0 }}
-                        >
-                          <Checkbox>Đúng</Checkbox>
-                        </Form.Item>
-                      </Col>
-                      <Col>
-                        <Button
-                          type="text"
-                          danger
-                          size="small"
-                          icon={<DeleteOutlined />}
-                          disabled={optFields.length <= 2}
-                          onClick={() => removeOpt(optField.name)}
-                        />
-                      </Col>
-                    </Row>
-                  ))
-                )}
-
-                <Button
-                  type="dashed"
-                  size="small"
-                  icon={<PlusOutlined />}
-                  onClick={() => addOpt({ content: '', order: optFields.length + 1 })}
-                >
-                  Thêm đáp án
-                </Button>
-              </Space>
-            )
-          }}
-        </Form.List>
-      )}
-
-      {/* Short answer */}
-      {qType === 'short_answer' && (
-        <Form.List name={[field.name, 'acceptedAnswers']}>
-          {(ansFields, { add: addAns, remove: removeAns }) => (
-            <Space direction="vertical" size={6} style={{ width: '100%' }}>
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                Đáp án hợp lệ — khớp 1 trong các giá trị (không phân biệt hoa/thường)
-              </Typography.Text>
-
-              {ansFields.map(ansField => (
-                <Row key={ansField.key} gutter={8} align="middle">
-                  <Col flex="auto">
-                    <Form.Item
-                      name={[ansField.name, 'value']}
-                      style={{ margin: 0 }}
-                      rules={[{ required: true, message: 'Nhập đáp án' }]}
-                    >
-                      <Input placeholder="Ví dụ: dependency injection" />
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      disabled={ansFields.length <= 1}
-                      onClick={() => removeAns(ansField.name)}
-                    />
-                  </Col>
-                </Row>
-              ))}
-
-              <Button
-                type="dashed"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() => addAns({ value: '' })}
-              >
-                Thêm đáp án chấp nhận
-              </Button>
-            </Space>
-          )}
-        </Form.List>
-      )}
-    </Card>
-  )
+  [LessonType.QUIZ]: 'Bài kiểm tra',
 }
 
 // ─── Main Drawer ──────────────────────────────────────────────────────────────
 
-export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSaved }: Props) => {
+export const LessonDrawer = ({
+  open,
+  mode,
+  courseId,
+  moduleId,
+  initialData,
+  onClose,
+  onSaved,
+}: Props) => {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [form] = Form.useForm()
@@ -334,10 +109,10 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   const [docMode, setDocMode] = useState<'select' | 'upload'>('upload')
   const [existingDocFile, setExistingDocFile] = useState<ExistingFileData | null>(null)
   const [openPdfModal, setOpenPdfModal] = useState(false)
-  const [quizDetail, setQuizDetail] = useState<Quiz | null>(null)
-  const [isLoadingQuiz, setIsLoadingQuiz] = useState(false)
+  const [quizzes, setQuizzes] = useState<CourseQuizSummaryItem[] | null>(null)
 
   const lessonType = Form.useWatch('type', form) as LessonType | undefined
+  const selectedQuizId = Form.useWatch('quizId', form) as string | undefined
 
   // Populate / reset form when drawer opens
   useEffect(() => {
@@ -356,7 +131,6 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
         title: initialData.title,
         description: initialData.description ?? '',
         type: initialData.type,
-        order: initialData.order,
         durationMinutes: initialData.durationMinutes ?? 0,
         isRequired: initialData.isRequired ?? true,
         isPreview: initialData.isPreview ?? false,
@@ -364,6 +138,8 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
           initialData.type === LessonType.DOCUMENT
             ? (initialData.contentId ?? undefined)
             : undefined,
+        quizId:
+          initialData.type === LessonType.QUIZ ? (initialData.contentId ?? undefined) : undefined,
       })
 
       if (initialData.type === LessonType.VIDEO && initialData.contentId) {
@@ -435,21 +211,36 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
   }, [open, lessonType, videoMode])
 
   useEffect(() => {
-    if (
-      !open ||
-      mode !== 'edit' ||
-      initialData?.type !== LessonType.QUIZ ||
-      !initialData?.contentId
-    ) {
-      setQuizDetail(null)
-      return
+    if (!open || lessonType !== LessonType.QUIZ) return
+    let isCurrent = true
+    getCourseQuizSummary(courseId)
+      .then(result => {
+        if (isCurrent) setQuizzes(result)
+      })
+      .catch(() => {
+        if (isCurrent) setQuizzes([])
+        void message.error('Không thể tải danh sách bài kiểm tra')
+      })
+    return () => {
+      isCurrent = false
     }
-    setIsLoadingQuiz(true)
-    getQuizDetail({ id: initialData.contentId })
-      .then(setQuizDetail)
-      .catch(() => setQuizDetail(null))
-      .finally(() => setIsLoadingQuiz(false))
-  }, [open, mode, initialData])
+  }, [open, lessonType, courseId, message])
+
+  // A lesson only offers quizzes no other lesson uses, plus its own.
+  const quizOptions = (quizzes ?? []).filter(
+    quiz => !quiz.linkedLesson || quiz.linkedLesson.id === initialData?.id,
+  )
+  const selectedQuiz = quizOptions.find(quiz => quiz.quizId === selectedQuizId)
+  const currentQuiz = quizOptions.find(quiz => quiz.linkedLesson?.id === initialData?.id)
+  // The server refuses replacing a quiz learners already submitted.
+  const isQuizLocked = mode === 'edit' && (currentQuiz?.attempted ?? 0) > 0
+
+  const handleSelectQuiz = (quizId: string) => {
+    const title = quizOptions.find(quiz => quiz.quizId === quizId)?.title
+    if (title && !(form.getFieldValue('title') as string | undefined)?.trim()) {
+      form.setFieldValue('title', title)
+    }
+  }
 
   const handleClose = () => {
     form.resetFields()
@@ -510,45 +301,8 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
         }
       } else if (type === LessonType.DOCUMENT) {
         contentId = values.documentId as string | undefined
-      } else if (type === LessonType.QUIZ && mode === 'create') {
-        // Create quiz first, then use its id as contentId
-        const quizValues = values.quiz as {
-          passingScore: number
-          maxAttempts?: number
-          timeLimit?: number
-          questions?: (QuestionInput & { correctOptionIndex?: number })[]
-        }
-
-        if (!quizValues?.questions?.length) {
-          void message.warning('Quiz phải có ít nhất một câu hỏi')
-          return
-        }
-
-        const enrichedQuestions: QuestionInput[] = (quizValues.questions ?? []).map((q, qIdx) => {
-          const { correctOptionIndex, ...rest } = q
-          const isSingle = q.type === 'single_choice'
-          return {
-            ...rest,
-            order: q.order ?? qIdx + 1,
-            options: q.options?.map((opt, oIdx) => ({
-              content: opt.content,
-              order: oIdx + 1,
-              isCorrect: isSingle ? oIdx === correctOptionIndex : opt.isCorrect,
-            })),
-          }
-        })
-
-        const quiz = await createQuiz({
-          title: values.title as string,
-          passingScore: quizValues.passingScore,
-          maxAttempts: quizValues.maxAttempts,
-          timeLimit: quizValues.timeLimit,
-          questions: enrichedQuestions,
-        })
-        contentId = quiz.id
-      } else if (type === LessonType.QUIZ && mode === 'edit') {
-        // Keep existing contentId for edit
-        contentId = initialData?.contentId ?? undefined
+      } else if (type === LessonType.QUIZ) {
+        contentId = values.quizId as string
       }
 
       const basePayload = {
@@ -568,7 +322,6 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
         await updateLesson({
           id: initialData.id,
           ...basePayload,
-          order: (values.order as number | undefined) ?? undefined,
         })
         void message.success('Cập nhật bài học thành công')
       }
@@ -637,13 +390,6 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
                 />
               </Form.Item>
             </Col>
-            {mode === 'edit' && (
-              <Col span={3}>
-                <Form.Item name="order" label="Thứ tự">
-                  <InputNumber min={0} style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-            )}
             <Col span={3}>
               <Form.Item name="durationMinutes" label="Thời lượng (phút)">
                 <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
@@ -889,144 +635,74 @@ export const LessonDrawer = ({ open, mode, moduleId, initialData, onClose, onSav
               )}
 
               {/* ── Quiz ── */}
-              {lessonType === LessonType.QUIZ && (
-                <>
-                  {/* Edit mode: quiz already created, show info only */}
-                  {mode === 'edit' && initialData?.contentId ? (
-                    <Card size="small" loading={isLoadingQuiz}>
-                      {quizDetail ? (
-                        <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                          <Space wrap>
-                            <Typography.Text strong>{quizDetail.title}</Typography.Text>
-                            <Tag color="purple">{quizDetail.questions?.length ?? 0} câu hỏi</Tag>
-                            <Tag color="blue">Điểm đạt: {quizDetail.passingScore}%</Tag>
-                            {quizDetail.timeLimit && (
-                              <Tag color="orange">Thời gian: {quizDetail.timeLimit} phút</Tag>
-                            )}
-                            {quizDetail.maxAttempts && (
-                              <Tag>Tối đa {quizDetail.maxAttempts} lần thử</Tag>
-                            )}
-                          </Space>
-                          <Button
-                            size="small"
-                            type="primary"
-                            ghost
-                            onClick={() => {
-                              handleClose()
-                              navigate(`/quizzes/${initialData.contentId}`)
-                            }}
-                          >
-                            Chỉnh sửa câu hỏi
-                          </Button>
-                        </Space>
-                      ) : (
-                        <Typography.Text type="secondary">
-                          Không thể tải thông tin quiz
-                        </Typography.Text>
-                      )}
-                    </Card>
-                  ) : (
-                    <>
-                      {/* Quiz settings */}
-                      <Typography.Text strong>Cài đặt Quiz</Typography.Text>
-                      <Row gutter={16} style={{ marginTop: 12 }}>
-                        <Col span={8}>
-                          <Form.Item
-                            name={['quiz', 'passingScore']}
-                            label="Điểm đạt"
-                            initialValue={70}
-                            rules={[{ required: true, message: 'Nhập điểm đạt' }]}
-                          >
-                            <InputNumber
-                              min={0}
-                              max={100}
-                              style={{ width: '100%' }}
-                              addonAfter="%"
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                          <Form.Item name={['quiz', 'maxAttempts']} label="Số lần thử tối đa">
-                            <InputNumber
-                              min={1}
-                              style={{ width: '100%' }}
-                              placeholder="Không giới hạn"
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                          <Form.Item name={['quiz', 'timeLimit']} label="Giới hạn thời gian">
-                            <InputNumber
-                              min={0}
-                              style={{ width: '100%' }}
-                              placeholder="Không giới hạn"
-                              addonAfter="phút"
-                            />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      <Divider orientation="horizontal" style={{ fontSize: 13 }}>
-                        Danh sách câu hỏi
-                      </Divider>
-
-                      {/* Questions */}
-                      <Form.List name={['quiz', 'questions']}>
-                        {(fields, { add, remove }) => (
-                          <>
-                            {fields.length === 0 && (
-                              <div
-                                style={{
-                                  textAlign: 'center',
-                                  padding: '24px 0',
-                                  color: '#999',
-                                  border: '1px dashed #d9d9d9',
-                                  borderRadius: 8,
-                                  marginBottom: 12,
-                                }}
-                              >
-                                <Typography.Text type="secondary">
-                                  Chưa có câu hỏi nào. Bấm &quot;Thêm câu hỏi&quot; để bắt đầu.
-                                </Typography.Text>
-                              </div>
-                            )}
-
-                            {fields.map((field, index) => (
-                              <QuestionBuilder
-                                key={field.key}
-                                field={field}
-                                index={index}
-                                remove={remove}
-                                form={form}
-                              />
-                            ))}
-
-                            <Button
-                              type="dashed"
-                              block
-                              icon={<PlusOutlined />}
-                              onClick={() =>
-                                add({
-                                  type: 'single_choice',
-                                  order: fields.length + 1,
-                                  points: 10,
-                                  correctOptionIndex: 0,
-                                  options: [
-                                    { content: '', order: 1 },
-                                    { content: '', order: 2 },
-                                  ],
-                                })
-                              }
-                            >
-                              Thêm câu hỏi
-                            </Button>
-                          </>
-                        )}
-                      </Form.List>
-                    </>
-                  )}
-                </>
-              )}
+              {lessonType === LessonType.QUIZ &&
+                (quizzes && quizOptions.length === 0 ? (
+                  <Alert
+                    type="info"
+                    showIcon
+                    title="Chưa có bài kiểm tra nào để chọn"
+                    description="Tạo bài kiểm tra trước, rồi quay lại đây để gắn vào bài học."
+                    action={
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          handleClose()
+                          navigate(RoutePath.CourseExamsPage.getPath(courseId))
+                        }}
+                      >
+                        Mở Bài kiểm tra
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <>
+                    <Form.Item
+                      name="quizId"
+                      label="Bài kiểm tra"
+                      rules={[{ required: true, message: 'Chọn một bài kiểm tra' }]}
+                      extra={
+                        isQuizLocked
+                          ? 'Đã có học viên nộp bài nên không thể đổi. Muốn dùng bài khác, hãy tạo bài học mới.'
+                          : 'Chỉ hiện các bài chưa gắn vào bài học nào của khoá.'
+                      }
+                    >
+                      <Select
+                        showSearch={{ optionFilterProp: 'label' }}
+                        loading={!quizzes}
+                        disabled={isQuizLocked}
+                        placeholder="Chọn bài kiểm tra"
+                        onChange={handleSelectQuiz}
+                        options={quizOptions.map(quiz => ({
+                          value: quiz.quizId,
+                          label:
+                            quiz.questionCount > 0
+                              ? `${quiz.title} · ${quiz.questionCount} câu · đạt ${quiz.passingScore}%`
+                              : `${quiz.title} · chưa có câu hỏi`,
+                          disabled: quiz.questionCount === 0,
+                        }))}
+                      />
+                    </Form.Item>
+                    {!isQuizLocked && selectedQuiz && selectedQuiz.attempted > 0 && (
+                      <Alert
+                        type="warning"
+                        showIcon
+                        className="mb-4"
+                        title={`Bài này đã có ${selectedQuiz.attempted} học viên làm. Các lượt cũ vẫn được tính vào số lần làm bài của họ.`}
+                      />
+                    )}
+                    {selectedQuizId && (
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          handleClose()
+                          navigate(RoutePath.CourseExamEditPage.getPath(courseId, selectedQuizId))
+                        }}
+                      >
+                        Sửa câu hỏi
+                      </Button>
+                    )}
+                  </>
+                ))}
             </>
           )}
         </Form>

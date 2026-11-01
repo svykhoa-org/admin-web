@@ -7,6 +7,8 @@ import { CourseCategoryListPage } from '@/pages/authentication/CourseCategoryPag
 import { CourseWorkspaceLayout } from '@/pages/authentication/CoursePage/CourseWorkspaceLayout'
 import {
   CourseContentPage,
+  CourseExamEditPage,
+  CourseExamsPage,
   CourseLearnersPage,
   CourseOverviewPage,
   CourseSettingsPage,
@@ -90,6 +92,8 @@ const router = createBrowserRouter([
                   { path: RoutePath.CourseOverviewPage.route, element: <CourseOverviewPage /> },
                   { path: RoutePath.CourseContentPage.route, element: <CourseContentPage /> },
                   { path: RoutePath.CourseLearnersPage.route, element: <CourseLearnersPage /> },
+                  { path: RoutePath.CourseExamsPage.route, element: <CourseExamsPage /> },
+                  { path: RoutePath.CourseExamEditPage.route, element: <CourseExamEditPage /> },
                   { path: RoutePath.CourseSettingsPage.route, element: <CourseSettingsPage /> },
                 ],
               },

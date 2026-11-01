@@ -1,9 +1,12 @@
-import { App, Card } from 'antd'
+import { App, Card, Segmented } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useBlocker, useOutletContext } from 'react-router-dom'
+import { useBlocker, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
+import { CourseExams } from './components/CourseExams'
 import { CourseModuleManager } from './components/CourseModuleManager'
 import { CourseOverview } from './components/CourseOverview'
+import { CourseProgressMatrix } from './components/CourseProgressMatrix'
 import { CourseRoster } from './components/CourseRoster'
+import { QuizEditor } from './components/exam-editor/QuizEditor'
 import { CourseDangerCard } from './components/settings/CourseDangerCard'
 import { CourseInfoCard } from './components/settings/CourseInfoCard'
 import {
@@ -24,18 +27,49 @@ export const CourseContentPage = () => {
   const { course } = useOutletContext<CourseWorkspaceContext>()
   return (
     <Card>
-      <CourseModuleManager courseId={course.id} />
+      <CourseModuleManager courseId={course.id} enrolledTotal={course.data?.enrolledTotal ?? 0} />
     </Card>
   )
 }
 
 export const CourseLearnersPage = () => {
   const { course } = useOutletContext<CourseWorkspaceContext>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view = searchParams.get('view') === 'list' ? 'list' : 'progress'
+  const viewSwitcher = (
+    <Segmented
+      value={view}
+      options={[
+        { value: 'progress', label: 'Tiến độ' },
+        { value: 'list', label: 'Danh sách' },
+      ]}
+      onChange={value => setSearchParams(value === 'list' ? { view: 'list' } : {})}
+    />
+  )
   return (
     <Card>
-      <CourseRoster courseId={course.id} />
+      {view === 'list' ? (
+        <div className="flex flex-col gap-4">
+          {viewSwitcher}
+          <CourseRoster courseId={course.id} />
+        </div>
+      ) : (
+        <CourseProgressMatrix courseId={course.id} toolbarStart={viewSwitcher} />
+      )}
     </Card>
   )
+}
+
+export const CourseExamsPage = () => {
+  const { course, refreshCourse } = useOutletContext<CourseWorkspaceContext>()
+  return <CourseExams course={course} onSaved={refreshCourse} />
+}
+
+export const CourseExamEditPage = () => {
+  const { course } = useOutletContext<CourseWorkspaceContext>()
+  const { quizId } = useParams<{ quizId: string }>()
+  if (!quizId) return null
+  return <QuizEditor key={quizId} courseId={course.id} quizId={quizId} />
 }
 
 const useCardDirtyTracker = () => {
